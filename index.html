@@ -248,7 +248,7 @@
         <div class="sticky-controls">
             <div class="header-row">
                 <div class="title-group">
-                    <h1>🔥 Boss Timer Pro</h1>
+                    <h1>🔥 Boss Timer Pro (Sv.Laima only)</h1>
                 </div>
                 <div class="header-actions">
                     <button class="btn-circle" onclick="openSettings()" title="ตั้งค่าระบบ">⚙️</button>
@@ -443,7 +443,6 @@
         // 🔑 ตั้งค่า Firebase & Admin Security
         // ==========================================
         
-        // 🔴🔴🔴 นำโค้ด firebaseConfig ของคุณมาวางแทนที่ตรงนี้ 🔴🔴🔴
         const firebaseConfig = {
             apiKey: "AIzaSyAiFev1IKP9wVFM4ZZzijBiSWfJhH1afS0",
             authDomain: "boss-timer-pro.firebaseapp.com",
@@ -452,7 +451,6 @@
             messagingSenderId: "1202937101",
             appId: "1:1202937101:web:ea4a6a9c207170846da444"
         };
-        // 🔴🔴🔴 สิ้นสุดส่วนที่ต้องแก้ไข 🔴🔴🔴
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -461,6 +459,7 @@
         const ENABLE_AI_TELEMETRY = 1; 
         const ALLOWED_DOMAIN = "boss-timer-pro.netlify.app"; 
         const SECRET_KEY_BASE64 = "Z2Vuc3VfYWRtaW4="; 
+        
         const currentDomain = window.location.hostname;
         const userKey = window.location.hash.substring(1); 
         let isAdmin = false;
@@ -470,6 +469,14 @@
             isAdmin = true;
         } 
         
+        // 🌟 ตั้งค่า Environment แยกกล่องข้อมูลอัตโนมัติตาม URL
+        let targetDbDoc = 'main-server'; // ค่าเริ่มต้นคือ Production
+        if (currentDomain.includes('uat--')) {
+            targetDbDoc = 'uat-server'; // ถ้าเป็นเว็บ UAT ให้เปลี่ยนไปใช้กล่องเทสต์
+        } else if (currentDomain === 'localhost' || currentDomain === '127.0.0.1') {
+            targetDbDoc = 'local-server'; // สำหรับรันเทสต์ในเครื่องตัวเอง
+        }
+
         // ล็อกโดเมนป้องกันการก๊อปปี้ไปรันที่อื่น (รองรับทั้งเว็บหลัก และเว็บ UAT)
         if (!currentDomain.includes(ALLOWED_DOMAIN) && currentDomain !== "localhost" && currentDomain !== "127.0.0.1") {
             document.body.innerHTML = `
@@ -697,8 +704,8 @@
         // ☁️ ส่วนที่ 4: การบันทึก/โหลดข้อมูลจาก Firebase
         // ==========================================
         function saveData() { 
-            // อัปเดตข้อมูลขึ้น Firebase ส่วนกลาง
-            db.collection('bossData').doc('main-server').set({
+            // 🔥 อัปเดตข้อมูลขึ้น Firebase ตาม Environment (targetDbDoc)
+            db.collection('bossData').doc(targetDbDoc).set({
                 bosses: bosses,
                 deletedLogs: deletedLogs
             }).catch(error => console.error("Error saving data: ", error));
@@ -786,8 +793,8 @@
             const savedAiDataset = localStorage.getItem('bossAiDataset');
             if (savedAiDataset) aiDataset = JSON.parse(savedAiDataset);
             
-            // 🔥 ดึงข้อมูลบอสแบบ Real-time จาก Firebase
-            db.collection('bossData').doc('main-server').onSnapshot((doc) => {
+            // 🔥 ดึงข้อมูลบอสแบบ Real-time จาก Firebase ตาม Environment
+            db.collection('bossData').doc(targetDbDoc).onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
                     bosses = data.bosses || [];
