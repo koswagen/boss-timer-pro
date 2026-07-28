@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Boss Timer Pro">
+    <title>Boss Timer Pro | v1.9.0 Dynamic AI Engine</title>
+        <link rel="icon" href="data:,">
+    <style>
+        /* 🎨 หมวดหมู่สีและการตั้งค่าตัวแปร (CSS Variables) สำหรับใช้ทั้งโปรเจกต์ */
+        :root {
+            --bg-base: #0f172a; --bg-surface: #1e293b; --bg-input: #0f172a;       
+            --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-accent: #38bdf8;    
+            --color-success: #10b981; --color-danger: #ef4444; --color-warning: #f59e0b;  
+            --color-edit: #6366f1; --color-stage4: #e11d48; --color-ghost: rgba(245, 158, 11, 0.4);
+            --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px; --radius-pill: 20px;
+        }
+
+        /* 📱 โครงสร้างพื้นฐานของหน้าเว็บ */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-primary); line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+        .app-container { max-width: 1600px; margin: 0 auto; padding: 16px; }
+
+        /* 📌 ส่วนหัวของแอป (Header) ที่จะติดอยู่ด้านบนเสมอเวลาเลื่อนจอ */
+        .sticky-controls { position: sticky; top: 0; z-index: 100; background-color: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); padding-bottom: 15px; margin-bottom: 16px; border-bottom: 1px solid #334155; padding-top: 10px; }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
+        .title-group { display: flex; align-items: center; gap: 10px; }
+        .title-group h1 { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; margin-right: 12px;}
+        
+        .header-actions { display: flex; gap: 8px; }
+        .btn-circle { background: var(--bg-surface); border: 1px solid #334155; color: var(--text-accent); font-size: 1.1rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+        .btn-circle:hover { background: var(--text-accent); color: #000; }
+        
+        /* 📝 ฟอร์มสำหรับพิมพ์ชื่อและเพิ่มบอส */
+        .control-row { display: flex; background-color: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        input[type="text"], input[type="number"], select { background-color: var(--bg-input); border: 1px solid #334155; color: var(--text-primary); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.95rem; outline: none; transition: all 0.2s; }
+        input:focus, select:focus { border-color: var(--text-accent); }
+        input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--text-accent); cursor: pointer; }
+        
+        .add-form-group { display: flex; width: 100%; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .add-form-group input[type="text"]:not([readonly]) { flex: 1; min-width: 200px; }
+        .time-wrapper { position: relative; display: flex; align-items: center; width: 75px; min-width: 75px; }
+        .time-wrapper input[readonly] { width: 100%; padding-right: 24px; text-align: center; font-weight: bold; cursor: pointer; caret-color: transparent; border-color: var(--text-accent); background-color: rgba(56, 189, 248, 0.05); }
+        .time-label { position: absolute; right: 8px; color: var(--text-secondary); font-size: 0.8rem; pointer-events: none; }
+
+        .btn-trigger-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-trigger { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 0.95rem; cursor: pointer; font-weight: bold; white-space: nowrap; height: 38px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; border: 1px solid transparent; }
+        .btn-trigger.normal { background-color: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: var(--text-accent); }
+        .btn-trigger.instant { background-color: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: var(--color-warning); }
+        .btn-trigger:hover { filter: brightness(1.2); }
+
+        /* 🗂️ แถบเครื่องมือ (ตัวเลือกจัดเรียง และ ช่องค้นหา) */
+        .list-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; background-color: rgba(30, 41, 59, 0.4); padding: 10px 14px; border-radius: var(--radius-md); }
+        .list-toolbar h3 { margin: 0; color: var(--text-secondary); font-size: 1.05rem; }
+        .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .sort-select { height: 38px; cursor: pointer; background-color: var(--bg-surface); }
+        
+        .search-box { display: flex; align-items: center; position: relative; width: 180px; }
+        .search-box input { width: 100%; padding-left: 32px; border-color: transparent; font-size: 0.9rem; height: 38px;}
+        .search-icon { position: absolute; left: 10px; font-size: 0.9rem; color: var(--text-accent); }
+        .btn-icon { width: 30px; height: 30px; border: none; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; background-color: var(--bg-input); cursor: pointer; color: var(--text-primary); transition: 0.2s;}
+        .btn-icon.edit { color: var(--color-edit); } .btn-icon.delete { color: var(--color-danger); } 
+        .btn-icon.standby { color: #94a3b8; } .btn-icon.standby:hover { background: #475569; color: #fff; }
+        .btn-icon:hover { filter: brightness(1.2); }
+
+        /* 🔔 กล่องแจ้งเตือนมุมล่าง (Toast Notifications) */
+        #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; align-items: center;}
+        .toast-message { background: rgba(15, 23, 42, 0.95); color: var(--text-primary); padding: 10px 24px; border-radius: 30px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5); opacity: 0; transform: translateY(20px); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); display: flex; align-items: center; gap: 8px;}
+        .toast-message.show { opacity: 1; transform: translateY(0); }
+
+        /* 💳 สไตล์ของการ์ดบอสแต่ละใบ */
+        .boss-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+        .boss-card { background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 14px; border-left: 4px solid var(--text-accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; transition: all 0.3s ease; overflow: hidden; z-index: 1;}
+        .boss-card.is-spawned { border-left-color: var(--color-warning); background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-surface) 100%); }
+        
+        /* อนิเมชั่นไฟกะพริบสำหรับ Stage 4 */
+        @keyframes heartbeatCard {
+            0% { box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); background: linear-gradient(135deg, rgba(225, 29, 72, 0.1) 0%, var(--bg-surface) 100%); }
+            50% { box-shadow: 0 0 25px rgba(225, 29, 72, 0.5); background: linear-gradient(135deg, rgba(225, 29, 72, 0.25) 0%, var(--bg-surface) 100%); }
+            100% { box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); background: linear-gradient(135deg, rgba(225, 29, 72, 0.1) 0%, var(--bg-surface) 100%); }
+        }
+        .boss-card.is-stage4 { border-left-color: var(--color-stage4); border-width: 1px; border-style: solid; border-color: rgba(225, 29, 72, 0.4); border-left-width: 4px; animation: heartbeatCard 2s infinite ease-in-out;}
+        .boss-card.is-stage4::after { content: 'STAGE 4'; position: absolute; bottom: -5px; right: -5px; font-size: 5.5rem; font-weight: 900; color: var(--color-stage4); opacity: 0.05; pointer-events: none; line-height: 1; transform: rotate(-5deg); z-index: -1; }
+
+        /* 💤 จังหวะกำลังหดตัวเข้าโหมดพักการ์ด */
+        .boss-card.entering-standby {
+            transform: scale(0.95); background-color: rgba(30, 41, 59, 0.4) !important;
+            border-left-color: #475569 !important; box-shadow: none !important; animation: none !important;
+            background-image: none !important; transition: all 0.4s ease !important;
+        }
+        .boss-card.entering-standby::after { display: none; }
+        .boss-card.entering-standby .card-header .boss-name, 
+        .boss-card.entering-standby .card-header .boss-eta { filter: grayscale(1); transition: filter 0.4s ease; }
+        .boss-card.entering-standby .state-container, .boss-card.entering-standby .eta-capsule, .boss-card.entering-standby .countdown-container { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+
+        /* 💤 หน้าตาของการ์ดที่ถูกพับเก็บ (โหมด Sleep เต็มรูปแบบ) */
+        .boss-card.is-standby { 
+            background-color: rgba(30, 41, 59, 0.4); border-left-color: #475569; 
+            border-width: 0 0 0 4px; border-style: solid; box-shadow: none; opacity: 0.6; 
+            animation: none; background-image: none; padding: 10px 16px; gap: 0; 
+        }
+        .boss-card.is-standby::after { display: none; }
+        .boss-card.is-standby .card-header .boss-name, 
+        .boss-card.is-standby .card-header .boss-eta { filter: grayscale(1); }
+        .boss-card.is-standby .countdown-container { display: none !important; }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2;}
+        .boss-name-group { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; line-height: 1.3; }
+        .boss-name { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+        .boss-eta { font-size: 0.85rem; color: var(--text-secondary); background: rgba(0,0,0,0.25); padding: 3px 8px; border-radius: 6px; font-weight: 500; display: flex; gap: 6px; align-items: center;}
+        .boss-elapsed { font-family: ui-monospace, Consolas, monospace; color: var(--color-warning); font-weight: bold; letter-spacing: 0.5px;}
+        .card-actions { display: flex; gap: 6px; }
+
+        .countdown-container { text-align: right; z-index: 2;}
+        .countdown-display { font-size: 1.6rem; font-weight: bold; font-family: ui-monospace, Consolas, monospace; color: var(--text-primary); background: rgba(0,0,0,0.25); padding: 6px 12px; border-radius: var(--radius-sm); display: inline-block;}
+        
+        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด */
+        .state-container { display: none; flex-direction: column; gap: 12px; z-index: 2; background: rgba(0,0,0,0.15); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
+        .state-body { display: flex; align-items: center; gap: 14px; }
+        
+        .state-left { flex-shrink: 0; } 
+        .progress-circle { width: 50px; height: 50px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s linear;}
+        .progress-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(transparent 0deg, transparent 34deg, var(--bg-surface) 34deg, var(--bg-surface) 36deg); z-index: 1; }
+        .progress-inner { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-surface); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: var(--text-primary); z-index: 2;}
+        .boss-card.is-stage4 .progress-inner { background: rgba(30, 41, 59, 1); }
+        @keyframes ringPulseAlert { 0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0); } 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } }
+        .progress-circle.is-hype { animation: ringPulseAlert 1.5s infinite; }
+
+        .state-center { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 65px;} 
+        .state-center input { width: 100%; text-align: center; font-size: 1.25rem; font-weight: bold; cursor: pointer; border-color: #334155; background-color: var(--bg-input); color: var(--text-primary); padding: 4px; border-radius: var(--radius-sm); transition: all 0.3s;}
+        
+        @keyframes pulseAmber { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6); } 70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
+        .state-center input.needs-update { animation: pulseAmber 1.5s infinite; border-color: var(--color-warning); background-color: rgba(245, 158, 11, 0.15); color: var(--color-warning); }
+        .boss-card.is-stage4 .state-center input { border-color: var(--color-stage4); color: var(--color-stage4); background-color: rgba(225, 29, 72, 0.15); }
+
+        .state-right { flex-grow: 1; padding: 0 10px; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative;}
+        .micro-timeline { position: relative; width: 100%; height: 10px; display: flex; align-items: center; margin-bottom: 8px;}
+        .mt-track { position: absolute; width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; }
+        
+        .mt-actual { position: absolute; height: 4px; background: var(--text-accent); border-radius: 2px; z-index: 2; transition: width 0.3s; box-shadow: 0 0 6px var(--text-accent);}
+        .mt-ghost { position: absolute; height: 4px; background: var(--color-warning); opacity: 0.9; border-radius: 2px; z-index: 1; transition: width 0.5s linear; box-shadow: 0 0 8px var(--color-warning);}
+        .boss-card.is-stage4 .mt-ghost { background: var(--color-stage4); box-shadow: 0 0 8px var(--color-stage4); }
+        
+        .mt-dot { position: absolute; z-index: 3; transform: translate(-50%, -50%); top: 50%; width: 8px; height: 8px; background: #475569; border-radius: 50%; transition: all 0.3s; box-shadow: 0 0 0 2px var(--bg-surface); display: flex; align-items: center; justify-content: center;}
+        .mt-dot.taurus { width: auto; height: auto; background: transparent; border-radius: 0; box-shadow: none; font-size: 0.95rem; color: #475569; }
+        
+        .mt-dot.active { background: var(--text-accent); }
+        .mt-dot.taurus.active { background: transparent; color: var(--text-accent); text-shadow: 0 0 6px var(--text-accent); }
+        .mt-dot.active-ghost { background: var(--color-warning); }
+        .boss-card.is-stage4 .mt-dot.active-ghost { background: var(--color-stage4); }
+        .mt-dot.taurus.active-ghost { background: transparent; color: var(--color-warning); text-shadow: 0 0 6px var(--color-warning); }
+        .boss-card.is-stage4 .mt-dot.taurus.active-ghost { color: var(--color-stage4); text-shadow: 0 0 6px var(--color-stage4); }
+        
+        .timeline-status-text { font-size: 0.75rem; color: #94a3b8; text-align: center; font-weight: 500; white-space: nowrap; letter-spacing: -0.2px; margin-top: 4px;}
+        .timeline-status-text .hl { font-family: ui-monospace, monospace; color: var(--text-secondary); font-size: 0.8rem;}
+        .timeline-status-text .warning { color: var(--color-warning); animation: pulseAmber 1.5s infinite; font-weight: bold;}
+
+        /* --- Capsule ETA UI --- */
+        .eta-capsule { display: none; justify-content: center; align-items: center; font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: var(--radius-pill); border: 1px solid rgba(56, 189, 248, 0.2); gap: 8px; white-space: nowrap; flex-wrap: nowrap;}
+        .boss-card.is-stage4 .eta-capsule { border-color: rgba(225, 29, 72, 0.4); background: rgba(225, 29, 72, 0.12);}
+        .eta-item { display: flex; align-items: center; gap: 6px; white-space: nowrap;}
+        .eta-divider { color: #334155; margin: 0 2px; font-weight: bold;}
+        .eta-label { color: var(--text-secondary); }
+        .boss-card.is-stage4 .eta-label { color: #cbd5e1; }
+        .eta-time { font-family: ui-monospace, monospace; font-weight: bold; color: var(--text-primary); font-size: 1rem;}
+        
+        /* --- Logs & Footer --- */
+        .edit-mode-container { display: flex; flex-direction: column; gap: 10px; z-index: 2;}
+        .edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+        .btn-text { padding: 6px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: bold; border: none; cursor: pointer; } .btn-text.save { background-color: var(--color-success); color: #000; } .btn-text.cancel { background-color: #475569; color: var(--text-primary); }
+        
+        .ai-panel { display: none; margin-top: 24px; padding: 14px 18px; background: rgba(168, 85, 247, 0.08); border-left: 4px solid #a855f7; border-radius: var(--radius-md); justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid rgba(168, 85, 247, 0.2); border-bottom: 1px solid rgba(168, 85, 247, 0.2);}
+        .ai-panel-title { color: #d8b4fe; font-size: 0.95rem; font-weight: bold; display: flex; align-items: center; gap: 8px;}
+        .ai-panel-counter { color: var(--text-accent); font-family: monospace; font-size: 1.05rem; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 6px;}
+        .btn-sync { width: auto; padding: 0 12px; font-weight: bold; font-size: 0.85rem; background-color: #334155; color: var(--text-primary); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; height: 34px; border: none; transition: 0.2s;}
+        .btn-sync:hover { background-color: #475569; }
+
+        .log-section { margin-top: 24px; border-top: 1px dashed #334155; padding-top: 20px; }
+        .log-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .log-row { background-color: rgba(30, 41, 59, 0.5); border-radius: var(--radius-sm); padding: 10px 14px; border-left: 3px solid var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; width: 100%; }
+        .watermark { text-align: center; font-size: 0.8rem; color: #475569; margin-top: 40px; padding-top: 20px; font-weight: normal; border-top: 1px solid #1e293b;}
+        .watermark span { color: var(--text-accent); font-weight: bold;}
+        .version-tag { background: #1e293b; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-top: 8px; letter-spacing: 0.5px; border: 1px solid #334155; font-size: 0.75rem;}
+
+        /* --- Numpad (แป้นพิมพ์ตัวเลข) --- */
+        .numpad-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(1px); z-index: 9999; display: none; align-items: flex-end; justify-content: center; }
+        .numpad-panel { background: var(--bg-surface); width: 100%; max-width: 450px; border-radius: 20px 20px 0 0; padding: 25px 20px; box-shadow: 0 -10px 25px rgba(0,0,0,0.5); animation: slideUp 0.2s ease-out; border-top: 1px solid #334155; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .numpad-header { text-align: center; margin-bottom: 20px; }
+        .numpad-title { color: var(--text-secondary); font-size: 1rem; margin-bottom: 4px; font-weight: bold; }
+        .numpad-value { font-size: 3rem; font-weight: bold; color: var(--text-accent); font-family: ui-monospace, monospace; height: 60px; display: flex; align-items: center; justify-content: center;}
+        
+        .time-box-group { display: flex; justify-content: center; align-items: center; gap: 8px; font-family: ui-monospace, monospace; font-size: 2.2rem; font-weight: bold; color: var(--text-accent);}
+        .time-box { background: var(--bg-input); border: 2px solid #334155; border-radius: 8px; padding: 0 10px; min-width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; transition: 0.2s; position: relative;}
+        .time-box.active { border-color: var(--text-accent); box-shadow: 0 0 12px rgba(56, 189, 248, 0.2); background: rgba(56, 189, 248, 0.05);}
+        /* 🚨 ไฮไลท์สีแดงเมื่อพิมพ์เกิน 59 */
+        .time-box.error { border-color: var(--color-danger); color: var(--color-danger); box-shadow: 0 0 12px rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05);}
+        
+        .blink-cursor { display: inline-block; width: 3px; height: 1.2em; background: var(--text-accent); animation: blink 1s step-end infinite; margin-left: 2px;}
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .numpad-btn { background: var(--bg-input); border: 1px solid #334155; color: var(--text-primary); font-size: 1.6rem; font-weight: bold; border-radius: 12px; padding: 18px 0; cursor: pointer; transition: all 0.1s; display: flex; justify-content: center; align-items: center; }
+        .numpad-btn:active { background: #334155; transform: scale(0.92); } .numpad-btn.del { color: var(--color-danger); } .numpad-btn.action { background: var(--color-edit); font-size: 1.1rem; color: #fff; } .numpad-btn.action.done { background: var(--color-success); color: #000; }
+        /* 🔒 ล็อกปุ่มเมื่อมี Error */
+        .numpad-btn.action.disabled { background: #475569 !important; color: #94a3b8 !important; cursor: not-allowed; transform: none !important; }
+        
+        /* --- Modal Boxes --- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 20px;}
+        .modal-content { background: var(--bg-surface); width: 100%; border-radius: var(--radius-lg); border: 1px solid #334155; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+        .modal-content.help { max-width: 700px; } .modal-content.settings { max-width: 500px; }
+        .modal-header { padding: 16px 20px; background: rgba(15, 23, 42, 0.5); border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.1rem;}
+        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; transition: 0.2s;} .modal-close:hover { color: var(--color-danger); }
+        .modal-body { padding: 20px 24px; overflow-y: auto; font-size: 0.95rem; line-height: 1.6;}
+        
+        .setting-section { margin-bottom: 20px; }
+        .setting-section h4 { color: var(--text-accent); margin-bottom: 12px; font-size: 1rem; border-bottom: 1px solid #334155; padding-bottom: 6px;}
+        .setting-row { display: flex; align-items: center; margin-bottom: 12px; gap: 10px;}
+        
+        .setting-box-highlight { background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: var(--radius-md); margin-bottom: 15px;}
+        .setting-box-highlight h5 { color: var(--text-accent); margin-bottom: 8px; font-size: 0.95rem; }
+        .range-wrapper { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .range-wrapper input[type=range] { flex: 1; accent-color: var(--color-edit); }
+        .range-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); padding: 0 5px;}
+
+        /* CSS สำหรับคู่มือการใช้งาน */
+        .help-section { margin-bottom: 24px; background: rgba(0,0,0,0.15); padding: 14px 18px; border-radius: var(--radius-md); border-left: 4px solid var(--text-accent);} 
+        .help-section h4 { color: var(--text-primary); margin-bottom: 12px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;}
+        .help-list { list-style: none; margin-left: 0; } 
+        .help-list li { position: relative; padding-left: 20px; margin-bottom: 10px; color: var(--text-secondary); font-size: 0.95rem;} 
+        .help-list li::before { content: '▪'; color: var(--text-accent); position: absolute; left: 0;}
+        .help-list b { color: var(--text-primary); }
+
+        @media (max-width: 900px) { 
+            .boss-list { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } 
+            .add-form-group { flex-direction: column; align-items: stretch; } 
+            .toolbar-actions { width: 100%; justify-content: flex-start;} 
+            .sort-select { flex: 1; }
+            .search-box { width: 100%; } 
+            .btn-trigger-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; } 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- 📌 ส่วนควบคุมหลัก -->
+        <div class="sticky-controls">
+            <div class="header-row">
+                <div class="title-group">
+                    <h1>🔥 Boss Timer Pro</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-circle" onclick="openSettings()" title="ตั้งค่าระบบ">⚙️</button>
+                    <button class="btn-circle" onclick="openHelp()" title="คู่มือการใช้งาน">📖</button>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="add-form-group">
+                    <input type="text" id="bossName" placeholder="พิมพ์ชื่อบอสใหม่..." autocomplete="off">
+                    
+                    <input type="hidden" id="inputHours" value="0">
+                    <input type="hidden" id="inputMinutes" value="0">
+                    <input type="hidden" id="inputSeconds" value="0">
+                    <input type="hidden" id="inputInstantStage" value="1.0">
+
+                    <div class="btn-trigger-group">
+                        <button type="button" class="btn-trigger normal" onclick="openNumpad('inputHours', 'inputMinutes', 2, 'ตั้งเวลาบอส (รอเกิด)')">⏱️ ระบุเวลา</button>
+                        <button type="button" class="btn-trigger instant" id="btnInstantStage" onclick="openNumpad('inputInstantStage', null, 4, 'กรอก Stage ปัจจุบัน')">⚡ ระบุ Stage</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🗂️ แถบเครื่องมือจัดการบอส -->
+        <div class="list-toolbar">
+            <h3>⚔️ รายการบอส</h3>
+            
+            <div class="toolbar-actions">
+                <select id="sortOption" class="sort-select" onchange="applySort(true)">
+                    <option value="time">⏱️ เรียงตามเวลา (ดึงดาวขึ้นบนสุด)</option>
+                    <option value="name_asc">🔠 เรียงชื่อ (น้อย ➔ มาก)</option>
+                    <option value="name_desc">🔠 เรียงชื่อ (มาก ➔ น้อย)</option>
+                </select>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="ค้นหาชื่อ..." onkeyup="renderBosses()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 💳 พื้นที่สำหรับแสดงการ์ดบอสทั้งหมด -->
+        <div class="boss-list" id="timersContainer"></div>
+
+        <!-- 🧠 แผงควบคุม AI สำหรับ Admin -->
+        <div id="aiPanelContainer" class="ai-panel">
+            <div class="ai-panel-title">
+                🧠 AI Telemetry Dataset (Beta) 
+                <span class="ai-panel-counter" id="aiDataCount">[ สะสม: 0 รอบ ]</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-sync" style="background-color: #a855f7; color: white; border: 1px solid #c084fc;" onclick="exportAiDataset()">📥 Export Dataset</button>
+                <button class="btn-sync" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid var(--color-danger); color: var(--color-danger);" onclick="clearAiDataset()">🗑️ ล้างข้อมูล AI</button>
+            </div>
+        </div>
+
+        <!-- 📜 ประวัติบอสที่ถูกลบไปแล้ว -->
+        <div class="log-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--text-secondary); font-size: 1rem;">📜 ประวัติที่ลบแล้ว</h3>
+                <button onclick="clearLogs()" style="background: none; border: 1px solid var(--color-danger); color: var(--color-danger); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">ล้างประวัติ</button>
+            </div>
+            <div class="log-list" id="logContainer"></div>
+        </div>
+
+        <div class="watermark">
+            © 2026 Crafted by <span>Gensu</span>. All rights reserved.<br>
+            <div class="version-tag">Version 1.9.0 | Build: 2026-07-27 | Dynamic AI Engine</div>
+        </div>
+    </div>
+
+    <!-- 🔢 แป้นพิมพ์ตัวเลข (Numpad) -->
+    <div id="numpadOverlay" class="numpad-overlay" onclick="if(event.target===this) closeNumpad()">
+        <div class="numpad-panel">
+            <div class="numpad-header">
+                <div id="numpadTitle" class="numpad-title">ตั้งค่าเวลา</div>
+                <div id="numpadValue" class="numpad-value">0:00:00</div>
+            </div>
+            <div class="numpad-grid">
+                <button class="numpad-btn" onclick="numpadType('1')">1</button>
+                <button class="numpad-btn" onclick="numpadType('2')">2</button>
+                <button class="numpad-btn" onclick="numpadType('3')">3</button>
+                <button class="numpad-btn" onclick="numpadType('4')">4</button>
+                <button class="numpad-btn" onclick="numpadType('5')">5</button>
+                <button class="numpad-btn" onclick="numpadType('6')">6</button>
+                <button class="numpad-btn" onclick="numpadType('7')">7</button>
+                <button class="numpad-btn" onclick="numpadType('8')">8</button>
+                <button class="numpad-btn" onclick="numpadType('9')">9</button>
+                <button class="numpad-btn" id="numpadDotBtn" onclick="numpadType('.')">•</button>
+                <button class="numpad-btn" onclick="numpadType('0')">0</button>
+                <button class="numpad-btn del" onclick="numpadDel()">⌫</button>
+                <div style="grid-column: span 3;"><button class="numpad-btn action" id="numpadNextBtn" onclick="numpadNext()" style="width:100%; border-radius: 12px;">ถัดไป ➔</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⚙️ หน้าต่างตั้งค่า (Settings Modal) -->
+    <div id="settingsModal" class="modal-overlay" onclick="if(event.target===this) closeSettings()">
+        <div class="modal-content settings">
+            <div class="modal-header">⚙️ ตั้งค่าระบบ <button class="modal-close" onclick="closeSettings()">✕</button></div>
+            <div class="modal-body">
+                <div class="setting-section">
+                    <h4>🤖 การคำนวณ Hybrid Engine</h4>
+                    <label class="setting-row" style="cursor:pointer; font-weight: bold; color: var(--text-primary); margin-bottom: 15px;">
+                        <input type="checkbox" id="enableStages" checked onchange="saveSettings(); renderBosses();"> เปิดใช้งานระบบ Stage (สำหรับเกมที่มีเงื่อนไข)
+                    </label>
+                    <div class="setting-box-highlight" id="endGameMapContainer">
+                        <h5>🔥 แมพสูงสุดของแพตช์ปัจจุบัน (End-Game Map)</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.3;">ระบุเลขแมพที่มีคนฟาร์มเยอะที่สุด ระบบจะใช้ <b>Fast Profile</b> เป็นมาตรฐาน</p>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color:var(--text-primary);">เลเวลแมพ:</span>
+                            <input type="text" id="endGameMap" value="153" style="width: 80px; text-align: center; font-weight: bold; font-size: 1rem;" onchange="saveSettings(); applySort(true);">
+                        </div>
+                    </div>
+                    
+                    <!-- 🚫 ซ่อนแผงตั้งค่า AI Sensitivity: ตาม Data พฤติกรรมผู้เล่นที่แห่ล้นห้อง เราบังคับใช้ค่าฉับไวสูงสุด (1.0) เป็น Default เลย -->
+                    <div class="setting-box-highlight" style="margin-bottom: 0; display: none;" id="emaAlphaContainer">
+                        <h5>⚡ ความไวในการพยากรณ์เวลา (AI Sensitivity)</h5>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.3;">เลื่อนซ้ายเพื่อความสมูท | เลื่อนขวาเพื่อตอบสนองความเร็วจริงแบบทันที</p>
+                        <div class="range-wrapper">
+                            <span style="font-size:0.85rem;">สมูท</span>
+                            <input type="range" id="emaAlpha" min="0.1" max="1.0" step="0.1" value="1.0" onchange="saveSettings(); applySort(true);">
+                            <span style="font-size:0.85rem;">ฉับไว</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-section">
+                    <h4>🔊 เสียงและการแจ้งเตือน</h4>
+                    <label class="setting-row">ระดับเสียง: <input type="range" id="volumeControl" min="0" max="100" value="100" onchange="testSound(); saveSettings();" style="flex-grow:1;"></label>
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enablePreAlert" onchange="saveSettings()"> เตือนล่วงหน้า <input type="number" id="preAlertTime" value="2" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableRepeatAlert" checked onchange="saveSettings()"> เตือนซ้ำเมื่อบอสเกิด ทุกๆ <input type="number" id="alertInterval" value="10" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableEpicSound" checked onchange="saveSettings()"> 🎵 เสียงเตือนพิเศษ Stage 4 (Epic Sound)</label>
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableStage5Sound" checked onchange="saveSettings()"> 🎺 เสียงแตรออกรบตอนบอสเกิด (Stage 5)</label>
+                </div>
+                
+                <div class="setting-section">
+                    <h4>💤 การจัดการการ์ดอัตโนมัติ</h4>
+                    <label class="setting-row" style="cursor:pointer; color: var(--text-primary);">
+                        <input type="checkbox" id="autoSleepEnable" checked onchange="saveSettings()"> 💤 พักการ์ดอัตโนมัติ (Auto-Sleep) ทิ้งไว้เกิน <input type="number" id="autoSleepHrs" value="6" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
+                    </label>
+                    <label class="setting-row" style="cursor:pointer; color: var(--color-danger);">
+                        <input type="checkbox" id="autoDeleteEnable" onchange="saveSettings()"> 🗑️ ลบการ์ดอัตโนมัติ (Auto-Delete) ทิ้งไว้เกิน <input type="number" id="autoDeleteHrs" value="12" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
+                    </label>
+                    
+                    <div style="display:flex; gap:10px; margin-top: 15px; margin-bottom: 10px;">
+                        <button class="btn-sync" onclick="importData()" style="flex:1; justify-content:center;">📥 นำเข้าเซฟ (Import)</button>
+                        <button class="btn-sync" onclick="exportData()" style="flex:1; justify-content:center;">📤 ส่งออกเซฟ (Export)</button>
+                    </div>
+                    <button class="btn-sync" style="width:100%; justify-content:center; background-color:rgba(239, 68, 68, 0.1); color:var(--color-danger); border:1px solid var(--color-danger);" onclick="clearAllBosses()">🔴 ล้างกระดานบอสทั้งหมด (Reset Board)</button>
+                </div>
+
+                <div class="setting-section" id="adminSettingsSection" style="display:none; margin-bottom: 0;">
+                    <h4 style="color:#a855f7; border-bottom-color: rgba(168, 85, 247, 0.3);">🧠 ขั้นสูง (Admin Only)</h4>
+                    <label class="setting-row" style="cursor:pointer; color: #cbd5e1;"><input type="checkbox" id="showAiPanel" onchange="saveSettings(); toggleAiPanelVisibility();"> แสดงแผงควบคุม AI Telemetry ด้านล่าง</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📖 หน้าต่างคู่มือการใช้งาน -->
+    <div id="helpModal" class="modal-overlay" onclick="if(event.target===this) closeHelp()">
+        <div class="modal-content help">
+            <div class="modal-header">📖 คู่มือการใช้งานแบบเต็ม (Full Version) <button class="modal-close" onclick="closeHelp()">✕</button></div>
+            <div class="modal-body">
+                <div class="help-section">
+                    <h4>➕ 1. การเพิ่มและตั้งเวลาบอส</h4>
+                    <ul class="help-list">
+                        <li><b>⏱️ ระบุเวลา:</b> พิมพ์ชื่อบอส (ด้านบน) แล้วกดปุ่มนี้เพื่อตั้งเวลานับถอยหลัง (ชั่วโมง:นาที:วินาที) เหมาะสำหรับบอสที่ยังไม่เกิด</li>
+                        <li><b>⚡ ระบุ Stage:</b> พิมพ์ชื่อบอส แล้วกดปุ่มนี้เพื่อกรอกเลขร่าง (เช่น 2.5) เหมาะสำหรับบอสที่เกิดไปแล้ว ระบบจะคำนวณเวลาเกิดย้อนหลังให้อัตโนมัติ</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4>⭐ 2. การจัดการการ์ดและการจัดเรียง</h4>
+                    <ul class="help-list">
+                        <li><b>การติดดาว (⭐):</b> กดที่รูปดาวหน้าชื่อบอส หากบอสนั้น "เกิดแล้ว" การ์ดจะถูกดันขึ้นไปอยู่บนสุดของหน้าจอเสมอ ทำให้ตามล่าได้ง่ายขึ้น</li>
+                        <li><b>เมนูจัดเรียง (Dropdown):</b> สามารถเลือกจัดเรียงการ์ดได้ 2 แบบ คือ "เรียงตามเวลาเกิด" หรือ "เรียงตามชื่อบอส (ก-ฮ, 1-100)"</li>
+                        <li><b>ปุ่ม ✏️ (ดินสอ):</b> ใช้สำหรับแก้ไขเวลาหรือแก้ชื่อบอส</li>
+                        <li><b>ปุ่ม 🗑️ (ถังขยะ):</b> ใช้สำหรับลบบอสตัวนั้นทิ้งออกจากกระดาน</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4>💤 3. โหมดพักการ์ด (Sleep Mode)</h4>
+                    <ul class="help-list">
+                        <li><b>ปุ่ม 💤 (พักการ์ด):</b> เมื่อเราตีบอสเสร็จแล้ว ให้กดปุ่มนี้ การ์ดจะถูกย่อขนาดและเก็บลงไปด้านล่างสุดของจอเพื่อไม่ให้เกะกะ</li>
+                        <li><b>พักอัตโนมัติ (Auto-Sleep):</b> หากเราปล่อยบอสทิ้งไว้นานๆ โดยไม่ได้ทำอะไร ระบบจะช่วยพับการ์ดเก็บให้อัตโนมัติ (สามารถไปปรับเวลาได้ในเมนูตั้งค่า)</li>
+                        <li><b>วิธีปลุกการ์ด:</b> หากต้องการนำบอสตัวเดิมกลับมาใช้ แค่กดปุ่ม ✏️ (แก้ไข) แล้วกรอกเวลาใหม่ การ์ดจะตื่นขึ้นมาทำงานต่อทันที!</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4>🤖 4. ระบบพยากรณ์เวลา (AI & Stage)</h4>
+                    <ul class="help-list">
+                        <li>เมื่อเวลาบอสเกิดแล้ว การ์ดจะเปลี่ยนเป็นแถบเครื่องมือ <b>อัปเดตสเตจ (1-5)</b></li>
+                        <li>เมื่อมีคนในเกมแจ้งสเตจ ให้เรากดที่ <b>ตัวเลขในช่อง</b> เพื่ออัปเดตตาม</li>
+                        <li>ระบบจะคำนวณความเร็วในการตีของคนในเซิร์ฟเวอร์ และพยากรณ์ (เส้นสีเหลือง) ว่าจะรวมพล (Stage 4) หรือ (Stage 5) ตอนกี่โมง</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4>⚙️ 5. การตั้งค่าและการสำรองข้อมูล</h4>
+                    <ul class="help-list">
+                        <li><b>เสียงเตือน:</b> คุณสามารถไปที่เมนู ⚙️ เพื่อเปิด-ปิดเสียง, ปรับความดัง, ตั้งเตือนล่วงหน้า และตั้งให้เตือนซ้ำได้</li>
+                        <li><b>การย้ายข้อมูล (Export/Import):</b> หากต้องการย้ายไปเปิดบนคอมพิวเตอร์หรือมือถือเครื่องอื่น ให้กดปุ่ม <b>"ส่งออกเซฟ"</b> เพื่อคัดลอกรหัส และนำไปวางในปุ่ม <b>"นำเข้าเซฟ"</b> ที่เครื่องใหม่ได้เลย ข้อมูลทั้งหมดจะตามไปทันที</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ส่วนของการทำงานด้วย JavaScript (ควบคุมลอจิกทั้งหมด) -->
+    <script>
+        // เปิดใช้งานระบบวิเคราะห์ AI (แอดมินเท่านั้น)
+        const ENABLE_AI_TELEMETRY = 1; 
+        const ALLOWED_DOMAIN = "jade-dango-30bcaa.netlify.app"; 
+        const SECRET_KEY_BASE64 = "Z2Vuc3VfYWRtaW4="; 
+        const currentDomain = window.location.hostname;
+        const userKey = window.location.hash.substring(1); 
+        let isAdmin = false;
+
+        if (userKey && btoa(userKey) === SECRET_KEY_BASE64) {
+            isAdmin = true;
+        } else if (currentDomain !== ALLOWED_DOMAIN && currentDomain !== "localhost" && currentDomain !== "127.0.0.1") {
+            document.body.innerHTML = `
+                <div style="display:flex; height:100vh; background:#0f172a; color:#ef4444; justify-content:center; align-items:center; flex-direction:column; font-family:sans-serif;">
+                    <h1 style="font-size:3rem; margin-bottom:10px;">🚫 Unauthorized</h1>
+                </div>`;
+            throw new Error("Access Denied");
+        }
+
+        // ==========================================
+        // 🧮 ส่วนที่ 1: ระบบสมการคำนวณเวลา (Baseline Engine)
+        // ==========================================
+        function getCumulativeBaselineTime(stage, isFast = false) {
+            /*
+             * 📊 โครงสร้างโค้งอัตราเร่ง (Curve Ratio) ตามพฤติกรรมผู้เล่น
+             * ถอดรหัสจาก Telemetry Data (บอส 153/x):
+             * - ผู้เล่นมักแห่เข้าห้องตั้งแต่ต้น ทำให้ Stage 1 กินเวลาส่วนใหญ่ (ประมาณ 45%)
+             * - เมื่อคนเริ่มเต็มห้อง (Snowball Effect) สเตจหลังๆ จะเร่งความเร็วแบบทวีคูณ (สเตจแคบลง)
+             * - Stage 4 -> 5 คือช่วง Sprint สุดท้าย บอสตายไวมาก ใช้เวลาแค่ 10%
+             * 
+             * - Fast Profile (End-game): ค่าเฉลี่ยจบที่ ~23.3 นาที (1,400 วิ)
+             * - Normal Profile (แมปทั่วไป/ร้าง): ตั้งเผื่อไว้ที่ 60 นาที (3,600 วิ) แล้วใช้ Dynamic Scale หด/ขยายทีหลัง
+             */
+            const durations = isFast ? [630, 350, 280, 140] : [1620, 900, 720, 360];
+            let total = 0;
+            if (stage > 1) total += Math.min(1, stage - 1) * durations[0]; 
+            if (stage > 2) total += Math.min(1, stage - 2) * durations[1]; 
+            if (stage > 3) total += Math.min(1, stage - 3) * durations[2]; 
+            if (stage > 4) total += Math.min(1, stage - 4) * durations[3]; 
+            return total;
+        }
+
+        function getStageFromTime(time, isFast = false) {
+            const d = isFast ? [630, 350, 280, 140] : [1620, 900, 720, 360];
+            if (time <= 0) return 1.0;
+            if (time <= d[0]) return 1.0 + time / d[0];
+            if (time <= d[0] + d[1]) return 2.0 + (time - d[0]) / d[1];
+            if (time <= d[0] + d[1] + d[2]) return 3.0 + (time - (d[0]+d[1])) / d[2];
+            if (time <= d[0] + d[1] + d[2] + d[3]) return 4.0 + (time - (d[0]+d[1]+d[2])) / d[3];
+            return 5.0;
+        }
+
+        // ==========================================
+        // 💾 ส่วนที่ 2: ตัวแปรหลัก และระบบจัดการ Modal
+        // ==========================================
+        let bosses = []; 
+        let deletedLogs = []; 
+        let aiDataset = []; 
+        let editingBossId = null; 
+        let audioCtx;
+        
+        let activeInputId = null; let nextTargetId = null; let maxInputDigits = 2; let isNewInputSession = true;
+        let currentSettings = {}; let standbyTimeout = null; 
+
+        function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
+        function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+        function openHelp() { document.getElementById('helpModal').style.display = 'flex'; }
+        function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
+        
+        function showToast(message) {
+            let container = document.getElementById('toast-container');
+            if (!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
+            const toast = document.createElement('div'); toast.className = 'toast-message'; toast.innerHTML = message;
+            container.appendChild(toast); void toast.offsetWidth; toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); setTimeout(() => { if (toast.parentNode) toast.remove(); }, 400); }, 2000);
+        }
+
+        // ==========================================
+        // ⌨️ ส่วนที่ 3: ระบบ Numpad ควบคุมการกรอกเวลา (อัปเดตใหม่)
+        // ==========================================
+        function getTimeGroupFields(id) {
+            if (!id) return null;
+            if (id.includes('inputHours') || id.includes('inputMinutes') || id.includes('inputSeconds')) {
+                return { h: 'inputHours', m: 'inputMinutes', s: 'inputSeconds', type: 'add' };
+            }
+            if (id.startsWith('editHours-') || id.startsWith('editMinutes-') || id.startsWith('editSeconds-')) {
+                const bid = id.split('-')[1]; return { h: `editHours-${bid}`, m: `editMinutes-${bid}`, s: `editSeconds-${bid}`, type: 'edit', bossId: bid };
+            }
+            return null;
+        }
+
+        function updateNumpadDisplay() {
+            const group = getTimeGroupFields(activeInputId);
+            const valEl = document.getElementById('numpadValue');
+            const nextBtn = document.getElementById('numpadNextBtn');
+            const dotBtn = document.getElementById('numpadDotBtn');
+            
+            if (group) {
+                if (dotBtn) dotBtn.innerText = ':';
+                let hVal = document.getElementById(group.h).value;
+                let mVal = document.getElementById(group.m).value;
+                let sVal = document.getElementById(group.s).value;
+
+                // เช็ค Error หากพิมพ์เกิน 59
+                let hasError = false;
+                const mNum = parseInt(mVal || '0');
+                const sNum = parseInt(sVal || '0');
+                const mErr = mNum > 59;
+                const sErr = sNum > 59;
+                if (mErr || sErr) hasError = true;
+                
+                // รูปแบบการแสดงผล: ถ้ากำลังพิมพ์อยู่ ให้โชว์เลขเพียวๆ ถ้าข้ามช่องไปแล้วค่อยเติม 0
+                const dispH = hVal === '' ? (activeInputId === group.h ? '' : '0') : hVal;
+                const dispM = mVal === '' ? (activeInputId === group.m ? '' : '00') : (activeInputId === group.m ? mVal : String(mVal).padStart(2, '0'));
+                const dispS = sVal === '' ? (activeInputId === group.s ? '' : '00') : (activeInputId === group.s ? sVal : String(sVal).padStart(2, '0'));
+
+                let html = `<div class="time-box-group">`;
+                html += `<div class="time-box ${activeInputId === group.h ? 'active' : ''}">${dispH}${activeInputId === group.h ? '<span class="blink-cursor"></span>' : ''}</div><span>:</span>`;
+                html += `<div class="time-box ${activeInputId === group.m ? 'active' : ''} ${mErr ? 'error' : ''}">${dispM}${activeInputId === group.m ? '<span class="blink-cursor"></span>' : ''}</div><span>:</span>`;
+                html += `<div class="time-box ${activeInputId === group.s ? 'active' : ''} ${sErr ? 'error' : ''}">${dispS}${activeInputId === group.s ? '<span class="blink-cursor"></span>' : ''}</div></div>`;
+                valEl.innerHTML = html;
+                
+                if (activeInputId === group.s) { 
+                    nextBtn.innerText = group.type === 'add' ? "➕ Add Boss" : "✓ Save Edit"; 
+                    nextBtn.className = hasError ? "numpad-btn action disabled" : "numpad-btn action done"; 
+                } else { 
+                    nextBtn.innerText = "ถัดไป ➔"; 
+                    nextBtn.className = hasError ? "numpad-btn action disabled" : "numpad-btn action"; 
+                }
+            } else {
+                if (dotBtn) dotBtn.innerText = '•';
+                const inputEl = document.getElementById(activeInputId); let val = inputEl.value;
+                valEl.innerHTML = val + '<span class="blink-cursor" style="font-size:3rem;"></span>';
+                nextBtn.innerText = (activeInputId === 'inputInstantStage') ? "➕ Add Boss" : "✓ ตกลง";
+                nextBtn.className = "numpad-btn action done";
+            }
+        }
+
+        function openNumpad(currentId, nextId, limit, titleText) {
+            activeInputId = currentId; nextTargetId = nextId; maxInputDigits = limit; isNewInputSession = true; 
+            if (currentId === 'inputHours') {
+                document.getElementById('inputHours').value = ''; document.getElementById('inputMinutes').value = ''; document.getElementById('inputSeconds').value = '';
+            } else if (currentId === 'inputInstantStage') { document.getElementById('inputInstantStage').value = '1.0'; }
+            else if (currentId.startsWith('editHours')) {
+                // เคลียร์ 0 ทิ้งตอนเริ่มต้นแก้ไข เพื่อให้เคอร์เซอร์รอรับค่าแบบอิสระ
+                const group = getTimeGroupFields(currentId);
+                if (document.getElementById(group.h).value === '0') document.getElementById(group.h).value = '';
+            }
+            document.getElementById('numpadTitle').innerText = titleText;
+            document.getElementById('numpadOverlay').style.display = 'flex'; updateNumpadDisplay();
+        }
+
+        function closeNumpad() { document.getElementById('numpadOverlay').style.display = 'none'; activeInputId = null; }
+
+        function numpadType(char) {
+            if (!activeInputId) return;
+            const group = getTimeGroupFields(activeInputId);
+            
+            if (group) {
+                if (char === '.' || char === ':') {
+                    if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; } 
+                    else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; }
+                    updateNumpadDisplay(); return;
+                }
+                
+                let limit = (activeInputId === group.h) ? 1 : 2;
+                const inputEl = document.getElementById(activeInputId); let val = inputEl.value;
+                
+                if (isNewInputSession) { val = ''; isNewInputSession = false; }
+                
+                if (val.length < limit) { val += char; inputEl.value = val; }
+                
+                if (val.length >= limit) {
+                    if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; } 
+                    else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; }
+                }
+                updateNumpadDisplay();
+            } else {
+                if (char === ':') char = '.'; 
+                const inputEl = document.getElementById(activeInputId); let val = inputEl.value;
+                if (isNewInputSession) { val = ''; isNewInputSession = false; }
+                if (val === '0' && char !== '.') val = '';
+                if (char === '.' && val.includes('.')) return; 
+                if (val.length < maxInputDigits) { val += char; inputEl.value = val; }
+                updateNumpadDisplay();
+            }
+        }
+
+        function numpadDel() {
+            if (!activeInputId) return;
+            const group = getTimeGroupFields(activeInputId);
+            if (group) {
+                const inputEl = document.getElementById(activeInputId); let val = inputEl.value;
+                if (val === '' || isNewInputSession) {
+                    if (activeInputId === group.s) { activeInputId = group.m; isNewInputSession = false; } 
+                    else if (activeInputId === group.m) { activeInputId = group.h; isNewInputSession = false; }
+                } else { 
+                    val = val.slice(0, -1); 
+                    inputEl.value = val; 
+                    isNewInputSession = false; 
+                }
+                updateNumpadDisplay();
+            } else {
+                isNewInputSession = false; const inputEl = document.getElementById(activeInputId);
+                let val = inputEl.value; val = val.slice(0, -1); if (val === '') val = '0';
+                inputEl.value = val; updateNumpadDisplay();
+            }
+        }
+
+        function numpadNext() {
+            if (!activeInputId) return;
+            const group = getTimeGroupFields(activeInputId);
+            if (group) {
+                // ตรวจสอบข้อมูลก่อนข้าม (ถ้าเกิน 59 บล็อกไว้ไม่ให้ข้ามหรือเซฟ)
+                let mVal = parseInt(document.getElementById(group.m).value || '0');
+                let sVal = parseInt(document.getElementById(group.s).value || '0');
+                if (mVal > 59 || sVal > 59) return; 
+
+                if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; updateNumpadDisplay(); } 
+                else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; updateNumpadDisplay(); } 
+                else if (activeInputId === group.s) { 
+                    closeNumpad(); 
+                    // ป้องกันค่าว่างก่อนนำไปประมวลผล
+                    if(!document.getElementById(group.h).value) document.getElementById(group.h).value = '0';
+                    if(!document.getElementById(group.m).value) document.getElementById(group.m).value = '0';
+                    if(!document.getElementById(group.s).value) document.getElementById(group.s).value = '0';
+
+                    if (group.type === 'add') { addBoss('normal'); } else if (group.type === 'edit') { saveEditBoss(parseInt(group.bossId)); } 
+                }
+                return;
+            }
+            
+            if (activeInputId.startsWith('state-input-')) {
+                const bossId = parseInt(activeInputId.replace('state-input-', '')); const boss = bosses.find(b => b.id === bossId);
+                if (boss && !boss.isStandby) {
+                    const newVal = parseFloat(document.getElementById(activeInputId).value) || 1.0;
+                    boss.stateInput = Math.max(1.0, newVal).toString();
+                    if (!boss.stateHistory) boss.stateHistory = [{ s: 1.0, t: boss.spawnTime }];
+                    
+                    const nowTime = Date.now(); boss.hasManualUpdate = true;
+                    if (boss.stateHistory.length > 0 && (nowTime - boss.stateHistory[boss.stateHistory.length-1].t < 15000)) { boss.stateHistory[boss.stateHistory.length-1] = { s: boss.stateInput, t: nowTime }; } 
+                    else { boss.stateHistory.push({ s: boss.stateInput, t: nowTime }); }
+                    
+                    saveData(); applySort(true); 
+                }
+            } else if (activeInputId === 'inputInstantStage') {
+                const newVal = parseFloat(document.getElementById('inputInstantStage').value) || 1.0;
+                document.getElementById('inputInstantStage').value = Math.max(1.0, newVal).toString();
+                closeNumpad(); addBoss('instant'); return;
+            }
+            closeNumpad();
+        }
+
+        // ==========================================
+        // ⚙️ ส่วนที่ 4: การบันทึก/โหลดข้อมูล และการตั้งค่า
+        // ==========================================
+        function saveData() { 
+            localStorage.setItem('bossTimersData', JSON.stringify(bosses)); 
+            localStorage.setItem('bossLogsData', JSON.stringify(deletedLogs)); 
+        }
+        
+        function saveSettings() {
+            currentSettings = {
+                enableStages: document.getElementById('enableStages').checked,
+                vol: document.getElementById('volumeControl').value, 
+                enablePreAlert: document.getElementById('enablePreAlert').checked, 
+                preAlertTime: document.getElementById('preAlertTime').value,
+                enableRepeatAlert: document.getElementById('enableRepeatAlert').checked, 
+                interval: document.getElementById('alertInterval').value,
+                autoSleepEnable: document.getElementById('autoSleepEnable').checked,
+                autoSleepHrs: document.getElementById('autoSleepHrs').value,
+                autoDeleteEnable: document.getElementById('autoDeleteEnable').checked, 
+                autoDeleteHrs: document.getElementById('autoDeleteHrs').value,
+                enableEpicSound: document.getElementById('enableEpicSound').checked,
+                enableStage5Sound: document.getElementById('enableStage5Sound').checked,
+                showAiPanel: document.getElementById('showAiPanel').checked,
+                endGameMap: document.getElementById('endGameMap').value.trim(),
+                emaAlpha: 1.0, // 🔒 บังคับใช้ความไวสูงสุดเสมอ ตามพฤติกรรม Snowball Effect ของผู้เล่นที่ไหลเข้าไม่หยุด
+                patch153Applied: true 
+            };
+            localStorage.setItem('bossSettings', JSON.stringify(currentSettings));
+            document.getElementById('endGameMapContainer').style.opacity = currentSettings.enableStages ? '1' : '0.4';
+            document.getElementById('btnInstantStage').style.display = currentSettings.enableStages ? 'inline-flex' : 'none';
+        }
+
+        function toggleAiPanelVisibility() {
+            const isChecked = document.getElementById('showAiPanel').checked;
+            const aiPanel = document.getElementById('aiPanelContainer');
+            if (isAdmin && isChecked && ENABLE_AI_TELEMETRY === 1) { aiPanel.style.display = 'flex'; updateAiCounterDisplay(); } 
+            else { aiPanel.style.display = 'none'; }
+        }
+
+        function updateAiCounterDisplay() {
+            if (!isAdmin) return;
+            const countEl = document.getElementById('aiDataCount');
+            if (countEl) countEl.innerText = `[ สะสม: ${aiDataset.length} รอบ ]`;
+        }
+
+        function processTelemetry(boss) {
+            if (ENABLE_AI_TELEMETRY !== 1) return;
+            if (boss.telemetrySaved) return; 
+            if (!boss.stateHistory || boss.stateHistory.length < 2) return;
+            for (let i = 1; i < boss.stateHistory.length; i++) { if ((boss.stateHistory[i].t - boss.stateHistory[i-1].t) > (3 * 60 * 60 * 1000)) { return; } }
+            const segments = [];
+            for (let i = 1; i < boss.stateHistory.length; i++) {
+                const prev = boss.stateHistory[i - 1]; const curr = boss.stateHistory[i];
+                let duration = (curr.t - prev.t) / 1000; if (duration < 0) duration = Math.abs(duration);
+                segments.push({ fromStage: prev.s, toStage: curr.s, durationSeconds: duration });
+            }
+            const lastState = parseFloat(boss.stateHistory[boss.stateHistory.length - 1].s) || 0;
+            let totalDur = (boss.stateHistory[boss.stateHistory.length - 1].t - boss.stateHistory[0].t) / 1000;
+            if (totalDur < 0) totalDur = Math.abs(totalDur);
+
+            const payload = {
+                bossName: boss.name, spawnTime: boss.spawnTime, endTime: Date.now(),
+                totalDurationSeconds: totalDur, updatesCount: boss.stateHistory.length,
+                isCompleteCycle: (lastState >= 5.0), segments: segments, rawHistory: boss.stateHistory
+            };
+            aiDataset.push(payload); boss.telemetrySaved = true; 
+            localStorage.setItem('bossAiDataset', JSON.stringify(aiDataset)); updateAiCounterDisplay();
+        }
+
+        function exportAiDataset() {
+            if (ENABLE_AI_TELEMETRY !== 1) return;
+            if (aiDataset.length === 0) { alert("ยังไม่มีข้อมูล AI ในขณะนี้ครับ"); return; }
+            const dataStr = JSON.stringify(aiDataset, null, 2);
+            if (navigator.clipboard && window.isSecureContext) { 
+                navigator.clipboard.writeText(dataStr).then(() => alert(`🧠 คัดลอก AI Dataset สำเร็จ! (${aiDataset.length} Cycles)`)).catch(e => prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr));
+            } else { prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr); }
+        }
+
+        function clearAiDataset() {
+            if(confirm("⚠️ ยืนยันการล้างข้อมูล AI Dataset สะสมทั้งหมดหรือไม่?")) {
+                aiDataset = []; localStorage.removeItem('bossAiDataset'); updateAiCounterDisplay(); alert("🗑️ ล้างข้อมูล AI เรียบร้อยแล้วครับ");
+            }
+        }
+
+        function loadData() {
+            const savedBosses = localStorage.getItem('bossTimersData'); const savedLogs = localStorage.getItem('bossLogsData'); const savedSettings = localStorage.getItem('bossSettings');
+            const savedAiDataset = localStorage.getItem('bossAiDataset');
+
+            if (savedBosses) bosses = JSON.parse(savedBosses); if (savedLogs) deletedLogs = JSON.parse(savedLogs);
+            if (savedAiDataset) aiDataset = JSON.parse(savedAiDataset);
+            
+            bosses.forEach(b => { 
+                if (!b.stateHistory) b.stateHistory = [{ s: Math.max(1.0, parseFloat(b.stateInput)||1.0), t: b.spawnTime }];
+                if (parseFloat(b.stateInput) < 1.0) b.stateInput = "1.0";
+                if (!b.addedAt) b.addedAt = b.id; 
+                if (b.hasManualUpdate === undefined) { b.hasManualUpdate = b.stateHistory.length > 1 || b._wasSpawned; }
+                if (b.spawnTime <= Date.now() && !b.spawnedAt) { b.spawnedAt = b.spawnTime; }
+                if (b.isStandby === undefined) b.isStandby = false;
+                if (b.isAutoSlept === undefined) b.isAutoSlept = false;
+                if (b.telemetrySaved === undefined) b.telemetrySaved = false;
+                
+                if (b.isStarred === undefined) b.isStarred = false;
+                if (b.sleptAt === undefined && b.isStandby) b.sleptAt = b.spawnTime;
+                if (b.isStage5AlertPlayed === undefined) b.isStage5AlertPlayed = false;
+            });
+
+            if (savedSettings) {
+                currentSettings = JSON.parse(savedSettings);
+                if (currentSettings.patch153Applied !== true) {
+                    currentSettings.endGameMap = "153"; currentSettings.patch153Applied = true;
+                    localStorage.setItem('bossSettings', JSON.stringify(currentSettings)); 
+                }
+                document.getElementById('enableStages').checked = currentSettings.enableStages !== false; 
+                document.getElementById('volumeControl').value = currentSettings.vol !== undefined ? currentSettings.vol : 100;
+                document.getElementById('enablePreAlert').checked = currentSettings.enablePreAlert || false;
+                document.getElementById('preAlertTime').value = currentSettings.preAlertTime || 2;
+                document.getElementById('enableRepeatAlert').checked = currentSettings.enableRepeatAlert !== undefined ? currentSettings.enableRepeatAlert : true;
+                document.getElementById('alertInterval').value = currentSettings.interval || 10;
+                document.getElementById('autoSleepEnable').checked = currentSettings.autoSleepEnable !== false; 
+                document.getElementById('autoSleepHrs').value = currentSettings.autoSleepHrs || 6;
+                document.getElementById('autoDeleteEnable').checked = currentSettings.autoDeleteEnable || false; 
+                document.getElementById('autoDeleteHrs').value = currentSettings.autoDeleteHrs || 12; 
+                document.getElementById('enableEpicSound').checked = currentSettings.enableEpicSound !== undefined ? currentSettings.enableEpicSound : true;
+                document.getElementById('enableStage5Sound').checked = currentSettings.enableStage5Sound !== undefined ? currentSettings.enableStage5Sound : true;
+                document.getElementById('showAiPanel').checked = currentSettings.showAiPanel || false;
+                document.getElementById('endGameMap').value = currentSettings.endGameMap || "153";
+                
+                // 🔒 บังคับการทำงานของ EMA ให้เป็น 1.0 (รับสัมผัสไวสุด) ตามหลักการ Snowball Effect
+                document.getElementById('emaAlpha').value = 1.0; 
+                currentSettings.emaAlpha = 1.0;
+            } else { saveSettings(); }
+
+            document.getElementById('btnInstantStage').style.display = (currentSettings.enableStages !== false) ? 'inline-flex' : 'none';
+            document.getElementById('endGameMapContainer').style.opacity = (currentSettings.enableStages !== false) ? '1' : '0.4';
+
+            if (isAdmin) { document.getElementById('adminSettingsSection').style.display = 'block'; toggleAiPanelVisibility(); } 
+            else { document.getElementById('adminSettingsSection').style.display = 'none'; document.getElementById('aiPanelContainer').style.display = 'none'; }
+
+            applySort(true); renderLogs();
+        }
+
+        function exportData() {
+            const data = { bosses: bosses, settings: JSON.parse(localStorage.getItem('bossSettings') || '{}') };
+            const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+            const preview = encoded.length > 20 ? encoded.substring(0, 12) + "........" + encoded.substring(encoded.length - 8) : encoded;
+            if (navigator.clipboard && window.isSecureContext) { 
+                navigator.clipboard.writeText(encoded).then(() => alert(`📋 คัดลอกรหัสเซฟสำเร็จ!\n[ รหัส: ${preview} ]`)).catch(e => prompt("คัดลอกรหัสเซฟนี้:", encoded));
+            } else { prompt("คัดลอกรหัสเซฟนี้:", encoded); }
+        }
+
+        function importData() {
+            const inputCode = prompt("📥 วางรหัสเซฟที่คัดลอกมา:"); if (!inputCode || inputCode.trim() === "") return;
+            try {
+                const decoded = JSON.parse(decodeURIComponent(atob(inputCode.trim())));
+                if(confirm("🔄 รวมข้อมูล (Merge) ใช่หรือไม่?")) {
+                    if (decoded.bosses) {
+                        decoded.bosses.forEach(newBoss => {
+                            const dupIdx = bosses.findIndex(b => b.name.toLowerCase() === newBoss.name.toLowerCase());
+                            if (dupIdx !== -1) { 
+                                if (!bosses[dupIdx].telemetrySaved && !bosses[dupIdx].isStandby) processTelemetry(bosses[dupIdx]);
+                                bosses[dupIdx] = newBoss; 
+                            } else { bosses.push(newBoss); }
+                        });
+                    }
+                    if (decoded.settings && Object.keys(decoded.settings).length > 0) { localStorage.setItem('bossSettings', JSON.stringify(decoded.settings)); }
+                    saveData(); loadData(); alert("✅ นำเข้าเซฟเรียบร้อยครับ!");
+                }
+            } catch (e) { alert("❌ รหัสเซฟไม่ถูกต้อง กรุณาลองใหม่"); }
+        }
+
+        function clearAllBosses() {
+            if(confirm("🔴 คำเตือน: คุณต้องการล้างกระดานบอสทั้งหมด ใช่หรือไม่?")) {
+                bosses.forEach(boss => { if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); });
+                bosses = []; saveData(); renderBosses(); closeSettings();
+            }
+        }
+
+        // ==========================================
+        // 🔊 ส่วนที่ 5: ระบบเสียงแจ้งเตือน
+        // ==========================================
+        function initAudio() { if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if (audioCtx.state === 'suspended') { audioCtx.resume(); } }
+        function playTone(time, freq, vol, type) {
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, time); gain.gain.setValueAtTime(vol, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(time); osc.stop(time + 0.3);
+        }
+        function playDingSound() {
+            const vol = document.getElementById('volumeControl').value / 100; if (vol === 0) return;
+            initAudio(); const now = audioCtx.currentTime; playTone(now, 880, vol, 'sine'); playTone(now + 0.2, 880, vol, 'sine');
+        }
+        function playEpicStage4Sound() {
+            const vol = document.getElementById('volumeControl').value / 100; if (vol === 0) return;
+            initAudio(); const now = audioCtx.currentTime;
+            playTone(now, 440, vol, 'square'); playTone(now + 0.15, 659, vol, 'square'); playTone(now + 0.3, 880, vol * 1.5, 'square'); playTone(now + 0.45, 1108, vol * 1.5, 'square');
+        }
+        function playStage5HornSound() {
+            const vol = document.getElementById('volumeControl').value / 100; if (vol === 0) return;
+            initAudio(); const now = audioCtx.currentTime;
+            
+            const d1 = 0.60; const p1 = 146.83; 
+            const d2 = 1.10; const p2 = 293.66; 
+
+            const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
+            osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(p1, now); 
+            gain1.gain.setValueAtTime(vol * 0.7, now); gain1.gain.exponentialRampToValueAtTime(0.01, now + d1);
+            osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.start(now); osc1.stop(now + d1);
+
+            const start2 = now + d1; const end2 = start2 + d2;
+            const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+            osc2.type = 'sawtooth'; osc2.frequency.setValueAtTime(p2, start2); 
+            gain2.gain.setValueAtTime(vol * 0.9, start2); 
+            
+            const holdTime = start2 + (d2 * 0.4); 
+            gain2.gain.linearRampToValueAtTime(vol * 0.5, holdTime); gain2.gain.exponentialRampToValueAtTime(0.01, end2); 
+            
+            osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.start(start2); osc2.stop(end2);
+        }
+        function testSound() { playDingSound(); }
+
+        // ==========================================
+        // ⚔️ ส่วนที่ 6: การกระทำต่างๆ ของการ์ดบอส
+        // ==========================================
+        function addBoss(mode) {
+            initAudio(); 
+            const nameInput = document.getElementById('bossName').value.trim();
+            if (!nameInput) { alert("กรุณาใส่ชื่อบอสครับ!"); return; }
+            if (bosses.some(boss => boss.name.toLowerCase() === nameInput.toLowerCase())) { alert("ชื่อซ้ำครับ!"); return; }
+            
+            const now = Date.now(); let sTime = now; let initialStageStr = "1.0"; let historyLog = []; let isManual = false;
+
+            if (mode === 'instant') {
+                const inputStage = Math.max(1.0, parseFloat(document.getElementById('inputInstantStage').value) || 1.0);
+                const currentEndMap = document.getElementById('endGameMap').value.trim();
+                const isEndGame = currentEndMap !== "" && nameInput.includes(currentEndMap);
+                const baselineMs = getCumulativeBaselineTime(inputStage, isEndGame) * 1000;
+                sTime = now - baselineMs;
+                initialStageStr = inputStage.toString();
+                historyLog.push({ s: 1.0, t: sTime });
+                if (inputStage > 1.0) historyLog.push({ s: inputStage, t: now });
+                isManual = true;
+            } else {
+                const hoursInput = parseInt(document.getElementById('inputHours').value) || 0;
+                const minutesInput = parseInt(document.getElementById('inputMinutes').value) || 0;
+                const secondsInput = parseInt(document.getElementById('inputSeconds').value) || 0;
+                const totalMsToAdd = (hoursInput * 60 * 60 * 1000) + (minutesInput * 60 * 1000) + (secondsInput * 1000);
+                if (totalMsToAdd <= 0) { alert("ระบุเวลาอย่างน้อย 1 วินาที!"); return; }
+                sTime = now + totalMsToAdd; 
+                historyLog.push({ s: 1.0, t: now });
+                isManual = false;
+            }
+
+            bosses.push({
+                id: Date.now(), addedAt: Date.now(), hasManualUpdate: isManual,
+                name: nameInput, spawnTime: sTime, spawnedAt: (mode === 'instant') ? now : null, stateInput: initialStageStr, stateHistory: historyLog,
+                isPreAlertPlayed: false, isSpawnSoundPlayed: false, isStage4AlertPlayed: false, lastIntervalPlayed: 0, _wasSpawned: (mode === 'instant'),
+                isStandby: false, isAutoSlept: false, telemetrySaved: false,
+                isStarred: false, sleptAt: null,
+                isStage5AlertPlayed: false
+            });
+            
+            document.getElementById('bossName').value = ''; 
+            document.getElementById('inputHours').value = '0'; document.getElementById('inputMinutes').value = '0'; document.getElementById('inputSeconds').value = '0';
+            document.getElementById('inputInstantStage').value = '1.0';
+            
+            saveData(); applySort(true);
+        }
+
+        function toggleStar(id) {
+            const boss = bosses.find(b => b.id === id); 
+            if (!boss) return;
+            boss.isStarred = !boss.isStarred;
+            saveData(); applySort(true);
+        }
+
+        function toggleStandbyBoss(id, isAuto = false) {
+            const boss = bosses.find(b => b.id === id); if (!boss) return;
+            if (!boss.isStandby) {
+                boss.isStandby = true; boss.isAutoSlept = isAuto; boss.sleptAt = Date.now(); 
+                processTelemetry(boss); 
+                
+                const card = document.getElementById(`boss-card-${id}`);
+                if (card) {
+                    card.classList.add('entering-standby');
+                    const elap = document.getElementById(`elapsed-${id}`);
+                    if(elap) elap.innerText = boss.isAutoSlept ? "[💤 พักอัตโนมัติ]" : "[💤 พักการ์ด]";
+                }
+                if (!isAuto) showToast(`💤 พักการ์ด <b>${boss.name}</b> สำเร็จ`);
+            }
+            saveData(); 
+            if (standbyTimeout) clearTimeout(standbyTimeout);
+            standbyTimeout = setTimeout(() => { applySort(true); }, 1200);
+        }
+
+        function startEditBoss(id) { editingBossId = id; renderBosses(); }
+        function cancelEditBoss() { editingBossId = null; renderBosses(); }
+
+        function saveEditBoss(id) {
+            const boss = bosses.find(b => b.id === id); if (!boss) return;
+            const nameInput = document.getElementById(`editName-${id}`).value.trim();
+            const hoursInput = parseInt(document.getElementById(`editHours-${id}`).value) || 0;
+            const minutesInput = parseInt(document.getElementById(`editMinutes-${id}`).value) || 0;
+            const secondsInput = parseInt(document.getElementById(`editSeconds-${id}`).value) || 0;
+
+            if (hoursInput === boss._tempPrefillH && minutesInput === boss._tempPrefillM && secondsInput === boss._tempPrefillS) {
+                boss.name = nameInput;
+            } else {
+                if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); 
+
+                boss.name = nameInput;
+                const sTime = new Date().getTime() + (hoursInput*3600000) + (minutesInput*60000) + (secondsInput*1000);
+                
+                boss.spawnTime = sTime; boss.stateInput = "1.0"; boss.stateHistory = [{ s: 1.0, t: sTime }];
+                boss.hasManualUpdate = false; boss.spawnedAt = null;
+                boss.isPreAlertPlayed = false; boss.isSpawnSoundPlayed = false; boss.isStage4AlertPlayed = false; boss.lastIntervalPlayed = 0; boss._wasSpawned = false;
+                
+                boss.isStandby = false; boss.isAutoSlept = false; boss.telemetrySaved = false; boss.sleptAt = null; boss.isStage5AlertPlayed = false;
+            }
+            editingBossId = null; saveData(); applySort(true);
+        }
+
+        function removeBoss(id, isAutoDelete = false) {
+            const boss = bosses.find(b => b.id === id); if (!boss) return;
+            if (!isAutoDelete && !confirm(`🗑️ ต้องการลบ "${boss.name}" หรือไม่?`)) return;
+
+            if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss);
+
+            const now = new Date().getTime();
+            let elapsedTimeText = now >= boss.spawnTime ? `⏳ ปล่อยเลยมานาน` : `⏳ (ลบก่อนเกิด)`;
+            deletedLogs.unshift({
+                id: Date.now(), name: boss.name, spawnTimeStr: new Date(boss.spawnTime).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}),
+                statusText: elapsedTimeText, reasonText: isAutoDelete ? `(ลบอัตโนมัติ)` : `(ลบด้วยตัวเอง)`
+            });
+            if (deletedLogs.length > 50) deletedLogs.pop();
+            bosses = bosses.filter(b => b.id !== id); 
+            saveData(); renderLogs(); renderBosses();
+        }
+
+        function clearLogs() { if(confirm("ล้างประวัติทั้งหมด?")) { deletedLogs = []; saveData(); renderLogs(); } }
+
+        function renderLogs() {
+            const logContainer = document.getElementById('logContainer'); if (!logContainer) return; 
+            logContainer.innerHTML = '';
+            deletedLogs.forEach(log => {
+                const logDiv = document.createElement('div'); logDiv.className = 'log-row';
+                logDiv.innerHTML = `<div>⚔️ ${log.name}</div><div>🕒 เริ่ม: ${log.spawnTimeStr}</div><div>${log.statusText}</div><div style="color:var(--text-accent);">${log.reasonText}</div>`;
+                logContainer.appendChild(logDiv);
+            });
+        }
+
+        // ==========================================
+        // 🔀 ส่วนที่ 7: กลไกการจัดเรียงการ์ด
+        // ==========================================
+        function applySort(forceRender = false) {
+            const sortMode = document.getElementById('sortOption') ? document.getElementById('sortOption').value : 'time';
+            const now = new Date().getTime();
+
+            bosses.sort((a, b) => {
+                if (a.isStandby && !b.isStandby) return 1;
+                if (!a.isStandby && b.isStandby) return -1;
+                
+                if (a.isStandby && b.isStandby) {
+                    return (a.sleptAt || a.spawnTime) - (b.sleptAt || b.spawnTime);
+                }
+
+                const aSpawned = now >= a.spawnTime; const bSpawned = now >= b.spawnTime;
+
+                if (sortMode === 'time') {
+                    const aStarredReady = a.isStarred && aSpawned; const bStarredReady = b.isStarred && bSpawned;
+                    if (aStarredReady && !bStarredReady) return -1;
+                    if (!aStarredReady && bStarredReady) return 1;
+                    
+                    if (aSpawned && bSpawned) { return (a.spawnedAt || a.spawnTime) - (b.spawnedAt || b.spawnTime); } 
+                    else if (aSpawned && !bSpawned) { return -1; } 
+                    else if (!aSpawned && bSpawned) { return 1; } 
+                    else { return a.spawnTime - b.spawnTime; } 
+                } else {
+                    let cmp = a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+                    return sortMode === 'name_asc' ? cmp : -cmp;
+                }
+            });
+            saveData(); 
+            
+            // 🛡️ ป้องกันการวาดหน้าจอซ้อนทับ (Layout Shift/Form Wipe) 
+            // - หยุดกระดานถ้าผู้ใช้กำลังเปิดโหมดแก้ไขการ์ดอยู่ (editingBossId !== null)
+            // - ป้องกันเหตุการณ์ผู้ใช้พิมพ์แก้ชื่อบอสเก่า แล้วมีบอสอีกใบเกิดพอดี ทำให้ชื่อเก่าวิ่งกลับมาทับ
+            if (forceRender && editingBossId === null) {
+                renderBosses();
+            }
+        }
+
+        // ==========================================
+        // 🖥️ ส่วนที่ 8: ฟังก์ชันวาด UI ลงหน้าจอ
+        // ==========================================
+        function renderBosses() {
+            const container = document.getElementById('timersContainer'); if (!container) return;
+            container.innerHTML = '';
+            
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredBosses = bosses.filter(boss => boss.name.toLowerCase().includes(searchTerm));
+            const isStageSystemEnabled = currentSettings.enableStages !== false; 
+
+            filteredBosses.forEach(boss => {
+                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
+
+                if (boss.id === editingBossId) {
+                    const dist = boss.spawnTime - new Date().getTime(); let eh = 0, em = 0, es = 0;
+                    if (dist > 0) { eh = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); em = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)); es = Math.floor((dist % (1000 * 60)) / 1000); }
+                    boss._tempPrefillH = eh; boss._tempPrefillM = em; boss._tempPrefillS = es;
+                    div.className = 'boss-card';
+                    div.innerHTML = `<div class="edit-mode-container"><div style="font-size:0.9rem; color:var(--text-accent); font-weight:bold;">✏️ แก้ไขข้อมูล</div><input type="text" id="editName-${boss.id}" value="${boss.name}" style="width:100%;"><div style="display:flex; gap:8px;"><div class="time-wrapper"><input type="text" id="editHours-${boss.id}" value="${eh}" readonly onclick="openNumpad('editHours-${boss.id}', 'editMinutes-${boss.id}', 2, 'ชั่วโมง')"><span class="time-label">ชม.</span></div><div class="time-wrapper"><input type="text" id="editMinutes-${boss.id}" value="${em}" readonly onclick="openNumpad('editMinutes-${boss.id}', 'editSeconds-${boss.id}', 2, 'นาที')"><span class="time-label">น.</span></div><div class="time-wrapper"><input type="text" id="editSeconds-${boss.id}" value="${es}" readonly onclick="openNumpad('editSeconds-${boss.id}', null, 2, 'วินาที')"><span class="time-label">วิ.</span></div></div><div class="edit-actions"><button class="btn-text save" onclick="saveEditBoss(${boss.id})">✓ บันทึก</button><button class="btn-text cancel" onclick="cancelEditBoss()">✕ ยกเลิก</button></div></div>`;
+                } else {
+                    let cardClass = 'boss-card';
+                    if (boss.isStandby) cardClass += ' is-standby';
+                    else if (boss.spawnTime <= new Date().getTime()) cardClass += ' is-spawned';
+                    div.className = cardClass;
+                    
+                    const spawnTimeString = new Date(boss.spawnTime).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+                    
+                    let etaDisplay = boss.isStandby 
+                        ? `<span class="boss-elapsed" id="elapsed-${boss.id}">${boss.isAutoSlept ? '[💤 พักอัตโนมัติ]' : '[💤 พักการ์ด]'}</span>`
+                        : `🕒 เริ่ม: ${spawnTimeString} <span class="boss-elapsed" id="elapsed-${boss.id}"></span>`;
+
+                    let standbyBtnHtml = boss.isStandby 
+                        ? ``
+                        : `<button class="btn-icon standby" onclick="toggleStandbyBoss(${boss.id})" title="จบงาน / พักการ์ด">💤</button>`;
+
+                    let starFilter = 'grayscale(1) opacity(0.3)'; 
+                    if (boss.isStarred) {
+                        if (boss.isStandby) { starFilter = 'opacity(0.4)'; } else { starFilter = 'none'; }
+                    }
+
+                    div.innerHTML = `
+                        <div class="card-header">
+                            <div class="boss-name-group">
+                                <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;" title="ติดดาวดันขึ้นบนสุดเมื่อบอสเกิด">⭐</span>
+                                <span class="boss-name">${boss.name}</span>
+                                <span class="boss-eta">${etaDisplay}</span>
+                            </div>
+                            <div class="card-actions">
+                                ${standbyBtnHtml}
+                                <button class="btn-icon edit" onclick="startEditBoss(${boss.id})">✏️</button>
+                                <button class="btn-icon delete" onclick="removeBoss(${boss.id}, false)">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="countdown-container" id="countdown-wrap-${boss.id}"><div class="countdown-display" id="time-${boss.id}">...</div></div>
+                        
+                        <div class="state-container" id="state-wrap-${boss.id}" style="${(!isStageSystemEnabled || boss.isStandby) ? 'display: none !important;' : ''}">
+                            <div class="state-body">
+                                <div class="state-center"><input type="text" id="state-input-${boss.id}" value="${boss.stateInput || '1.0'}" readonly onclick="openNumpad('state-input-${boss.id}', null, 4, 'อัปเดต State: ${boss.name}')"></div>
+                                <div class="state-right">
+                                    <div class="micro-timeline">
+                                        <div class="mt-track"></div>
+                                        <div class="mt-actual" id="mt-actual-${boss.id}" style="width: 0%;"></div>
+                                        <div class="mt-ghost" id="mt-ghost-${boss.id}" style="width: 0%;"></div>
+                                        <div class="mt-dot" id="mt-dot-1-${boss.id}" style="left: 0%"></div>
+                                        <div class="mt-dot" id="mt-dot-2-${boss.id}" style="left: 25%"></div>
+                                        <div class="mt-dot" id="mt-dot-3-${boss.id}" style="left: 50%"></div>
+                                        <div class="mt-dot" id="mt-dot-4-${boss.id}" style="left: 75%"></div>
+                                        <div class="mt-dot taurus" id="mt-dot-5-${boss.id}" style="left: 100%">♉&#xFE0E;</div>
+                                    </div>
+                                    <div class="timeline-status-text" id="update-time-${boss.id}">-</div>
+                                </div>
+                                <div class="state-left"><div class="progress-circle" id="progress-circle-${boss.id}"><div class="progress-inner" id="progress-text-${boss.id}">1</div></div></div>
+                            </div>
+                        </div>
+                        
+                        <div class="eta-capsule" id="eta-wrap-${boss.id}" style="${(!isStageSystemEnabled || boss.isStandby) ? 'display: none !important;' : ''}">
+                            <div class="eta-item"><span class="eta-label" id="label-4-${boss.id}">🎯 รวมพล (4.0):</span> <span class="eta-time" id="eta4-text-${boss.id}">-</span></div>
+                            <div class="eta-divider">|</div>
+                            <div class="eta-item"><span class="eta-label">⚔️ บอส:</span> <span class="eta-time" id="eta5-text-${boss.id}">-</span></div>
+                        </div>`;
+                }
+                container.appendChild(div);
+            });
+            updateTimers();
+        }
+
+        function formatCountdownOnly(etaMs, now) {
+            if (etaMs <= now) return "<span style='color:var(--color-success)'>✅ ลุยเลย!</span>";
+            const d = etaMs - now; const h = Math.floor(d / 3600000); const m = Math.floor((d % 3600000) / 60000); const s = Math.floor((d % 60000) / 1000);
+            if (h > 0) return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        // ==========================================
+        // ⏱️ ส่วนที่ 9: ฟังก์ชันวนรอบเพื่ออัปเดตตัวเลข
+        // ==========================================
+        function updateTimers() {
+            const now = new Date().getTime();
+            const preAlertTimeMs = (parseInt(document.getElementById('preAlertTime')?.value || 2)) * 60 * 1000;
+            const repeatIntervalMs = (parseInt(document.getElementById('alertInterval')?.value || 10)) * 60 * 1000;
+            
+            const autoSleepEnable = document.getElementById('autoSleepEnable')?.checked;
+            const autoSleepHrs = parseFloat(document.getElementById('autoSleepHrs')?.value || 6);
+            const autoDelEnable = document.getElementById('autoDeleteEnable')?.checked;
+            const autoDelHrs = parseFloat(document.getElementById('autoDeleteHrs')?.value || 12);
+            
+            const epicSoundEnable = document.getElementById('enableEpicSound')?.checked;
+            const isStageSystemEnabled = currentSettings.enableStages !== false; 
+            
+            const currentEndMap = document.getElementById('endGameMap')?.value.trim() || "";
+            // บังคับดึงค่า Alpha 1.0 (ฉับไวสูงสุด) เสมอ เพื่อจับความเร็วแบบทวีคูณ (Snowball) 
+            const emaAlpha = 1.0; 
+
+            const filteredBosses = bosses.filter(b => b.name.toLowerCase().includes(document.getElementById('searchInput')?.value.toLowerCase() || ''));
+            let dataChanged = false; let needsSort = false; 
+
+            filteredBosses.forEach(boss => {
+                if (boss.id === editingBossId) return;
+                const cardEl = document.getElementById(`boss-card-${boss.id}`);
+                const timeEl = document.getElementById(`time-${boss.id}`);
+                if (!cardEl || !timeEl) return;
+
+                const distance = boss.spawnTime - now;
+                const isCurrentlySpawned = distance <= 0;
+                const isEndGameMap = currentEndMap !== "" && boss.name.includes(currentEndMap);
+
+                if (boss._wasSpawned !== isCurrentlySpawned) { 
+                    boss._wasSpawned = isCurrentlySpawned; needsSort = true; dataChanged = true; 
+                    if (isCurrentlySpawned && !boss.isStandby) {
+                        boss.spawnedAt = Date.now(); boss.stateHistory = [{s: 1.0, t: boss.spawnTime}]; boss.stateInput = "1.0";
+                        boss.hasManualUpdate = false; boss.isPreAlertPlayed = true; boss.isSpawnSoundPlayed = false; boss.isStage4AlertPlayed = false; boss.lastIntervalPlayed = 0; boss.isStage5AlertPlayed = false; 
+                    }
+                }
+
+                if (!isCurrentlySpawned) {
+                    if (boss.isStandby) return; 
+                    
+                    document.getElementById(`countdown-wrap-${boss.id}`).style.display = 'block';
+                    if (isStageSystemEnabled) { document.getElementById(`state-wrap-${boss.id}`).style.display = 'none'; document.getElementById(`eta-wrap-${boss.id}`).style.display = 'none'; }
+                    document.getElementById(`elapsed-${boss.id}`).innerText = "";
+                    cardEl.classList.remove("is-spawned", "is-stage4");
+
+                    if (document.getElementById('enablePreAlert')?.checked && distance <= preAlertTimeMs && !boss.isPreAlertPlayed) { playDingSound(); boss.isPreAlertPlayed = true; dataChanged = true; }
+
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    timeEl.innerHTML = (hours > 0 ? `${hours}:` : "") + (minutes < 10 && hours > 0 ? `0${minutes}:` : `${minutes}:`) + (seconds < 10 ? `0${seconds}` : seconds);
+                
+                } else {
+                    const elapsed = Math.abs(distance);
+                    
+                    if (autoDelEnable && elapsed >= autoDelHrs * 3600000) { removeBoss(boss.id, true); return; } 
+                    if (autoSleepEnable && !boss.isStandby && elapsed >= autoSleepHrs * 3600000) { toggleStandbyBoss(boss.id, true); return; }
+                    if (boss.isStandby) {
+                        const elap = document.getElementById(`elapsed-${boss.id}`);
+                        if (elap) elap.innerText = boss.isAutoSlept ? "[💤 พักอัตโนมัติ]" : "[💤 พักการ์ด]";
+                        return; 
+                    }
+
+                    document.getElementById(`countdown-wrap-${boss.id}`).style.display = 'none';
+                    if (isStageSystemEnabled) { document.getElementById(`state-wrap-${boss.id}`).style.display = 'flex'; } 
+                    else { document.getElementById(`countdown-wrap-${boss.id}`).style.display = 'block'; timeEl.innerHTML = `<span style="color: var(--color-warning);">บอสเกิดแล้ว!</span>`; }
+                    
+                    const eH = Math.floor(elapsed / 3600000); const eM = Math.floor((elapsed % 3600000) / 60000); const eS = Math.floor((elapsed % 60000) / 1000);
+                    const elapsedStr = eH > 0 ? `[+${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}:${String(eS).padStart(2,'0')}]` : `[+${String(eM).padStart(2,'0')}:${String(eS).padStart(2,'0')}]`;
+                    document.getElementById(`elapsed-${boss.id}`).innerText = elapsedStr;
+
+                    if (!boss.isSpawnSoundPlayed) { playDingSound(); boss.isSpawnSoundPlayed = true; dataChanged = true; }
+                    if (document.getElementById('enableRepeatAlert')?.checked) {
+                        const currentInterval = Math.floor(elapsed / repeatIntervalMs);
+                        if (currentInterval >= 1 && currentInterval > boss.lastIntervalPlayed) { playDingSound(); boss.lastIntervalPlayed = currentInterval; dataChanged = true; }
+                    }
+
+                    if (isStageSystemEnabled) {
+                        try {
+                            const actualVal = parseFloat(boss.stateInput) || 1.0;
+                            const etaWrap = document.getElementById(`eta-wrap-${boss.id}`);
+                            etaWrap.style.display = 'flex';
+                            
+                            const lastLog = boss.stateHistory[boss.stateHistory.length - 1];
+                            const elapsedSinceLogSec = (now - lastLog.t) / 1000;
+                            
+                            const inputStateEl = document.getElementById(`state-input-${boss.id}`);
+                            if (elapsedSinceLogSec > 60) { inputStateEl.classList.add('needs-update'); } 
+                            else { inputStateEl.classList.remove('needs-update'); }
+
+                            const updateTimeEl = document.getElementById(`update-time-${boss.id}`);
+                            if (!boss.hasManualUpdate) {
+                                updateTimeEl.innerHTML = `<span class="warning">⚠️ รอการอัปเดตครั้งแรก</span>`;
+                            } else {
+                                const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
+                                const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')} วิ.`;
+                                updateTimeEl.innerHTML = `ล่าสุด: ${boss.stateInput} (<span class="hl">${timeStr}</span> ที่แล้ว)`;
+                            }
+
+                            let predStage = 1.0; let eta4Ms = 0; let etaBossMs = 0;
+
+                            if (!boss.hasManualUpdate || boss.stateHistory.length < 2) {
+                                // กรณียังไม่มีการกดอัปเดต
+                                const totalElapsedSec = (now - boss.spawnTime) / 1000;
+                                predStage = getStageFromTime(totalElapsedSec, isEndGameMap);
+                                
+                                const remainingTo4Sec = Math.max(0, getCumulativeBaselineTime(4.0, isEndGameMap) - totalElapsedSec);
+                                const remainingTo5Sec = Math.max(0, getCumulativeBaselineTime(5.0, isEndGameMap) - totalElapsedSec);
+                                eta4Ms = now + (remainingTo4Sec * 1000); etaBossMs = now + (remainingTo5Sec * 1000);
+                            } else {
+                                // 🧠 ระบบ DYNAMIC BASELINE: 
+                                // หาค่าสัดส่วน (Scale) โดยอิงความเร็วของ "การอัปเดตครั้งแรก" ของห้องนั้นๆ
+                                // ทำให้แมปร้างที่ไม่มีคน (Low level map abandonment) ไม้บรรทัดจะถูกดึงยืดออกอัตโนมัติ
+                                let dynamicScale = 1.0;
+                                if (boss.stateHistory.length > 1) {
+                                    let firstActual = (boss.stateHistory[1].t - boss.stateHistory[0].t) / 1000;
+                                    let firstBase = getCumulativeBaselineTime(boss.stateHistory[1].s, isEndGameMap) - getCumulativeBaselineTime(boss.stateHistory[0].s, isEndGameMap);
+                                    if (firstBase > 0 && firstActual > 0) {
+                                        dynamicScale = firstActual / firstBase;
+                                        // ป้องกันการสวิงเวอร์ๆ (แคปเพดานไม่ให้ยืด/หดเกิน 10 เท่า)
+                                        dynamicScale = Math.max(0.1, Math.min(10.0, dynamicScale));
+                                    }
+                                }
+
+                                // 🧠 ระบบ HYBRID EMA (Momentum Catcher):
+                                // ตรวจจับความเร็วแบบเรียลไทม์ (Snowball Effect: ยิ่งคนมาออเยอะ สเตจยิ่งกระโดดไว)
+                                let mEma = null; 
+                                for (let i = 1; i < boss.stateHistory.length; i++) {
+                                    let prev = boss.stateHistory[i-1]; let curr = boss.stateHistory[i];
+                                    let actualSec = (curr.t - prev.t) / 1000;
+                                    
+                                    // ใช้ไม้บรรทัดโค้งอันใหม่ที่ถูกยืดแล้วด้วย dynamicScale
+                                    let expectedSec = (getCumulativeBaselineTime(curr.s, isEndGameMap) - getCumulativeBaselineTime(prev.s, isEndGameMap)) * dynamicScale;
+                                    
+                                    if (expectedSec > 0 && actualSec > 0) {
+                                        let currentSpeed = expectedSec / actualSec; 
+                                        if (mEma === null) { mEma = currentSpeed; } 
+                                        else { 
+                                            // emaAlpha ถูกล็อกไว้ที่ 1.0 จะสนใจเฉพาะความเร็วของรอบล่าสุดเท่านั้น
+                                            mEma = (emaAlpha * currentSpeed) + ((1 - emaAlpha) * mEma); 
+                                        } 
+                                    }
+                                }
+
+                                if (mEma === null || mEma <= 0) mEma = 1.0;
+
+                                // พยากรณ์หลอดสถานะ (Progress) และแคปซูลเวลา ETA
+                                const baselineSecAtLastLog = getCumulativeBaselineTime(lastLog.s, isEndGameMap) * dynamicScale;
+                                const virtualElapsedSec = elapsedSinceLogSec * mEma;
+                                const currentExpectedCumulative = baselineSecAtLastLog + virtualElapsedSec;
+
+                                predStage = getStageFromTime(currentExpectedCumulative / dynamicScale, isEndGameMap);
+                                const remainingTo4Sec = Math.max(0, getCumulativeBaselineTime(4.0, isEndGameMap) * dynamicScale - baselineSecAtLastLog);
+                                const remainingTo5Sec = Math.max(0, getCumulativeBaselineTime(5.0, isEndGameMap) * dynamicScale - baselineSecAtLastLog);
+                                
+                                eta4Ms = lastLog.t + ((remainingTo4Sec / mEma) * 1000); 
+                                etaBossMs = lastLog.t + ((remainingTo5Sec / mEma) * 1000);
+                            }
+
+                            predStage = Math.min(5.0, predStage); 
+                            document.getElementById(`progress-text-${boss.id}`).innerText = Math.floor(predStage) >= 5 ? "ON" : Math.floor(predStage).toString();
+                            
+                            const predPct = (predStage % 1) * 100;
+                            const ringEl = document.getElementById(`progress-circle-${boss.id}`);
+                            
+                            if (predStage >= 4.0) { ringEl.style.background = `conic-gradient(var(--color-stage4) ${predPct}%, transparent 0)`; } 
+                            else { ringEl.style.background = `conic-gradient(var(--color-ghost) ${predPct}%, transparent 0)`; }
+
+                            if (predStage >= 3.8 && predStage < 4.0) { ringEl.classList.add('is-hype'); } else { ringEl.classList.remove('is-hype'); }
+
+                            document.getElementById(`mt-actual-${boss.id}`).style.width = `${Math.max(0, Math.min(100, ((actualVal - 1) / 4) * 100))}%`;
+                            document.getElementById(`mt-ghost-${boss.id}`).style.width = `${Math.max(0, Math.min(100, ((predStage - 1) / 4) * 100))}%`;
+
+                            for (let i = 1; i <= 5; i++) {
+                                const dotEl = document.getElementById('mt-dot-' + i + '-' + boss.id); if (!dotEl) continue;
+                                let baseClass = i === 5 ? "mt-dot taurus" : "mt-dot";
+                                if (actualVal >= i) { dotEl.className = baseClass + " active"; } 
+                                else if (predStage >= i) { dotEl.className = baseClass + " active-ghost"; } 
+                                else { dotEl.className = baseClass; }
+                            }
+
+                            document.getElementById(`eta4-text-${boss.id}`).innerHTML = formatCountdownOnly(eta4Ms, now);
+                            document.getElementById(`eta5-text-${boss.id}`).innerHTML = formatCountdownOnly(etaBossMs, now);
+
+                            if (predStage >= 4.0) {
+                                cardEl.classList.add("is-stage4"); cardEl.classList.remove("is-spawned");
+                                document.getElementById(`label-4-${boss.id}`).innerHTML = "🎯 ลุย (4.0):";
+                                
+                                if (!boss.isStage4AlertPlayed) { 
+                                    if(epicSoundEnable) playEpicStage4Sound(); 
+                                    boss.isStage4AlertPlayed = true; dataChanged = true; 
+                                }
+
+                                if (predStage >= 5.0) {
+                                    if (!boss.isStage5AlertPlayed) {
+                                        if(document.getElementById('enableStage5Sound')?.checked) playStage5HornSound();
+                                        boss.isStage5AlertPlayed = true; dataChanged = true;
+                                    }
+                                } else {
+                                    if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; dataChanged = true; }
+                                }
+                            } else {
+                                cardEl.classList.add("is-spawned"); cardEl.classList.remove("is-stage4");
+                                document.getElementById(`label-4-${boss.id}`).innerHTML = "🎯 รวมพล (4.0):";
+                                if (boss.isStage4AlertPlayed) { boss.isStage4AlertPlayed = false; dataChanged = true; }
+                                if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; dataChanged = true; }
+                            }
+                        } catch (err) {}
+                    }
+                }
+            });
+
+            if (dataChanged) saveData();
+            if (needsSort) applySort(true);
+        }
+
+        window.onload = loadData;
+        setInterval(updateTimers, 1000);
+    </script>
+</body>
+</html>
