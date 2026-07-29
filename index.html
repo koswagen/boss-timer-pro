@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Boss Timer Pro">
-    <title>Boss Timer Pro | v2.0.0 Cloud Sync</title>
+    <title>Boss Timer Pro | v2.0.5 Cloud Sync</title>
     <link rel="icon" href="data:,">
     <style>
         /* 🎨 หมวดหมู่สีและการตั้งค่าตัวแปร (CSS Variables) สำหรับใช้ทั้งโปรเจกต์ */
@@ -66,8 +66,8 @@
         .section-header { font-size: 1.1rem; color: var(--text-secondary); margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;}
         .count-badge { background: #334155; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;}
 
-        /* 💳 สไตล์ของการ์ดบอสทั้งหมดเป็น Grid (ตั้งค่า minmax(340px) เพื่อให้ได้ 4 ใบต่อแถว ในจอขนาด 1600px) */
-        .boss-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; margin-bottom: 20px;}
+        /* 💳 สไตล์ของการ์ดบอสทั้งหมดเป็น Grid (ตั้งค่า minmax(300px) เพื่อให้ได้ 4-5 ใบต่อแถวแบบพอดีๆ) */
+        .boss-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 20px;}
         
         .boss-card { background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px; border-left: 4px solid var(--text-accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; transition: all 0.3s ease; overflow: hidden; z-index: 1;}
         .boss-card.is-spawned { border-left-color: var(--color-warning); background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-surface) 100%); }
@@ -132,14 +132,14 @@
         .btn-icon.standby { color: #94a3b8; } .btn-icon.standby:hover { background: #475569; color: #fff; }
         .btn-icon:hover { filter: brightness(1.2); }
         
-        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด (ปรับให้เพรียวบางลง) */
+        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด (ปรับให้แบนและเพรียวบางลงมาก) */
         .state-container { display: flex; flex-direction: column; gap: 8px; z-index: 2; background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
         .state-body { display: flex; align-items: center; gap: 14px; }
         
         .state-right { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative; padding-right: 6px; overflow: hidden; }
         .micro-timeline { position: relative; width: 100%; height: 10px; display: flex; align-items: center; margin-bottom: 6px;}
         
-        /* ปรับพื้นหลังเส้น Timeline ให้สว่างขึ้นเพื่อให้เห็นชัดเจน (ความหนา 4px เท่าเดิม) */
+        /* ปรับพื้นหลังเส้น Timeline ให้สว่างขึ้นเล็กน้อย เป็นสีเดียวกับจุด (ความหนา 4px เท่าเดิม) */
         .mt-track { position: absolute; width: 100%; height: 4px; background: rgba(71, 85, 105, 0.5); border-radius: 2px; }
         
         .mt-actual { position: absolute; height: 4px; background: var(--text-accent); border-radius: 2px; z-index: 2; transition: width 0.3s; box-shadow: 0 0 6px var(--text-accent);}
@@ -156,16 +156,16 @@
         .mt-dot.taurus.active-ghost { background: transparent; color: var(--color-warning); text-shadow: 0 0 6px var(--color-warning); }
         .boss-card.is-stage4 .mt-dot.taurus.active-ghost { color: var(--color-stage4); text-shadow: 0 0 6px var(--color-stage4); }
         
-        /* วงกลมกดได้ (ปุ่ม Phase หลัก) */
-        .state-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;} 
-        .progress-circle { width: 55px; height: 55px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s linear;}
+        /* วงกลมกดได้ (ปุ่ม Phase หลัก หดขนาดลงให้กล่องเตี้ยลง) */
+        .state-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 0;} 
+        .progress-circle { width: 48px; height: 48px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s linear;}
         .progress-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(transparent 0deg, transparent 34deg, var(--bg-surface) 34deg, var(--bg-surface) 36deg); z-index: 1; pointer-events: none; }
-        .progress-inner { width: 43px; height: 43px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; color: var(--text-primary); z-index: 2; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);}
+        .progress-inner { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: var(--text-primary); z-index: 2; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);}
         .progress-inner:hover { border-color: var(--text-accent); background: var(--bg-surface); transform: scale(1.05);}
         .boss-card.is-stage4 .progress-inner { background: rgba(30, 41, 59, 1); }
         
-        /* บังคับข้อความล่าสุดให้อยู่ 1 บรรทัด และตัดเป็นจุดไข่ปลาถ้าล้น เพื่อป้องกันการ์ดยืด */
-        .timeline-status-text { font-size: 0.75rem; color: #94a3b8; font-weight: 500; text-align: left; line-height: 1.2; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;}
+        /* จัดเรียงข้อความ "ล่าสุด" และ "ผ่านไปแล้ว" ไว้บรรทัดเดียวกันซ้ายขวา เพื่อลดความสูงกล่อง */
+        .timeline-status-text { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #94a3b8; font-weight: 500; width: 100%;}
         .timeline-status-text .hl { font-family: ui-monospace, monospace; color: var(--text-primary); }
 
         @keyframes pulseAmber { 0% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0.6); border-color: rgba(245, 158, 11, 0.6); } 70% { box-shadow: inset 0 0 0 8px rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } 100% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } }
@@ -335,7 +335,7 @@
 
         <div class="watermark">
             © 2026 Crafted by <span>Gensu</span>. All rights reserved.<br>
-            <div class="version-tag">Version 2.0.0 | Cloud Sync & Dynamic AI</div>
+            <div class="version-tag">Version 2.0.5 | Cloud Sync & Dynamic AI</div>
         </div>
     </div>
 
@@ -389,14 +389,12 @@
                     <label class="setting-row">ระดับเสียง: <input type="range" id="volumeControl" min="0" max="100" value="100" onchange="testSound(); saveSettings();" style="flex-grow:1;"></label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enablePreAlert" onchange="saveSettings()"> เตือนล่วงหน้า <input type="number" id="preAlertTime" value="2" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableRepeatAlert" checked onchange="saveSettings()"> เตือนซ้ำเมื่อบอสเกิด ทุกๆ <input type="number" id="alertInterval" value="10" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
-                    <!-- อัปเดต Default ค่าตั้งต้นที่นี่ -->
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableEpicSound" onchange="saveSettings()"> 🎵 เสียงเตือนพิเศษ Phase 4 (Epic Sound)</label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableStage5Sound" checked onchange="saveSettings()"> 🎺 เสียงแตรออกรบตอนบอสเกิด (Phase 5)</label>
                 </div>
                 
                 <div class="setting-section">
                     <h4>💤 การจัดการการ์ดอัตโนมัติ (ให้ Admin เป็นผู้รันคำสั่ง)</h4>
-                    <!-- อัปเดต Default ค่าตั้งต้นที่นี่ -->
                     <label class="setting-row" style="cursor:pointer; color: var(--text-primary);">
                         <input type="checkbox" id="autoSleepEnable" onchange="saveSettings()"> 💤 พักการ์ดอัตโนมัติ (Auto-Sleep) ทิ้งไว้เกิน <input type="number" id="autoSleepHrs" value="6" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
                     </label>
@@ -475,7 +473,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Security Validation (Domain & Admin Check)
         const ENABLE_AI_TELEMETRY = 1; 
         const ALLOWED_DOMAIN = "boss-timer-pro.netlify.app"; 
         const SECRET_KEY_BASE64 = "Z2Vuc3VfYWRtaW4="; 
@@ -484,20 +481,17 @@
         const userKey = window.location.hash.substring(1); 
         let isAdmin = false;
 
-        // เช็คสิทธิ์ Admin
         if (userKey && btoa(userKey) === SECRET_KEY_BASE64) {
             isAdmin = true;
         } 
         
-        // 🌟 ตั้งค่า Environment แยกกล่องข้อมูลอัตโนมัติตาม URL
-        let targetDbDoc = 'main-server'; // ค่าเริ่มต้นคือ Production
+        let targetDbDoc = 'main-server'; 
         if (currentDomain.includes('uat--')) {
             targetDbDoc = 'uat-server'; 
         } else if (currentDomain === 'localhost' || currentDomain === '127.0.0.1') {
             targetDbDoc = 'local-server'; 
         }
 
-        // ล็อกโดเมนป้องกันการก๊อปปี้ไปรันที่อื่น
         if (!currentDomain.includes(ALLOWED_DOMAIN) && currentDomain !== "localhost" && currentDomain !== "127.0.0.1") {
             document.body.innerHTML = `
                 <div style="display:flex; height:100vh; background:#0f172a; color:#ef4444; justify-content:center; align-items:center; flex-direction:column; font-family:sans-serif;">
@@ -542,6 +536,7 @@
         
         let activeInputId = null; let nextTargetId = null; let maxInputDigits = 2; let isNewInputSession = true;
         let currentSettings = {}; let standbyTimeout = null; 
+        let lastAudioPlayTime = 0; // ตัวแปรสำหรับป้องกันเสียงตีกันข้ามรอบ
 
         function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
         function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -703,6 +698,11 @@
                 if (boss && !boss.isStandby) {
                     const newVal = parseFloat(document.getElementById(activeInputId).value) || 1.0;
                     boss.stateInput = Math.max(1.0, newVal).toString();
+                    
+                    // ป้องกันเสียงแจ้งเตือนย้อนหลัง หากพิมพ์ข้าม Phase มา
+                    if (newVal >= 4.0) boss.isStage4AlertPlayed = true; 
+                    if (newVal >= 5.0) boss.isStage5AlertPlayed = true;
+
                     if (!boss.stateHistory) boss.stateHistory = [{ s: 1.0, t: boss.spawnTime }];
                     
                     const nowTime = Date.now(); boss.hasManualUpdate = true;
@@ -826,6 +826,8 @@
                         if (b.isAutoSlept === undefined) b.isAutoSlept = false;
                         if (b.telemetrySaved === undefined) b.telemetrySaved = false;
                         if (b.sleptAt === undefined && b.isStandby) b.sleptAt = b.spawnTime;
+                        // ป้องกันค่า Undefined ทำให้เสียงดังเอง
+                        if (b.isStage4AlertPlayed === undefined) b.isStage4AlertPlayed = false;
                         if (b.isStage5AlertPlayed === undefined) b.isStage5AlertPlayed = false;
                     });
                     
@@ -968,6 +970,7 @@
             if (bosses.some(boss => boss.name.toLowerCase() === nameInput.toLowerCase())) { alert("ชื่อซ้ำครับ!"); return; }
             
             const now = Date.now(); let sTime = now; let initialStageStr = "1.0"; let historyLog = []; let isManual = false;
+            let muteStage4 = false; let muteStage5 = false;
 
             if (mode === 'instant') {
                 const inputStage = Math.max(1.0, parseFloat(document.getElementById('inputInstantStage').value) || 1.0);
@@ -979,6 +982,10 @@
                 historyLog.push({ s: 1.0, t: sTime });
                 if (inputStage > 1.0) historyLog.push({ s: inputStage, t: now });
                 isManual = true;
+                
+                // Mute เสียงถ้าระบุข้ามเฟสมา
+                if (inputStage >= 4.0) muteStage4 = true;
+                if (inputStage >= 5.0) muteStage5 = true;
             } else {
                 const hoursInput = parseInt(document.getElementById('inputHours').value) || 0;
                 const minutesInput = parseInt(document.getElementById('inputMinutes').value) || 0;
@@ -993,9 +1000,10 @@
             bosses.push({
                 id: Date.now(), addedAt: Date.now(), hasManualUpdate: isManual,
                 name: nameInput, spawnTime: sTime, spawnedAt: (mode === 'instant') ? now : null, stateInput: initialStageStr, stateHistory: historyLog,
-                isPreAlertPlayed: false, isSpawnSoundPlayed: false, isStage4AlertPlayed: false, lastIntervalPlayed: 0, _wasSpawned: (mode === 'instant'),
+                isPreAlertPlayed: false, isSpawnSoundPlayed: false, 
+                isStage4AlertPlayed: muteStage4, lastIntervalPlayed: 0, _wasSpawned: (mode === 'instant'),
                 isStandby: false, isAutoSlept: false, telemetrySaved: false,
-                sleptAt: null, isStage5AlertPlayed: false
+                sleptAt: null, isStage5AlertPlayed: muteStage5
             });
             
             document.getElementById('bossName').value = ''; 
@@ -1164,7 +1172,6 @@
 
             let activeBosses = []; let upcomingBosses = []; let standbyBosses = [];
 
-            // 1. แยกกลุ่มบอส
             filteredBosses.forEach(boss => {
                 if (boss.isStandby) { standbyBosses.push(boss); } 
                 else if (boss.spawnTime <= nowTime) { activeBosses.push(boss); } 
@@ -1237,7 +1244,7 @@
                 activeCont.appendChild(div);
             });
 
-            // ⏳ วาดการ์ด Upcoming (ดึงเวลาเริ่มกลับมาใส่หลังชื่อบอส)
+            // ⏳ วาดการ์ด Upcoming 
             upcomingBosses.forEach(boss => {
                 const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
                 div.className = 'list-card';
@@ -1271,7 +1278,7 @@
                 upcomingCont.appendChild(div);
             });
 
-            // 💤 วาดการ์ด Standby (ดึงเวลาเริ่มกลับมาใส่เช่นกัน เพื่อให้สอดคล้องกับ Upcoming)
+            // 💤 วาดการ์ด Standby
             standbyBosses.forEach(boss => {
                 const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
                 div.className = 'list-card standby-mode';
@@ -1315,7 +1322,7 @@
         }
 
         // ==========================================
-        // ⏱️ ส่วนที่ 9: ฟังก์ชันวนรอบเพื่ออัปเดตตัวเลข
+        // ⏱️ ส่วนที่ 9: ฟังก์ชันวนรอบเพื่ออัปเดตตัวเลขและเสียง (แก้เสียงตีกัน)
         // ==========================================
         function updateTimers() {
             const now = new Date().getTime();
@@ -1336,6 +1343,11 @@
             const filteredBosses = bosses.filter(b => b.name.toLowerCase().includes(document.getElementById('searchInput')?.value.toLowerCase() || ''));
             let needsSort = false; 
 
+            // ตัวแปรส่วนกลางสำหรับล็อคเสียงให้ดังแค่แบบเดียวใน 1 วินาที
+            let globalPlayHorn = false;
+            let globalPlayEpic = false;
+            let globalPlaySpawn = false;
+
             filteredBosses.forEach(boss => {
                 if (boss.id === editingBossId) return;
                 const cardEl = document.getElementById(`boss-card-${boss.id}`);
@@ -1345,10 +1357,6 @@
                 const distance = boss.spawnTime - now;
                 const isCurrentlySpawned = distance <= 0;
                 const isEndGameMap = currentEndMap !== "" && boss.name.includes(currentEndMap);
-
-                let shouldPlayHorn = false;
-                let shouldPlayEpic = false;
-                let shouldPlaySpawn = false;
 
                 if (boss._wasSpawned !== isCurrentlySpawned) { 
                     boss._wasSpawned = isCurrentlySpawned; needsSort = true;
@@ -1361,7 +1369,9 @@
                 if (!isCurrentlySpawned) {
                     if (boss.isStandby) return; 
 
-                    if (document.getElementById('enablePreAlert')?.checked && distance <= preAlertTimeMs && !boss.isPreAlertPlayed) { playDingSound(); boss.isPreAlertPlayed = true; }
+                    if (document.getElementById('enablePreAlert')?.checked && distance <= preAlertTimeMs && !boss.isPreAlertPlayed) { 
+                        globalPlaySpawn = true; boss.isPreAlertPlayed = true; 
+                    }
 
                     if (timeEl) {
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -1392,7 +1402,9 @@
 
                     if (document.getElementById('enableRepeatAlert')?.checked) {
                         const currentInterval = Math.floor(elapsed / repeatIntervalMs);
-                        if (currentInterval >= 1 && currentInterval > boss.lastIntervalPlayed) { playDingSound(); boss.lastIntervalPlayed = currentInterval; }
+                        if (currentInterval >= 1 && currentInterval > boss.lastIntervalPlayed) { 
+                            globalPlaySpawn = true; boss.lastIntervalPlayed = currentInterval; 
+                        }
                     }
 
                     if (isStageSystemEnabled) {
@@ -1413,11 +1425,11 @@
                             const updateTimeEl = document.getElementById(`update-time-${boss.id}`);
                             if(updateTimeEl) {
                                 if (!boss.hasManualUpdate) {
-                                    updateTimeEl.innerHTML = `ล่าสุด: ${boss.stateInput} | <span class="warning">⚠️ รออัปเดตครั้งแรก</span>`;
+                                    updateTimeEl.innerHTML = `<span>เฟสล่าสุด: <b>${boss.stateInput}</b></span> <span><span class="warning">⚠️ รออัปเดต</span></span>`;
                                 } else {
                                     const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
-                                    const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')} วิ.`;
-                                    updateTimeEl.innerHTML = `ล่าสุด: ${boss.stateInput} | ผ่านไป <span class="hl">${timeStr}</span>`;
+                                    const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')}วิ`;
+                                    updateTimeEl.innerHTML = `<span>เฟสล่าสุด: <b>${boss.stateInput}</b></span> <span>ผ่านไป: <b class="hl">${timeStr}</b></span>`;
                                 }
                             }
 
@@ -1463,7 +1475,9 @@
                                 etaBossMs = lastLog.t + ((remainingTo5Sec / mEma) * 1000);
                             }
 
-                            predPhase = Math.min(5.0, predPhase); 
+                            // 🛡️ ปัดเศษทศนิยมเพื่อแก้ปัญหา Floating point ที่ทำให้เสียงเฟส 4 และ 5 ดังไล่เลี่ยกันในเสี้ยววิ
+                            predPhase = Math.round(Math.min(5.0, predPhase) * 100) / 100;
+                            
                             if(inputStateInner) {
                                 inputStateInner.innerText = Math.floor(predPhase) >= 5 ? "ON" : Math.floor(predPhase).toString();
                             }
@@ -1498,14 +1512,14 @@
                                 
                                 if (predPhase >= 5.0) {
                                     if (!boss.isStage5AlertPlayed) {
-                                        shouldPlayHorn = document.getElementById('enableStage5Sound')?.checked;
+                                        globalPlayHorn = document.getElementById('enableStage5Sound')?.checked;
                                         boss.isStage5AlertPlayed = true; 
-                                        boss.isStage4AlertPlayed = true; 
+                                        boss.isStage4AlertPlayed = true; // บังคับ Mute เฟส 4 ป้องกันเสียงตีกัน
                                         boss.isSpawnSoundPlayed = true; 
                                     }
                                 } else {
                                     if (!boss.isStage4AlertPlayed) { 
-                                        shouldPlayEpic = epicSoundEnable;
+                                        globalPlayEpic = epicSoundEnable;
                                         boss.isStage4AlertPlayed = true; 
                                         boss.isSpawnSoundPlayed = true;
                                     }
@@ -1515,7 +1529,7 @@
                                 cardEl.classList.add("is-spawned"); cardEl.classList.remove("is-stage4");
                                 
                                 if (!boss.isSpawnSoundPlayed) { 
-                                    shouldPlaySpawn = true; 
+                                    globalPlaySpawn = true; 
                                     boss.isSpawnSoundPlayed = true; 
                                 }
                                 if (boss.isStage4AlertPlayed) { boss.isStage4AlertPlayed = false; }
@@ -1524,20 +1538,26 @@
                         } catch (err) {}
                     } else {
                         if (!boss.isSpawnSoundPlayed) { 
-                            shouldPlaySpawn = true; 
+                            globalPlaySpawn = true; 
                             boss.isSpawnSoundPlayed = true; 
                         }
                     }
                 }
-
-                if (shouldPlayHorn) {
-                    playStage5HornSound();
-                } else if (shouldPlayEpic) {
-                    playEpicStage4Sound();
-                } else if (shouldPlaySpawn) {
-                    playDingSound();
-                }
             });
+
+            // 🎵 ระบบจัดการคิวเสียง (Audio Priority System) ควบคุมไม่ให้ตีกันเด็ดขาด
+            if (Date.now() - lastAudioPlayTime > 2000) { 
+                if (globalPlayHorn) {
+                    playStage5HornSound();
+                    lastAudioPlayTime = Date.now();
+                } else if (globalPlayEpic) {
+                    playEpicStage4Sound();
+                    lastAudioPlayTime = Date.now();
+                } else if (globalPlaySpawn) {
+                    playDingSound();
+                    lastAudioPlayTime = Date.now();
+                }
+            }
 
             if (needsSort) applySort(true);
         }
