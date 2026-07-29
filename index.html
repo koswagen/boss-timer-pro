@@ -66,9 +66,10 @@
         .section-header { font-size: 1.1rem; color: var(--text-secondary); margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;}
         .count-badge { background: #334155; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;}
 
-        /* 💳 สไตล์ของการ์ดบอสแบบ Active (Grid) - ย่อความกว้างลงเพื่อให้ได้ 4 การ์ดต่อแถว */
-        .boss-list.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;}
-        .boss-card { background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 12px; border-left: 4px solid var(--text-accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; transition: all 0.3s ease; overflow: hidden; z-index: 1;}
+        /* 💳 สไตล์ของการ์ดบอสทั้งหมดเป็น Grid (ตั้งค่า minmax(260px) เพื่อให้ได้ประมาณ 5 ใบต่อแถว) */
+        .boss-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px;}
+        
+        .boss-card { background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px; border-left: 4px solid var(--text-accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; transition: all 0.3s ease; overflow: hidden; z-index: 1;}
         .boss-card.is-spawned { border-left-color: var(--color-warning); background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-surface) 100%); }
         
         @keyframes heartbeatCard {
@@ -86,45 +87,56 @@
             background-image: none !important; transition: all 0.4s ease !important;
         }
 
-        /* 📝 สไตล์ของ Upcoming และ Standby (List View บรรทัดเดียว) */
-        .boss-list.list-view { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;}
-        .list-card { background-color: var(--bg-surface); border-radius: var(--radius-sm); display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 3px solid var(--text-accent); transition: all 0.2s ease; }
-        .list-card:hover { background-color: rgba(30, 41, 59, 0.8); } /* Dynamic Hover Color ให้การ์ดสว่างขึ้นเบาๆ */
-        .list-card.standby-mode { border-left-color: #475569; background-color: rgba(30, 41, 59, 0.4); opacity: 0.6; }
-        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; position: relative; min-height: 55px;}
+        /* 📝 สไตล์ของ Upcoming และ Standby (แบบ Grid Cards) */
+        .list-card { background-color: var(--bg-surface); border-radius: var(--radius-sm); display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 3px solid var(--text-accent); transition: all 0.2s ease; overflow: hidden; }
         
+        /* 🔥 Hover Effect จัดเต็มสำหรับ Upcoming/Standby: สว่างขึ้น 30% พร้อมออร่านีออนด้านซ้าย */
+        .list-card:hover { 
+            filter: brightness(1.3); 
+            box-shadow: -4px 0 15px rgba(56, 189, 248, 0.4), 0 4px 12px rgba(0,0,0,0.2); 
+            background-color: rgba(30, 41, 59, 0.9);
+            z-index: 2;
+        }
+        .list-card.standby-mode { border-left-color: #475569; background-color: rgba(30, 41, 59, 0.4); opacity: 0.7; }
+        .list-card.standby-mode:hover {
+            filter: brightness(1.3); 
+            box-shadow: -4px 0 15px rgba(148, 163, 184, 0.3), 0 4px 12px rgba(0,0,0,0.2); 
+            background-color: rgba(30, 41, 59, 0.9);
+        }
+
+        .list-row { display: flex; flex-direction: column; padding: 12px 14px; gap: 8px; min-height: 90px;}
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2;}
-        .boss-name-group { display: flex; align-items: flex-start; gap: 8px; line-height: 1.3; flex: 1; padding-right: 10px;}
+        .boss-name-group { display: flex; align-items: flex-start; gap: 8px; line-height: 1.3; flex: 1; padding-right: 4px;}
         
         /* จัดการชื่อบอสยาวให้ขึ้นบรรทัดใหม่ และตัดไข่ปลาถ้าเกิน 2 บรรทัด */
-        .boss-name { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
-        .list-row .boss-name { font-size: 1.1rem; -webkit-line-clamp: 1; } /* ในลิสต์บังคับ 1 บรรทัด */
+        .boss-name { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
         
         .boss-elapsed { font-family: ui-monospace, Consolas, monospace; color: var(--color-warning); font-weight: bold; letter-spacing: 0.5px;}
         
-        /* เวลานับถอยหลังตัวใหญ่สะใจสำหรับ Upcoming */
+        /* เวลานับถอยหลังตัวใหญ่สะใจสำหรับ Upcoming (Grid Format) */
+        .list-bottom-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: auto;}
         .list-eta-large { font-size: 1.5rem; font-weight: bold; font-family: ui-monospace, Consolas, monospace; color: var(--text-primary); text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
         .list-card.standby-mode .list-eta-large { font-size: 0.95rem; font-family: inherit; font-weight: normal; color: var(--text-secondary); text-shadow: none; }
 
-        /* 🖱️ ปุ่มลอยแบบซ่อนได้ (Hover Actions) จองพื้นที่ขวาไว้เสมอเพื่อไม่ให้ Layout เด้ง */
-        .hover-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; min-width: 110px; justify-content: flex-end; align-items: flex-start;}
-        .list-row:hover .hover-actions, .card-header:hover .hover-actions { opacity: 1; }
-        @media (hover: none) { .hover-actions { opacity: 0.35; } .hover-actions:active { opacity: 1; } }
+        /* 🖱️ ปุ่มลอยแบบซ่อนได้ (Hover Actions) */
+        .hover-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; justify-content: flex-end;}
+        .list-card:hover .hover-actions, .boss-card:hover .hover-actions { opacity: 1; }
+        @media (hover: none) { .hover-actions { opacity: 0.4; } .hover-actions:active { opacity: 1; } }
 
         .btn-icon { width: 30px; height: 30px; border: none; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; background-color: var(--bg-input); cursor: pointer; color: var(--text-primary); transition: 0.2s;}
         .btn-icon.edit { color: var(--color-edit); } .btn-icon.delete { color: var(--color-danger); } 
         .btn-icon.standby { color: #94a3b8; } .btn-icon.standby:hover { background: #475569; color: #fff; }
         .btn-icon:hover { filter: brightness(1.2); }
         
-        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด */
-        .state-container { display: flex; flex-direction: column; gap: 12px; z-index: 2; background: rgba(0,0,0,0.15); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
+        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด (ปรับให้เพรียวบางลง) */
+        .state-container { display: flex; flex-direction: column; gap: 8px; z-index: 2; background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
         .state-body { display: flex; align-items: center; gap: 14px; }
         
-        .state-right { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative; padding-right: 10px;}
-        .micro-timeline { position: relative; width: 100%; height: 10px; display: flex; align-items: center; margin-bottom: 8px;}
+        .state-right { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative; padding-right: 6px;}
+        .micro-timeline { position: relative; width: 100%; height: 10px; display: flex; align-items: center; margin-bottom: 6px;}
         
-        /* ปรับพื้นหลังเส้น Timeline ให้สว่างขึ้นเพื่อให้เห็นว่ามีเส้นเชื่อมกัน */
-        .mt-track { position: absolute; width: 100%; height: 4px; background: rgba(255,255,255,0.25); border-radius: 2px; }
+        /* ปรับพื้นหลังเส้น Timeline ให้สว่างขึ้นเพื่อให้เห็นชัดเจน (ความหนา 4px เท่าเดิม) */
+        .mt-track { position: absolute; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.25); border-radius: 2px; }
         
         .mt-actual { position: absolute; height: 4px; background: var(--text-accent); border-radius: 2px; z-index: 2; transition: width 0.3s; box-shadow: 0 0 6px var(--text-accent);}
         .mt-ghost { position: absolute; height: 4px; background: var(--color-warning); opacity: 0.9; border-radius: 2px; z-index: 1; transition: width 0.5s linear; box-shadow: 0 0 8px var(--color-warning);}
@@ -148,7 +160,8 @@
         .progress-inner:hover { border-color: var(--text-accent); background: var(--bg-surface); transform: scale(1.05);}
         .boss-card.is-stage4 .progress-inner { background: rgba(30, 41, 59, 1); }
         
-        .timeline-status-text { font-size: 0.75rem; color: #94a3b8; font-weight: 500; text-align: center; line-height: 1.1;}
+        /* รวมข้อความล่าสุด และเวลาที่ผ่านไป ไว้ในบรรทัดเดียวกัน เพื่อให้การ์ดไม่สูงเกินไป */
+        .timeline-status-text { font-size: 0.75rem; color: #94a3b8; font-weight: 500; text-align: left; line-height: 1.2; display: flex; flex-wrap: wrap; gap: 6px;}
         .timeline-status-text .hl { font-family: ui-monospace, monospace; color: var(--text-primary); }
 
         @keyframes pulseAmber { 0% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0.6); border-color: rgba(245, 158, 11, 0.6); } 70% { box-shadow: inset 0 0 0 8px rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } 100% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } }
@@ -165,8 +178,8 @@
         .boss-card.is-stage4 .eta-label { color: #cbd5e1; }
         .eta-time { font-family: ui-monospace, monospace; font-weight: bold; color: var(--text-primary); font-size: 1rem;}
         
-        /* --- Logs & Footer & Edit Accordion --- */
-        .edit-accordion { padding: 12px 16px; background: rgba(0,0,0,0.2); border-top: 1px dashed #334155; display: flex; flex-direction: column; gap: 10px; border-radius: 0 0 var(--radius-sm) var(--radius-sm);}
+        /* --- Edit Accordion --- */
+        .edit-accordion { padding: 12px 16px; background: rgba(0,0,0,0.2); border-top: 1px dashed #334155; display: flex; flex-direction: column; gap: 10px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); margin: 0 -14px -14px -14px;}
         .edit-mode-container { display: flex; flex-direction: column; gap: 10px; z-index: 2;}
         .edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
         .btn-text { padding: 6px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: bold; border: none; cursor: pointer; } .btn-text.save { background-color: var(--color-success); color: #000; } .btn-text.cancel { background-color: #475569; color: var(--text-primary); }
@@ -232,7 +245,7 @@
         .help-list b { color: var(--text-primary); }
 
         @media (max-width: 900px) { 
-            .boss-list.grid-view { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } 
+            .boss-list { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } 
             .add-form-group { flex-direction: column; align-items: stretch; } 
             .btn-trigger-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; } 
         }
@@ -285,13 +298,13 @@
         <!-- 💳 โซนแสดงผล 3 หมวดหมู่ -->
         
         <h3 class="section-header" id="headerActive">🔥 Active (Phase) <span class="count-badge" id="countActive">0</span></h3>
-        <div class="boss-list grid-view" id="activeContainer"></div>
+        <div class="boss-list" id="activeContainer"></div>
 
         <h3 class="section-header" id="headerUpcoming">⏳ Upcoming (นับถอยหลัง) <span class="count-badge" id="countUpcoming">0</span></h3>
-        <div class="boss-list list-view" id="upcomingContainer"></div>
+        <div class="boss-list" id="upcomingContainer"></div>
 
         <h3 class="section-header" id="headerStandby">💤 Standby (พักชั่วคราว) <span class="count-badge" id="countStandby">0</span></h3>
-        <div class="boss-list list-view" id="standbyContainer"></div>
+        <div class="boss-list" id="standbyContainer"></div>
 
 
         <!-- 🧠 แผงควบคุม AI สำหรับ Admin -->
@@ -353,7 +366,6 @@
             <div class="modal-header">⚙️ ตั้งค่าระบบ <button class="modal-close" onclick="closeSettings()">✕</button></div>
             <div class="modal-body">
                 <div class="setting-section">
-                    <!-- เปลี่ยนคำว่า Stage เป็น Phase -->
                     <h4>🤖 การคำนวณ Hybrid Engine</h4>
                     <label class="setting-row" style="cursor:pointer; font-weight: bold; color: var(--text-primary); margin-bottom: 15px;">
                         <input type="checkbox" id="enableStages" checked onchange="saveSettings(); renderBosses();"> เปิดใช้งานระบบ Phase (สำหรับเกมที่มีเงื่อนไข)
@@ -373,14 +385,16 @@
                     <label class="setting-row">ระดับเสียง: <input type="range" id="volumeControl" min="0" max="100" value="100" onchange="testSound(); saveSettings();" style="flex-grow:1;"></label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enablePreAlert" onchange="saveSettings()"> เตือนล่วงหน้า <input type="number" id="preAlertTime" value="2" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableRepeatAlert" checked onchange="saveSettings()"> เตือนซ้ำเมื่อบอสเกิด ทุกๆ <input type="number" id="alertInterval" value="10" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableEpicSound" checked onchange="saveSettings()"> 🎵 เสียงเตือนพิเศษ Phase 4 (Epic Sound)</label>
+                    <!-- อัปเดต Default ค่าตั้งต้นที่นี่ -->
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableEpicSound" onchange="saveSettings()"> 🎵 เสียงเตือนพิเศษ Phase 4 (Epic Sound)</label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableStage5Sound" checked onchange="saveSettings()"> 🎺 เสียงแตรออกรบตอนบอสเกิด (Phase 5)</label>
                 </div>
                 
                 <div class="setting-section">
                     <h4>💤 การจัดการการ์ดอัตโนมัติ (ให้ Admin เป็นผู้รันคำสั่ง)</h4>
+                    <!-- อัปเดต Default ค่าตั้งต้นที่นี่ -->
                     <label class="setting-row" style="cursor:pointer; color: var(--text-primary);">
-                        <input type="checkbox" id="autoSleepEnable" checked onchange="saveSettings()"> 💤 พักการ์ดอัตโนมัติ (Auto-Sleep) ทิ้งไว้เกิน <input type="number" id="autoSleepHrs" value="6" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
+                        <input type="checkbox" id="autoSleepEnable" onchange="saveSettings()"> 💤 พักการ์ดอัตโนมัติ (Auto-Sleep) ทิ้งไว้เกิน <input type="number" id="autoSleepHrs" value="6" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
                     </label>
                     <label class="setting-row" style="cursor:pointer; color: var(--color-danger);">
                         <input type="checkbox" id="autoDeleteEnable" onchange="saveSettings()"> 🗑️ ลบการ์ดอัตโนมัติ (Auto-Delete) ทิ้งไว้เกิน <input type="number" id="autoDeleteHrs" value="12" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
@@ -411,7 +425,6 @@
                     <h4>➕ 1. การเพิ่มและตั้งเวลาบอส</h4>
                     <ul class="help-list">
                         <li><b>⏱️ ระบุเวลา:</b> พิมพ์ชื่อบอส (ด้านบน) แล้วกดปุ่มนี้เพื่อตั้งเวลานับถอยหลัง (ชั่วโมง:นาที:วินาที) เหมาะสำหรับบอสที่ยังไม่เกิด</li>
-                        <!-- เปลี่ยนคำว่า Stage เป็น Phase -->
                         <li><b>⚡ ระบุ Phase:</b> พิมพ์ชื่อบอส แล้วกดปุ่มนี้เพื่อกรอกเลขร่าง (เช่น 2.5) เหมาะสำหรับบอสที่เกิดไปแล้ว ระบบจะคำนวณเวลาเกิดย้อนหลังให้อัตโนมัติ</li>
                     </ul>
                 </div>
@@ -475,12 +488,12 @@
         // 🌟 ตั้งค่า Environment แยกกล่องข้อมูลอัตโนมัติตาม URL
         let targetDbDoc = 'main-server'; // ค่าเริ่มต้นคือ Production
         if (currentDomain.includes('uat--')) {
-            targetDbDoc = 'uat-server'; // ถ้าเป็นเว็บ UAT ให้เปลี่ยนไปใช้กล่องเทสต์
+            targetDbDoc = 'uat-server'; 
         } else if (currentDomain === 'localhost' || currentDomain === '127.0.0.1') {
-            targetDbDoc = 'local-server'; // สำหรับรันเทสต์ในเครื่องตัวเอง
+            targetDbDoc = 'local-server'; 
         }
 
-        // ล็อกโดเมนป้องกันการก๊อปปี้ไปรันที่อื่น (รองรับทั้งเว็บหลัก และเว็บ UAT)
+        // ล็อกโดเมนป้องกันการก๊อปปี้ไปรันที่อื่น
         if (!currentDomain.includes(ALLOWED_DOMAIN) && currentDomain !== "localhost" && currentDomain !== "127.0.0.1") {
             document.body.innerHTML = `
                 <div style="display:flex; height:100vh; background:#0f172a; color:#ef4444; justify-content:center; align-items:center; flex-direction:column; font-family:sans-serif;">
@@ -491,7 +504,6 @@
 
         // ==========================================
         // 🧮 ส่วนที่ 1: ระบบสมการคำนวณเวลา (Baseline Engine)
-        // เปลี่ยนคำอธิบาย Stage เป็น Phase 
         // ==========================================
         function getCumulativeBaselineTime(phase, isFast = false) {
             const durations = isFast ? [630, 350, 280, 140] : [1620, 900, 720, 360];
@@ -522,7 +534,6 @@
         let editingBossId = null; 
         let audioCtx;
         
-        // โหลดข้อมูล "ดาว (Star)" จากเครื่องส่วนตัว (Local Storage)
         let localStarredBosses = JSON.parse(localStorage.getItem('localStarredBosses')) || [];
         
         let activeInputId = null; let nextTargetId = null; let maxInputDigits = 2; let isNewInputSession = true;
@@ -835,12 +846,15 @@
                 document.getElementById('preAlertTime').value = currentSettings.preAlertTime || 2;
                 document.getElementById('enableRepeatAlert').checked = currentSettings.enableRepeatAlert !== undefined ? currentSettings.enableRepeatAlert : true;
                 document.getElementById('alertInterval').value = currentSettings.interval || 10;
-                document.getElementById('autoSleepEnable').checked = currentSettings.autoSleepEnable !== false; 
+                // ตั้งค่า Default ใหม่จากการอ่านค่า (ถ้าไม่มีให้เป็น false ตามที่ขอ)
+                document.getElementById('autoSleepEnable').checked = currentSettings.autoSleepEnable !== undefined ? currentSettings.autoSleepEnable : false; 
                 document.getElementById('autoSleepHrs').value = currentSettings.autoSleepHrs || 6;
-                document.getElementById('autoDeleteEnable').checked = currentSettings.autoDeleteEnable || false; 
+                document.getElementById('autoDeleteEnable').checked = currentSettings.autoDeleteEnable !== undefined ? currentSettings.autoDeleteEnable : false; 
                 document.getElementById('autoDeleteHrs').value = currentSettings.autoDeleteHrs || 12; 
-                document.getElementById('enableEpicSound').checked = currentSettings.enableEpicSound !== undefined ? currentSettings.enableEpicSound : true;
+                // ตั้งค่า Default เสียง
+                document.getElementById('enableEpicSound').checked = currentSettings.enableEpicSound !== undefined ? currentSettings.enableEpicSound : false;
                 document.getElementById('enableStage5Sound').checked = currentSettings.enableStage5Sound !== undefined ? currentSettings.enableStage5Sound : true;
+                
                 document.getElementById('showAiPanel').checked = currentSettings.showAiPanel || false;
                 document.getElementById('endGameMap').value = currentSettings.endGameMap || "153";
                 document.getElementById('emaAlpha').value = 1.0; 
@@ -1003,7 +1017,6 @@
         function toggleStandbyBoss(id, isAuto = false) {
             const boss = bosses.find(b => b.id === id); if (!boss) return;
             if (!boss.isStandby) {
-                // อนิเมชั่นหน่วงเวลา (Fade & Shrink) ก่อนหายไปอยู่ Standby
                 const cardEl = document.getElementById(`boss-card-${boss.id}`);
                 if(cardEl) {
                     cardEl.classList.add('entering-standby');
@@ -1012,7 +1025,7 @@
                         processTelemetry(boss); 
                         if (!isAuto) showToast(`💤 พักการ์ด <b>${boss.name}</b> สำเร็จ`);
                         saveData(); 
-                        renderBosses(); // บังคับรีเฟรชใหม่หลังจบอนิเมชั่น
+                        renderBosses(); 
                     }, 400); 
                     return; 
                 } else {
@@ -1156,12 +1169,11 @@
                 else { upcomingBosses.push(boss); }
             });
 
-            // อัปเดตตัวเลข Count
             document.getElementById('countActive').innerText = activeBosses.length;
             document.getElementById('countUpcoming').innerText = upcomingBosses.length;
             document.getElementById('countStandby').innerText = standbyBosses.length;
 
-            // 🔥 วาดการ์ด Active (Grid ย่อขนาดลง ตัดเวลา ... ทิ้งไปเลย)
+            // 🔥 วาดการ์ด Active
             activeBosses.forEach(boss => {
                 const div = document.createElement('div'); 
                 div.id = 'boss-card-' + boss.id;
@@ -1206,15 +1218,12 @@
                                         <div class="mt-dot" id="mt-dot-4-${boss.id}" style="left: 75%"></div>
                                         <div class="mt-dot taurus" id="mt-dot-5-${boss.id}" style="left: 100%">♉&#xFE0E;</div>
                                     </div>
+                                    <!-- ข้อความล่าสุดถูกย้ายมารวมบรรทัดเดียวกับอัปเดตเวลา -->
                                     <div class="timeline-status-text" id="update-time-${boss.id}">-</div>
                                 </div>
                                 <div class="state-left">
                                     <div class="progress-circle" id="progress-circle-${boss.id}">
                                         <div class="progress-inner" id="progress-text-${boss.id}" onclick="openNumpad('state-input-${boss.id}', null, 4, 'อัปเดต Phase: ${boss.name}')">1</div>
-                                    </div>
-                                    <!-- ย้ายตัวหนังสือ "ล่าสุด" มาไว้ใต้กงล้อตัวเลขตามที่ต้องการ -->
-                                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 2px;">
-                                        ล่าสุด: ${boss.stateInput || '1.0'}
                                     </div>
                                 </div>
                             </div>
@@ -1227,7 +1236,7 @@
                 activeCont.appendChild(div);
             });
 
-            // ⏳ วาดการ์ด Upcoming (บรรทัดเดียว โชว์เวลาตัวใหญ่)
+            // ⏳ วาดการ์ด Upcoming (ตอนนี้เป็น Grid แล้ว 5 ใบต่อแถว)
             upcomingBosses.forEach(boss => {
                 const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
                 div.className = 'list-card';
@@ -1238,11 +1247,13 @@
 
                 let innerHTML = `
                     <div class="list-row">
-                        <div style="display:flex; align-items:center; gap:10px; flex: 1;">
-                            <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
-                            <span class="boss-name">${boss.name}</span>
+                        <div class="card-header">
+                            <div class="boss-name-group">
+                                <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
+                                <span class="boss-name">${boss.name}</span>
+                            </div>
                         </div>
-                        <div style="display:flex; align-items:center; gap: 16px;">
+                        <div class="list-bottom-row">
                             <span class="list-eta-large" id="time-${boss.id}">...</span>
                             <div class="hover-actions">
                                 <button class="btn-icon standby" onclick="toggleStandbyBoss(${boss.id})" title="สลีป">💤</button>
@@ -1252,13 +1263,12 @@
                         </div>
                     </div>`;
                 
-                // ใช้ Accordion กางลงมาตามที่คอนเฟิร์มไว้
                 if (boss.id === editingBossId) { innerHTML += `<div class="edit-accordion">${getEditFormHtml(boss, dist)}</div>`; }
                 div.innerHTML = innerHTML;
                 upcomingCont.appendChild(div);
             });
 
-            // 💤 วาดการ์ด Standby (บรรทัดเดียว ซ่อนปุ่ม Sleep)
+            // 💤 วาดการ์ด Standby (ตอนนี้เป็น Grid แล้ว 5 ใบต่อแถว)
             standbyBosses.forEach(boss => {
                 const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
                 div.className = 'list-card standby-mode';
@@ -1269,11 +1279,13 @@
 
                 let innerHTML = `
                     <div class="list-row">
-                        <div style="display:flex; align-items:center; gap:10px; filter: grayscale(1); flex: 1;">
-                            <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
-                            <span class="boss-name">${boss.name}</span>
+                        <div class="card-header" style="filter: grayscale(1);">
+                            <div class="boss-name-group">
+                                <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
+                                <span class="boss-name">${boss.name}</span>
+                            </div>
                         </div>
-                        <div style="display:flex; align-items:center; gap: 16px;">
+                        <div class="list-bottom-row">
                             <span class="list-eta-large">${boss.isAutoSlept ? '[💤 พักอัตโนมัติ]' : '[💤 พักการ์ด]'}</span>
                             <div class="hover-actions">
                                 <button class="btn-icon edit" onclick="startEditBoss(${boss.id})" title="แก้ไขเพื่อปลุก">✏️</button>
@@ -1329,6 +1341,11 @@
                 const isCurrentlySpawned = distance <= 0;
                 const isEndGameMap = currentEndMap !== "" && boss.name.includes(currentEndMap);
 
+                // ตัวแปรสำหรับเช็คเสียง เพื่อป้องกันเสียงตีกัน (Audio Overlap Logic)
+                let shouldPlayHorn = false;
+                let shouldPlayEpic = false;
+                let shouldPlaySpawn = false;
+
                 if (boss._wasSpawned !== isCurrentlySpawned) { 
                     boss._wasSpawned = isCurrentlySpawned; needsSort = true;
                     if (isCurrentlySpawned && !boss.isStandby) {
@@ -1369,7 +1386,6 @@
                     const elapEl = document.getElementById(`elapsed-${boss.id}`);
                     if(elapEl) elapEl.innerText = elapsedStr;
 
-                    if (!boss.isSpawnSoundPlayed) { playDingSound(); boss.isSpawnSoundPlayed = true; }
                     if (document.getElementById('enableRepeatAlert')?.checked) {
                         const currentInterval = Math.floor(elapsed / repeatIntervalMs);
                         if (currentInterval >= 1 && currentInterval > boss.lastIntervalPlayed) { playDingSound(); boss.lastIntervalPlayed = currentInterval; }
@@ -1393,11 +1409,11 @@
                             const updateTimeEl = document.getElementById(`update-time-${boss.id}`);
                             if(updateTimeEl) {
                                 if (!boss.hasManualUpdate) {
-                                    updateTimeEl.innerHTML = `<span class="warning">⚠️ รอการอัปเดตครั้งแรก</span>`;
+                                    updateTimeEl.innerHTML = `ล่าสุด: ${boss.stateInput} | <span class="warning">⚠️ รอการอัปเดตครั้งแรก</span>`;
                                 } else {
                                     const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
                                     const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')} วิ.`;
-                                    updateTimeEl.innerHTML = `ผ่านไปแล้ว <span class="hl">${timeStr}</span>`;
+                                    updateTimeEl.innerHTML = `ล่าสุด: ${boss.stateInput} | ผ่านไปแล้ว <span class="hl">${timeStr}</span>`;
                                 }
                             }
 
@@ -1473,29 +1489,52 @@
                             const eta5Text = document.getElementById(`eta5-text-${boss.id}`);
                             if(eta5Text) eta5Text.innerHTML = formatCountdownOnly(etaBossMs, now);
 
+                            // --- Logic ลำดับเสียงใหม่ (ป้องกันการตีกัน) ---
                             if (predPhase >= 4.0) {
                                 cardEl.classList.add("is-stage4"); cardEl.classList.remove("is-spawned");
                                 
-                                if (!boss.isStage4AlertPlayed) { 
-                                    if(epicSoundEnable) playEpicStage4Sound(); 
-                                    boss.isStage4AlertPlayed = true; 
-                                }
-
                                 if (predPhase >= 5.0) {
                                     if (!boss.isStage5AlertPlayed) {
-                                        if(document.getElementById('enableStage5Sound')?.checked) playStage5HornSound();
+                                        shouldPlayHorn = document.getElementById('enableStage5Sound')?.checked;
                                         boss.isStage5AlertPlayed = true; 
+                                        boss.isStage4AlertPlayed = true; // บังคับให้เงียบเสียงอื่นๆ
+                                        boss.isSpawnSoundPlayed = true; 
                                     }
                                 } else {
+                                    if (!boss.isStage4AlertPlayed) { 
+                                        shouldPlayEpic = epicSoundEnable;
+                                        boss.isStage4AlertPlayed = true; 
+                                        boss.isSpawnSoundPlayed = true;
+                                    }
                                     if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
                                 }
                             } else {
                                 cardEl.classList.add("is-spawned"); cardEl.classList.remove("is-stage4");
+                                
+                                if (!boss.isSpawnSoundPlayed) { 
+                                    shouldPlaySpawn = true; 
+                                    boss.isSpawnSoundPlayed = true; 
+                                }
                                 if (boss.isStage4AlertPlayed) { boss.isStage4AlertPlayed = false; }
                                 if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
                             }
                         } catch (err) {}
+                    } else {
+                        // กรณีปิดระบบ Phase
+                        if (!boss.isSpawnSoundPlayed) { 
+                            shouldPlaySpawn = true; 
+                            boss.isSpawnSoundPlayed = true; 
+                        }
                     }
+                }
+
+                // สั่งให้เล่นเสียงที่สำคัญที่สุดแค่ 1 เสียงในวินาทีนี้
+                if (shouldPlayHorn) {
+                    playStage5HornSound();
+                } else if (shouldPlayEpic) {
+                    playEpicStage4Sound();
+                } else if (shouldPlaySpawn) {
+                    playDingSound();
                 }
             });
 
