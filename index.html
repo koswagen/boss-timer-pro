@@ -861,8 +861,6 @@
                 
                 document.getElementById('showAiPanel').checked = currentSettings.showAiPanel || false;
                 document.getElementById('endGameMap').value = currentSettings.endGameMap || "153";
-                document.getElementById('emaAlpha').value = 1.0; 
-                currentSettings.emaAlpha = 1.0;
             } else { saveSettings(); }
 
             document.getElementById('btnInstantStage').style.display = (currentSettings.enableStages !== false) ? 'inline-flex' : 'none';
