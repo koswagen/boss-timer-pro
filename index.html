@@ -33,8 +33,8 @@
         .btn-circle { background: var(--bg-surface); border: 1px solid #334155; color: var(--text-accent); font-size: 1.1rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
         .btn-circle:hover { background: var(--text-accent); color: #000; }
         
-        /* 📝 ฟอร์มสำหรับพิมพ์ชื่อและเพิ่มบอส */
-        .control-row { display: flex; background-color: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        /* 📝 ฟอร์มสำหรับพิมพ์ชื่อและเพิ่มบอส รวมการค้นหาและฟิลเตอร์เข้าไว้ด้วยกัน */
+        .control-row { display: flex; flex-direction: column; gap: 12px; background-color: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         input[type="text"], input[type="number"], select { background-color: var(--bg-input); border: 1px solid #334155; color: var(--text-primary); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.95rem; outline: none; transition: all 0.2s; }
         input:focus, select:focus { border-color: var(--text-accent); }
         input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--text-accent); cursor: pointer; }
@@ -48,94 +48,76 @@
         .btn-trigger-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-trigger { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 0.95rem; cursor: pointer; font-weight: bold; white-space: nowrap; height: 38px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; border: 1px solid transparent; }
         .btn-trigger.normal { background-color: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: var(--text-accent); }
+        /* เปลี่ยนคำจาก Stage เป็น Phase */
         .btn-trigger.instant { background-color: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: var(--color-warning); }
         .btn-trigger:hover { filter: brightness(1.2); }
 
-        /* 🗂️ แถบเครื่องมือ (ตัวเลือกจัดเรียง และ ช่องค้นหา) */
-        .list-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; background-color: rgba(30, 41, 59, 0.4); padding: 10px 14px; border-radius: var(--radius-md); }
-        .list-toolbar h3 { margin: 0; color: var(--text-secondary); font-size: 1.05rem; }
-        .toolbar-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .sort-select { height: 38px; cursor: pointer; background-color: var(--bg-surface); }
-        
-        .search-box { display: flex; align-items: center; position: relative; width: 180px; }
-        .search-box input { width: 100%; padding-left: 32px; border-color: transparent; font-size: 0.9rem; height: 38px;}
+        .search-filter-group { display: flex; gap: 8px; width: 100%; align-items: center; flex-wrap: wrap; }
+        .sort-select { height: 38px; cursor: pointer; background-color: var(--bg-input); flex: 1; min-width: 150px; }
+        .search-box { display: flex; align-items: center; position: relative; flex: 1; min-width: 150px; }
+        .search-box input { width: 100%; padding-left: 32px; height: 38px;}
         .search-icon { position: absolute; left: 10px; font-size: 0.9rem; color: var(--text-accent); }
-        .btn-icon { width: 30px; height: 30px; border: none; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; background-color: var(--bg-input); cursor: pointer; color: var(--text-primary); transition: 0.2s;}
-        .btn-icon.edit { color: var(--color-edit); } .btn-icon.delete { color: var(--color-danger); } 
-        .btn-icon.standby { color: #94a3b8; } .btn-icon.standby:hover { background: #475569; color: #fff; }
-        .btn-icon:hover { filter: brightness(1.2); }
 
         /* 🔔 กล่องแจ้งเตือนมุมล่าง (Toast Notifications) */
         #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; align-items: center;}
         .toast-message { background: rgba(15, 23, 42, 0.95); color: var(--text-primary); padding: 10px 24px; border-radius: 30px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5); opacity: 0; transform: translateY(20px); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); display: flex; align-items: center; gap: 8px;}
         .toast-message.show { opacity: 1; transform: translateY(0); }
 
-        /* 💳 สไตล์ของการ์ดบอสแต่ละใบ */
-        .boss-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+        /* 📌 หัวข้อหมวดหมู่แบบมีตัวเลข Badge */
+        .section-header { font-size: 1.1rem; color: var(--text-secondary); margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;}
+        .count-badge { background: #334155; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;}
+
+        /* 💳 สไตล์ของการ์ดบอสแบบ Active (Grid) */
+        .boss-list.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; margin-bottom: 20px;}
         .boss-card { background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 14px; border-left: 4px solid var(--text-accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; transition: all 0.3s ease; overflow: hidden; z-index: 1;}
         .boss-card.is-spawned { border-left-color: var(--color-warning); background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-surface) 100%); }
         
-        /* อนิเมชั่นไฟกะพริบสำหรับ Stage 4 */
         @keyframes heartbeatCard {
             0% { box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); background: linear-gradient(135deg, rgba(225, 29, 72, 0.1) 0%, var(--bg-surface) 100%); }
             50% { box-shadow: 0 0 25px rgba(225, 29, 72, 0.5); background: linear-gradient(135deg, rgba(225, 29, 72, 0.25) 0%, var(--bg-surface) 100%); }
             100% { box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); background: linear-gradient(135deg, rgba(225, 29, 72, 0.1) 0%, var(--bg-surface) 100%); }
         }
         .boss-card.is-stage4 { border-left-color: var(--color-stage4); border-width: 1px; border-style: solid; border-color: rgba(225, 29, 72, 0.4); border-left-width: 4px; animation: heartbeatCard 2s infinite ease-in-out;}
-        .boss-card.is-stage4::after { content: 'STAGE 4'; position: absolute; bottom: -5px; right: -5px; font-size: 5.5rem; font-weight: 900; color: var(--color-stage4); opacity: 0.05; pointer-events: none; line-height: 1; transform: rotate(-5deg); z-index: -1; }
+        .boss-card.is-stage4::after { content: 'PHASE 4'; position: absolute; bottom: -5px; right: -5px; font-size: 5.5rem; font-weight: 900; color: var(--color-stage4); opacity: 0.05; pointer-events: none; line-height: 1; transform: rotate(-5deg); z-index: -1; }
 
-        /* 💤 จังหวะกำลังหดตัวเข้าโหมดพักการ์ด */
-        .boss-card.entering-standby {
-            transform: scale(0.95); background-color: rgba(30, 41, 59, 0.4) !important;
+        /* 💤 แอนิเมชันจังหวะกำลังหดตัวเข้าโหมดพักการ์ด */
+        .boss-card.entering-standby, .list-card.entering-standby {
+            transform: scale(0.95); background-color: rgba(30, 41, 59, 0.4) !important; filter: grayscale(1); opacity: 0.4;
             border-left-color: #475569 !important; box-shadow: none !important; animation: none !important;
             background-image: none !important; transition: all 0.4s ease !important;
         }
-        .boss-card.entering-standby::after { display: none; }
-        .boss-card.entering-standby .card-header .boss-name, 
-        .boss-card.entering-standby .card-header .boss-eta { filter: grayscale(1); transition: filter 0.4s ease; }
-        .boss-card.entering-standby .state-container, .boss-card.entering-standby .eta-capsule, .boss-card.entering-standby .countdown-container { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 
-        /* 💤 หน้าตาของการ์ดที่ถูกพับเก็บ (โหมด Sleep เต็มรูปแบบ) */
-        .boss-card.is-standby { 
-            background-color: rgba(30, 41, 59, 0.4); border-left-color: #475569; 
-            border-width: 0 0 0 4px; border-style: solid; box-shadow: none; opacity: 0.6; 
-            animation: none; background-image: none; padding: 10px 16px; gap: 0; 
-        }
-        .boss-card.is-standby::after { display: none; }
-        .boss-card.is-standby .card-header .boss-name, 
-        .boss-card.is-standby .card-header .boss-eta { filter: grayscale(1); }
-        .boss-card.is-standby .countdown-container { display: none !important; }
+        /* 📝 สไตล์ของ Upcoming และ Standby (List View บรรทัดเดียว) */
+        .boss-list.list-view { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;}
+        .list-card { background-color: var(--bg-surface); border-radius: var(--radius-sm); display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 3px solid var(--text-accent); transition: all 0.3s ease; }
+        .list-card.standby-mode { border-left-color: #475569; background-color: rgba(30, 41, 59, 0.4); opacity: 0.6; }
+        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; position: relative; min-height: 48px;}
         
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2;}
         .boss-name-group { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; line-height: 1.3; }
         .boss-name { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+        .list-row .boss-name { font-size: 1.05rem; }
         .boss-eta { font-size: 0.85rem; color: var(--text-secondary); background: rgba(0,0,0,0.25); padding: 3px 8px; border-radius: 6px; font-weight: 500; display: flex; gap: 6px; align-items: center;}
         .boss-elapsed { font-family: ui-monospace, Consolas, monospace; color: var(--color-warning); font-weight: bold; letter-spacing: 0.5px;}
-        .card-actions { display: flex; gap: 6px; }
+        
+        /* 🖱️ ปุ่มลอยแบบซ่อนได้ (Hover Actions) จองพื้นที่ขวาไว้เสมอเพื่อไม่ให้ Layout เด้ง */
+        .hover-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; width: 110px; justify-content: flex-end; align-items: flex-start;}
+        .list-row:hover .hover-actions, .card-header:hover .hover-actions { opacity: 1; }
+        @media (hover: none) { .hover-actions { opacity: 0.35; } .hover-actions:active { opacity: 1; } }
+
+        .btn-icon { width: 30px; height: 30px; border: none; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 0.9rem; background-color: var(--bg-input); cursor: pointer; color: var(--text-primary); transition: 0.2s;}
+        .btn-icon.edit { color: var(--color-edit); } .btn-icon.delete { color: var(--color-danger); } 
+        .btn-icon.standby { color: #94a3b8; } .btn-icon.standby:hover { background: #475569; color: #fff; }
+        .btn-icon:hover { filter: brightness(1.2); }
 
         .countdown-container { text-align: right; z-index: 2;}
         .countdown-display { font-size: 1.6rem; font-weight: bold; font-family: ui-monospace, Consolas, monospace; color: var(--text-primary); background: rgba(0,0,0,0.25); padding: 6px 12px; border-radius: var(--radius-sm); display: inline-block;}
         
-        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด */
-        .state-container { display: none; flex-direction: column; gap: 12px; z-index: 2; background: rgba(0,0,0,0.15); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
+        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด (ปรับใหม่ วงกลมกดได้) */
+        .state-container { display: flex; flex-direction: column; gap: 12px; z-index: 2; background: rgba(0,0,0,0.15); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
         .state-body { display: flex; align-items: center; gap: 14px; }
         
-        .state-left { flex-shrink: 0; } 
-        .progress-circle { width: 50px; height: 50px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s linear;}
-        .progress-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(transparent 0deg, transparent 34deg, var(--bg-surface) 34deg, var(--bg-surface) 36deg); z-index: 1; }
-        .progress-inner { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-surface); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: var(--text-primary); z-index: 2;}
-        .boss-card.is-stage4 .progress-inner { background: rgba(30, 41, 59, 1); }
-        @keyframes ringPulseAlert { 0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0); } 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } }
-        .progress-circle.is-hype { animation: ringPulseAlert 1.5s infinite; }
-
-        .state-center { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 65px;} 
-        .state-center input { width: 100%; text-align: center; font-size: 1.25rem; font-weight: bold; cursor: pointer; border-color: #334155; background-color: var(--bg-input); color: var(--text-primary); padding: 4px; border-radius: var(--radius-sm); transition: all 0.3s;}
-        
-        @keyframes pulseAmber { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6); } 70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
-        .state-center input.needs-update { animation: pulseAmber 1.5s infinite; border-color: var(--color-warning); background-color: rgba(245, 158, 11, 0.15); color: var(--color-warning); }
-        .boss-card.is-stage4 .state-center input { border-color: var(--color-stage4); color: var(--color-stage4); background-color: rgba(225, 29, 72, 0.15); }
-
-        .state-right { flex-grow: 1; padding: 0 10px; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative;}
+        .state-right { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative;}
         .micro-timeline { position: relative; width: 100%; height: 10px; display: flex; align-items: center; margin-bottom: 8px;}
         .mt-track { position: absolute; width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; }
         
@@ -153,20 +135,34 @@
         .mt-dot.taurus.active-ghost { background: transparent; color: var(--color-warning); text-shadow: 0 0 6px var(--color-warning); }
         .boss-card.is-stage4 .mt-dot.taurus.active-ghost { color: var(--color-stage4); text-shadow: 0 0 6px var(--color-stage4); }
         
-        .timeline-status-text { font-size: 0.75rem; color: #94a3b8; text-align: center; font-weight: 500; white-space: nowrap; letter-spacing: -0.2px; margin-top: 4px;}
+        .timeline-status-text { font-size: 0.75rem; color: #94a3b8; font-weight: 500; white-space: nowrap; letter-spacing: -0.2px; margin-top: 4px;}
         .timeline-status-text .hl { font-family: ui-monospace, monospace; color: var(--text-secondary); font-size: 0.8rem;}
         .timeline-status-text .warning { color: var(--color-warning); animation: pulseAmber 1.5s infinite; font-weight: bold;}
+
+        /* วงกลมกดได้ (แทนช่อง Input) */
+        .state-left { flex-shrink: 0; padding-left: 10px;} 
+        .progress-circle { width: 55px; height: 55px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s linear;}
+        .progress-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(transparent 0deg, transparent 34deg, var(--bg-surface) 34deg, var(--bg-surface) 36deg); z-index: 1; pointer-events: none; }
+        .progress-inner { width: 43px; height: 43px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; color: var(--text-primary); z-index: 2; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);}
+        .progress-inner:hover { border-color: var(--text-accent); background: var(--bg-surface); transform: scale(1.05);}
+        .boss-card.is-stage4 .progress-inner { background: rgba(30, 41, 59, 1); }
+        
+        @keyframes pulseAmber { 0% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0.6); border-color: rgba(245, 158, 11, 0.6); } 70% { box-shadow: inset 0 0 0 8px rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } 100% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } }
+        .progress-inner.needs-update { animation: pulseAmber 1.5s infinite; color: var(--color-warning); }
+
+        @keyframes ringPulseAlert { 0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0); } 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } }
+        .progress-circle.is-hype { animation: ringPulseAlert 1.5s infinite; }
 
         /* --- Capsule ETA UI --- */
         .eta-capsule { display: none; justify-content: center; align-items: center; font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: var(--radius-pill); border: 1px solid rgba(56, 189, 248, 0.2); gap: 8px; white-space: nowrap; flex-wrap: nowrap;}
         .boss-card.is-stage4 .eta-capsule { border-color: rgba(225, 29, 72, 0.4); background: rgba(225, 29, 72, 0.12);}
         .eta-item { display: flex; align-items: center; gap: 6px; white-space: nowrap;}
-        .eta-divider { color: #334155; margin: 0 2px; font-weight: bold;}
         .eta-label { color: var(--text-secondary); }
         .boss-card.is-stage4 .eta-label { color: #cbd5e1; }
         .eta-time { font-family: ui-monospace, monospace; font-weight: bold; color: var(--text-primary); font-size: 1rem;}
         
-        /* --- Logs & Footer --- */
+        /* --- Logs & Footer & Edit --- */
+        .edit-accordion { padding: 12px 16px; background: rgba(0,0,0,0.2); border-top: 1px dashed #334155; display: flex; flex-direction: column; gap: 10px; border-radius: 0 0 var(--radius-sm) var(--radius-sm);}
         .edit-mode-container { display: flex; flex-direction: column; gap: 10px; z-index: 2;}
         .edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
         .btn-text { padding: 6px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: bold; border: none; cursor: pointer; } .btn-text.save { background-color: var(--color-success); color: #000; } .btn-text.cancel { background-color: #475569; color: var(--text-primary); }
@@ -232,11 +228,8 @@
         .help-list b { color: var(--text-primary); }
 
         @media (max-width: 900px) { 
-            .boss-list { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } 
+            .boss-list.grid-view { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } 
             .add-form-group { flex-direction: column; align-items: stretch; } 
-            .toolbar-actions { width: 100%; justify-content: flex-start;} 
-            .sort-select { flex: 1; }
-            .search-box { width: 100%; } 
             .btn-trigger-group { width: 100%; display: grid; grid-template-columns: 1fr 1fr; } 
         }
     </style>
@@ -267,31 +260,36 @@
 
                     <div class="btn-trigger-group">
                         <button type="button" class="btn-trigger normal" onclick="openNumpad('inputHours', 'inputMinutes', 2, 'ตั้งเวลาบอส (รอเกิด)')">⏱️ ระบุเวลา</button>
-                        <button type="button" class="btn-trigger instant" id="btnInstantStage" onclick="openNumpad('inputInstantStage', null, 4, 'กรอก Stage ปัจจุบัน')">⚡ ระบุ Stage</button>
+                        <!-- เปลี่ยนคำว่า Stage เป็น Phase -->
+                        <button type="button" class="btn-trigger instant" id="btnInstantStage" onclick="openNumpad('inputInstantStage', null, 4, 'กรอก Phase ปัจจุบัน')">⚡ ระบุ Phase</button>
+                    </div>
+                </div>
+                
+                <div class="search-filter-group">
+                    <select id="sortOption" class="sort-select" onchange="applySort(true)">
+                        <option value="time">⏱️ เรียงตามเวลา (ดึงดาวขึ้นบนสุด)</option>
+                        <option value="name_asc">🔠 เรียงชื่อ (น้อย ➔ มาก)</option>
+                        <option value="name_desc">🔠 เรียงชื่อ (มาก ➔ น้อย)</option>
+                    </select>
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="ค้นหาชื่อ..." onkeyup="renderBosses()">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 🗂️ แถบเครื่องมือจัดการบอส -->
-        <div class="list-toolbar">
-            <h3>⚔️ รายการบอส</h3>
-            
-            <div class="toolbar-actions">
-                <select id="sortOption" class="sort-select" onchange="applySort(true)">
-                    <option value="time">⏱️ เรียงตามเวลา (ดึงดาวขึ้นบนสุด)</option>
-                    <option value="name_asc">🔠 เรียงชื่อ (น้อย ➔ มาก)</option>
-                    <option value="name_desc">🔠 เรียงชื่อ (มาก ➔ น้อย)</option>
-                </select>
-                <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" placeholder="ค้นหาชื่อ..." onkeyup="renderBosses()">
-                </div>
-            </div>
-        </div>
+        <!-- 💳 โซนแสดงผล 3 หมวดหมู่ -->
+        
+        <h3 class="section-header" id="headerActive">🔥 Active (Phase) <span class="count-badge" id="countActive">0</span></h3>
+        <div class="boss-list grid-view" id="activeContainer"></div>
 
-        <!-- 💳 พื้นที่สำหรับแสดงการ์ดบอสทั้งหมด -->
-        <div class="boss-list" id="timersContainer"></div>
+        <h3 class="section-header" id="headerUpcoming">⏳ Upcoming (นับถอยหลัง) <span class="count-badge" id="countUpcoming">0</span></h3>
+        <div class="boss-list list-view" id="upcomingContainer"></div>
+
+        <h3 class="section-header" id="headerStandby">💤 Standby (พักชั่วคราว) <span class="count-badge" id="countStandby">0</span></h3>
+        <div class="boss-list list-view" id="standbyContainer"></div>
+
 
         <!-- 🧠 แผงควบคุม AI สำหรับ Admin -->
         <div id="aiPanelContainer" class="ai-panel">
@@ -352,9 +350,10 @@
             <div class="modal-header">⚙️ ตั้งค่าระบบ <button class="modal-close" onclick="closeSettings()">✕</button></div>
             <div class="modal-body">
                 <div class="setting-section">
+                    <!-- เปลี่ยนคำว่า Stage เป็น Phase -->
                     <h4>🤖 การคำนวณ Hybrid Engine</h4>
                     <label class="setting-row" style="cursor:pointer; font-weight: bold; color: var(--text-primary); margin-bottom: 15px;">
-                        <input type="checkbox" id="enableStages" checked onchange="saveSettings(); renderBosses();"> เปิดใช้งานระบบ Stage (สำหรับเกมที่มีเงื่อนไข)
+                        <input type="checkbox" id="enableStages" checked onchange="saveSettings(); renderBosses();"> เปิดใช้งานระบบ Phase (สำหรับเกมที่มีเงื่อนไข)
                     </label>
                     <div class="setting-box-highlight" id="endGameMapContainer">
                         <h5>🔥 แมพสูงสุดของแพตช์ปัจจุบัน (End-Game Map)</h5>
@@ -371,8 +370,8 @@
                     <label class="setting-row">ระดับเสียง: <input type="range" id="volumeControl" min="0" max="100" value="100" onchange="testSound(); saveSettings();" style="flex-grow:1;"></label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enablePreAlert" onchange="saveSettings()"> เตือนล่วงหน้า <input type="number" id="preAlertTime" value="2" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableRepeatAlert" checked onchange="saveSettings()"> เตือนซ้ำเมื่อบอสเกิด ทุกๆ <input type="number" id="alertInterval" value="10" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableEpicSound" checked onchange="saveSettings()"> 🎵 เสียงเตือนพิเศษ Stage 4 (Epic Sound)</label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableStage5Sound" checked onchange="saveSettings()"> 🎺 เสียงแตรออกรบตอนบอสเกิด (Stage 5)</label>
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableEpicSound" checked onchange="saveSettings()"> 🎵 เสียงเตือนพิเศษ Phase 4 (Epic Sound)</label>
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableStage5Sound" checked onchange="saveSettings()"> 🎺 เสียงแตรออกรบตอนบอสเกิด (Phase 5)</label>
                 </div>
                 
                 <div class="setting-section">
@@ -409,7 +408,8 @@
                     <h4>➕ 1. การเพิ่มและตั้งเวลาบอส</h4>
                     <ul class="help-list">
                         <li><b>⏱️ ระบุเวลา:</b> พิมพ์ชื่อบอส (ด้านบน) แล้วกดปุ่มนี้เพื่อตั้งเวลานับถอยหลัง (ชั่วโมง:นาที:วินาที) เหมาะสำหรับบอสที่ยังไม่เกิด</li>
-                        <li><b>⚡ ระบุ Stage:</b> พิมพ์ชื่อบอส แล้วกดปุ่มนี้เพื่อกรอกเลขร่าง (เช่น 2.5) เหมาะสำหรับบอสที่เกิดไปแล้ว ระบบจะคำนวณเวลาเกิดย้อนหลังให้อัตโนมัติ</li>
+                        <!-- เปลี่ยนคำว่า Stage เป็น Phase -->
+                        <li><b>⚡ ระบุ Phase:</b> พิมพ์ชื่อบอส แล้วกดปุ่มนี้เพื่อกรอกเลขร่าง (เช่น 2.5) เหมาะสำหรับบอสที่เกิดไปแล้ว ระบบจะคำนวณเวลาเกิดย้อนหลังให้อัตโนมัติ</li>
                     </ul>
                 </div>
                 <div class="help-section">
@@ -422,11 +422,11 @@
                     </ul>
                 </div>
                 <div class="help-section">
-                    <h4>🤖 3. ระบบพยากรณ์เวลา (AI & Stage)</h4>
+                    <h4>🤖 3. ระบบพยากรณ์เวลา (AI & Phase)</h4>
                     <ul class="help-list">
-                        <li>เมื่อเวลาบอสเกิดแล้ว การ์ดจะเปลี่ยนเป็นแถบเครื่องมือ <b>อัปเดตสเตจ (1-5)</b></li>
-                        <li>เมื่อมีคนในเกมแจ้งสเตจ ให้เรากดที่ <b>ตัวเลขในช่อง</b> เพื่ออัปเดตตาม</li>
-                        <li>ระบบจะคำนวณความเร็วในการตีของคนในเซิร์ฟเวอร์ และพยากรณ์ (เส้นสีเหลือง) ว่าจะรวมพล (Stage 4) หรือ (Stage 5) ตอนกี่โมง</li>
+                        <li>เมื่อเวลาบอสเกิดแล้ว การ์ดจะเปลี่ยนเป็นแถบเครื่องมือสำหรับ <b>อัปเดตเฟส (Phase)</b></li>
+                        <li>เมื่อมีคนในเกมแจ้งเฟส (หรือสเตจ) ให้เรากดที่ <b>วงกลมตัวเลข</b> เพื่ออัปเดตตาม</li>
+                        <li>ระบบจะคำนวณความเร็วในการตีของคนในเซิร์ฟเวอร์ และพยากรณ์ว่าบอสจะเกิดตอนกี่โมง</li>
                     </ul>
                 </div>
             </div>
@@ -488,18 +488,19 @@
 
         // ==========================================
         // 🧮 ส่วนที่ 1: ระบบสมการคำนวณเวลา (Baseline Engine)
+        // เปลี่ยนคำอธิบาย Stage เป็น Phase 
         // ==========================================
-        function getCumulativeBaselineTime(stage, isFast = false) {
+        function getCumulativeBaselineTime(phase, isFast = false) {
             const durations = isFast ? [630, 350, 280, 140] : [1620, 900, 720, 360];
             let total = 0;
-            if (stage > 1) total += Math.min(1, stage - 1) * durations[0]; 
-            if (stage > 2) total += Math.min(1, stage - 2) * durations[1]; 
-            if (stage > 3) total += Math.min(1, stage - 3) * durations[2]; 
-            if (stage > 4) total += Math.min(1, stage - 4) * durations[3]; 
+            if (phase > 1) total += Math.min(1, phase - 1) * durations[0]; 
+            if (phase > 2) total += Math.min(1, phase - 2) * durations[1]; 
+            if (phase > 3) total += Math.min(1, phase - 3) * durations[2]; 
+            if (phase > 4) total += Math.min(1, phase - 4) * durations[3]; 
             return total;
         }
 
-        function getStageFromTime(time, isFast = false) {
+        function getPhaseFromTime(time, isFast = false) {
             const d = isFast ? [630, 350, 280, 140] : [1620, 900, 720, 360];
             if (time <= 0) return 1.0;
             if (time <= d[0]) return 1.0 + time / d[0];
@@ -538,7 +539,7 @@
         }
 
         // ==========================================
-        // ⌨️ ส่วนที่ 3: ระบบ Numpad ควบคุมการกรอกเวลา (อัปเดตใหม่)
+        // ⌨️ ส่วนที่ 3: ระบบ Numpad ควบคุมการกรอกเวลา
         // ==========================================
         function getTimeGroupFields(id) {
             if (!id) return null;
@@ -704,7 +705,6 @@
         // ☁️ ส่วนที่ 4: การบันทึก/โหลดข้อมูลจาก Firebase
         // ==========================================
         function saveData() { 
-            // 🔥 อัปเดตข้อมูลขึ้น Firebase ตาม Environment (targetDbDoc)
             db.collection('bossData').doc(targetDbDoc).set({
                 bosses: bosses,
                 deletedLogs: deletedLogs
@@ -757,7 +757,7 @@
             for (let i = 1; i < boss.stateHistory.length; i++) {
                 const prev = boss.stateHistory[i - 1]; const curr = boss.stateHistory[i];
                 let duration = (curr.t - prev.t) / 1000; if (duration < 0) duration = Math.abs(duration);
-                segments.push({ fromStage: prev.s, toStage: curr.s, durationSeconds: duration });
+                segments.push({ fromPhase: prev.s, toPhase: curr.s, durationSeconds: duration });
             }
             const lastState = parseFloat(boss.stateHistory[boss.stateHistory.length - 1].s) || 0;
             let totalDur = (boss.stateHistory[boss.stateHistory.length - 1].t - boss.stateHistory[0].t) / 1000;
@@ -788,19 +788,16 @@
         }
 
         function loadData() {
-            // โหลดการตั้งค่าและ AI Dataset จากในเครื่อง (Local Storage)
             const savedSettings = localStorage.getItem('bossSettings');
             const savedAiDataset = localStorage.getItem('bossAiDataset');
             if (savedAiDataset) aiDataset = JSON.parse(savedAiDataset);
             
-            // 🔥 ดึงข้อมูลบอสแบบ Real-time จาก Firebase ตาม Environment
             db.collection('bossData').doc(targetDbDoc).onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
                     bosses = data.bosses || [];
                     deletedLogs = data.deletedLogs || [];
                     
-                    // ปรับโครงสร้างข้อมูลเดิม (เพื่อให้รองรับตัวแปรใหม่ๆ)
                     bosses.forEach(b => { 
                         if (!b.stateHistory) b.stateHistory = [{ s: Math.max(1.0, parseFloat(b.stateInput)||1.0), t: b.spawnTime }];
                         if (parseFloat(b.stateInput) < 1.0) b.stateInput = "1.0";
@@ -817,7 +814,6 @@
                     applySort(true); 
                     renderLogs();
                 } else {
-                    // หากยังไม่มีข้อมูลบน Database ให้เตรียม Array ว่าง
                     bosses = [];
                     deletedLogs = [];
                     applySort(true);
@@ -862,7 +858,6 @@
             }
         }
 
-        // Export/Import ใช้ได้เฉพาะ Admin
         function exportData() {
             if (!isAdmin) return;
             const data = { bosses: bosses, settings: JSON.parse(localStorage.getItem('bossSettings') || '{}') };
@@ -991,7 +986,6 @@
             saveData();
         }
 
-        // 🌟 ฟังก์ชันจัดการ "ดาวส่วนตัว" (บันทึกลงเครื่องใครเครื่องมัน)
         function toggleStar(id) {
             const index = localStarredBosses.indexOf(id);
             if (index > -1) {
@@ -1006,12 +1000,24 @@
         function toggleStandbyBoss(id, isAuto = false) {
             const boss = bosses.find(b => b.id === id); if (!boss) return;
             if (!boss.isStandby) {
-                boss.isStandby = true; boss.isAutoSlept = isAuto; boss.sleptAt = Date.now(); 
-                processTelemetry(boss); 
-                
-                if (!isAuto) showToast(`💤 พักการ์ด <b>${boss.name}</b> สำเร็จ`);
+                // อนิเมชั่นหน่วงเวลา (Fade & Shrink)
+                const cardEl = document.getElementById(`boss-card-${boss.id}`);
+                if(cardEl) {
+                    cardEl.classList.add('entering-standby');
+                    setTimeout(() => {
+                        boss.isStandby = true; boss.isAutoSlept = isAuto; boss.sleptAt = Date.now(); 
+                        processTelemetry(boss); 
+                        if (!isAuto) showToast(`💤 พักการ์ด <b>${boss.name}</b> สำเร็จ`);
+                        saveData(); 
+                        renderBosses(); // บังคับรีเฟรชใหม่หลังจบอนิเมชั่น
+                    }, 400); 
+                    return; 
+                } else {
+                    boss.isStandby = true; boss.isAutoSlept = isAuto; boss.sleptAt = Date.now(); 
+                    processTelemetry(boss); 
+                    saveData();
+                }
             }
-            saveData(); 
         }
 
         function startEditBoss(id) { editingBossId = id; renderBosses(); }
@@ -1054,9 +1060,7 @@
                 statusText: elapsedTimeText, reasonText: isAutoDelete ? `(ลบอัตโนมัติ)` : `(ลบด้วยตัวเอง)`
             });
             
-            // 🔥 จำกัดจำนวนประวัติส่วนกลางไว้ที่ 10 รายการ
             if (deletedLogs.length > 10) deletedLogs.length = 10;
-            
             bosses = bosses.filter(b => b.id !== id); 
             saveData();
         }
@@ -1096,7 +1100,6 @@
                 const aSpawned = now >= a.spawnTime; const bSpawned = now >= b.spawnTime;
 
                 if (sortMode === 'time') {
-                    // ใช้ข้อมูลการติดดาวส่วนตัวจาก Local Storage
                     const aIsStarred = localStarredBosses.includes(a.id);
                     const bIsStarred = localStarredBosses.includes(b.id);
                     
@@ -1114,72 +1117,84 @@
                 }
             });
             
-            // หยุดกระดานถ้าผู้ใช้กำลังเปิดโหมดแก้ไขการ์ดอยู่ (ป้องกัน Form Wipe) 
-            if (forceRender && editingBossId === null) {
-                renderBosses();
-            }
+            if (forceRender && editingBossId === null) { renderBosses(); }
+        }
+
+        // ฟังก์ชันสร้างฟอร์ม Edit
+        function getEditFormHtml(boss, dist) {
+            let eh = 0, em = 0, es = 0;
+            if (dist > 0) { eh = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); em = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)); es = Math.floor((dist % (1000 * 60)) / 1000); }
+            boss._tempPrefillH = eh; boss._tempPrefillM = em; boss._tempPrefillS = es;
+            return `<div class="edit-mode-container"><div style="font-size:0.9rem; color:var(--text-accent); font-weight:bold;">✏️ แก้ไขข้อมูล</div><input type="text" id="editName-${boss.id}" value="${boss.name}" style="width:100%;"><div style="display:flex; gap:8px;"><div class="time-wrapper"><input type="text" id="editHours-${boss.id}" value="${eh}" readonly onclick="openNumpad('editHours-${boss.id}', 'editMinutes-${boss.id}', 2, 'ชั่วโมง')"><span class="time-label">ชม.</span></div><div class="time-wrapper"><input type="text" id="editMinutes-${boss.id}" value="${em}" readonly onclick="openNumpad('editMinutes-${boss.id}', 'editSeconds-${boss.id}', 2, 'นาที')"><span class="time-label">น.</span></div><div class="time-wrapper"><input type="text" id="editSeconds-${boss.id}" value="${es}" readonly onclick="openNumpad('editSeconds-${boss.id}', null, 2, 'วินาที')"><span class="time-label">วิ.</span></div></div><div class="edit-actions"><button class="btn-text save" onclick="saveEditBoss(${boss.id})">✓ บันทึก</button><button class="btn-text cancel" onclick="cancelEditBoss()">✕ ยกเลิก</button></div></div>`;
         }
 
         // ==========================================
         // 🖥️ ส่วนที่ 8: ฟังก์ชันวาด UI ลงหน้าจอ
         // ==========================================
         function renderBosses() {
-            const container = document.getElementById('timersContainer'); if (!container) return;
-            container.innerHTML = '';
+            const activeCont = document.getElementById('activeContainer'); 
+            const upcomingCont = document.getElementById('upcomingContainer');
+            const standbyCont = document.getElementById('standbyContainer');
+            if (!activeCont || !upcomingCont || !standbyCont) return;
+
+            activeCont.innerHTML = ''; upcomingCont.innerHTML = ''; standbyCont.innerHTML = '';
             
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const filteredBosses = bosses.filter(boss => boss.name.toLowerCase().includes(searchTerm));
             const isStageSystemEnabled = currentSettings.enableStages !== false; 
+            const nowTime = new Date().getTime();
 
+            let activeBosses = []; let upcomingBosses = []; let standbyBosses = [];
+
+            // 1. แยกกลุ่มบอส
             filteredBosses.forEach(boss => {
-                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
+                if (boss.isStandby) { standbyBosses.push(boss); } 
+                else if (boss.spawnTime <= nowTime) { activeBosses.push(boss); } 
+                else { upcomingBosses.push(boss); }
+            });
+
+            // อัปเดตตัวเลข Count
+            document.getElementById('countActive').innerText = activeBosses.length;
+            document.getElementById('countUpcoming').innerText = upcomingBosses.length;
+            document.getElementById('countStandby').innerText = standbyBosses.length;
+
+            // 🔥 วาดการ์ด Active (เต็มใบ)
+            activeBosses.forEach(boss => {
+                const div = document.createElement('div'); 
+                div.id = 'boss-card-' + boss.id;
+                const dist = boss.spawnTime - nowTime;
 
                 if (boss.id === editingBossId) {
-                    const dist = boss.spawnTime - new Date().getTime(); let eh = 0, em = 0, es = 0;
-                    if (dist > 0) { eh = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); em = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)); es = Math.floor((dist % (1000 * 60)) / 1000); }
-                    boss._tempPrefillH = eh; boss._tempPrefillM = em; boss._tempPrefillS = es;
                     div.className = 'boss-card';
-                    div.innerHTML = `<div class="edit-mode-container"><div style="font-size:0.9rem; color:var(--text-accent); font-weight:bold;">✏️ แก้ไขข้อมูล</div><input type="text" id="editName-${boss.id}" value="${boss.name}" style="width:100%;"><div style="display:flex; gap:8px;"><div class="time-wrapper"><input type="text" id="editHours-${boss.id}" value="${eh}" readonly onclick="openNumpad('editHours-${boss.id}', 'editMinutes-${boss.id}', 2, 'ชั่วโมง')"><span class="time-label">ชม.</span></div><div class="time-wrapper"><input type="text" id="editMinutes-${boss.id}" value="${em}" readonly onclick="openNumpad('editMinutes-${boss.id}', 'editSeconds-${boss.id}', 2, 'นาที')"><span class="time-label">น.</span></div><div class="time-wrapper"><input type="text" id="editSeconds-${boss.id}" value="${es}" readonly onclick="openNumpad('editSeconds-${boss.id}', null, 2, 'วินาที')"><span class="time-label">วิ.</span></div></div><div class="edit-actions"><button class="btn-text save" onclick="saveEditBoss(${boss.id})">✓ บันทึก</button><button class="btn-text cancel" onclick="cancelEditBoss()">✕ ยกเลิก</button></div></div>`;
+                    div.innerHTML = getEditFormHtml(boss, dist);
                 } else {
-                    let cardClass = 'boss-card';
-                    if (boss.isStandby) cardClass += ' is-standby';
-                    else if (boss.spawnTime <= new Date().getTime()) cardClass += ' is-spawned';
-                    div.className = cardClass;
-                    
+                    div.className = 'boss-card is-spawned';
                     const spawnTimeString = new Date(boss.spawnTime).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
-                    
-                    let etaDisplay = boss.isStandby 
-                        ? `<span class="boss-elapsed" id="elapsed-${boss.id}">${boss.isAutoSlept ? '[💤 พักอัตโนมัติ]' : '[💤 พักการ์ด]'}</span>`
-                        : `🕒 เริ่ม: ${spawnTimeString} <span class="boss-elapsed" id="elapsed-${boss.id}"></span>`;
-
-                    let standbyBtnHtml = boss.isStandby 
-                        ? ``
-                        : `<button class="btn-icon standby" onclick="toggleStandbyBoss(${boss.id})" title="จบงาน / พักการ์ด">💤</button>`;
-
                     const isStarredLocal = localStarredBosses.includes(boss.id);
-                    let starFilter = 'grayscale(1) opacity(0.3)'; 
-                    if (isStarredLocal) {
-                        if (boss.isStandby) { starFilter = 'opacity(0.4)'; } else { starFilter = 'none'; }
-                    }
-
+                    let starFilter = isStarredLocal ? 'none' : 'grayscale(1) opacity(0.3)'; 
+                    
                     div.innerHTML = `
                         <div class="card-header">
                             <div class="boss-name-group">
-                                <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;" title="ติดดาวดันขึ้นบนสุดเมื่อบอสเกิด (เฉพาะเครื่องคุณ)">⭐</span>
+                                <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
                                 <span class="boss-name">${boss.name}</span>
-                                <span class="boss-eta">${etaDisplay}</span>
+                                <span style="font-size:0.8rem; color:var(--text-secondary); margin-left: 8px;">(อัปเดตล่าสุด: เฟส ${boss.stateInput || '1.0'})</span>
                             </div>
-                            <div class="card-actions">
-                                ${standbyBtnHtml}
+                            <div class="hover-actions">
+                                <button class="btn-icon standby" onclick="toggleStandbyBoss(${boss.id})" title="จบงาน / พักการ์ด">💤</button>
                                 <button class="btn-icon edit" onclick="startEditBoss(${boss.id})">✏️</button>
                                 <button class="btn-icon delete" onclick="removeBoss(${boss.id}, false)">🗑️</button>
                             </div>
                         </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); display: flex; gap: 6px; align-items: center;">
+                            🕒 เริ่ม: ${spawnTimeString} <span class="boss-elapsed" id="elapsed-${boss.id}"></span>
+                        </div>
+                        
                         <div class="countdown-container" id="countdown-wrap-${boss.id}"><div class="countdown-display" id="time-${boss.id}">...</div></div>
                         
-                        <div class="state-container" id="state-wrap-${boss.id}" style="${(!isStageSystemEnabled || boss.isStandby) ? 'display: none !important;' : ''}">
+                        <div class="state-container" id="state-wrap-${boss.id}" style="${!isStageSystemEnabled ? 'display: none !important;' : ''}">
                             <div class="state-body">
-                                <div class="state-center"><input type="text" id="state-input-${boss.id}" value="${boss.stateInput || '1.0'}" readonly onclick="openNumpad('state-input-${boss.id}', null, 4, 'อัปเดต State: ${boss.name}')"></div>
+                                <input type="hidden" id="state-input-${boss.id}" value="${boss.stateInput || '1.0'}">
                                 <div class="state-right">
                                     <div class="micro-timeline">
                                         <div class="mt-track"></div>
@@ -1193,18 +1208,77 @@
                                     </div>
                                     <div class="timeline-status-text" id="update-time-${boss.id}">-</div>
                                 </div>
-                                <div class="state-left"><div class="progress-circle" id="progress-circle-${boss.id}"><div class="progress-inner" id="progress-text-${boss.id}">1</div></div></div>
+                                <div class="state-left">
+                                    <div class="progress-circle" id="progress-circle-${boss.id}">
+                                        <div class="progress-inner" id="progress-text-${boss.id}" onclick="openNumpad('state-input-${boss.id}', null, 4, 'อัปเดต Phase: ${boss.name}')">1</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="eta-capsule" id="eta-wrap-${boss.id}" style="${(!isStageSystemEnabled || boss.isStandby) ? 'display: none !important;' : ''}">
-                            <div class="eta-item"><span class="eta-label" id="label-4-${boss.id}">🎯 รวมพล (4.0):</span> <span class="eta-time" id="eta4-text-${boss.id}">-</span></div>
-                            <div class="eta-divider">|</div>
-                            <div class="eta-item"><span class="eta-label">⚔️ บอส:</span> <span class="eta-time" id="eta5-text-${boss.id}">-</span></div>
+                        <div class="eta-capsule" id="eta-wrap-${boss.id}" style="${!isStageSystemEnabled ? 'display: none !important;' : ''}">
+                            <div class="eta-item"><span class="eta-label">⚔️ บอสน่าจะเกิด:</span> <span class="eta-time" id="eta5-text-${boss.id}">-</span></div>
                         </div>`;
                 }
-                container.appendChild(div);
+                activeCont.appendChild(div);
             });
+
+            // ⏳ วาดการ์ด Upcoming (บรรทัดเดียว)
+            upcomingBosses.forEach(boss => {
+                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
+                div.className = 'list-card';
+                const dist = boss.spawnTime - nowTime;
+                
+                const isStarredLocal = localStarredBosses.includes(boss.id);
+                let starFilter = isStarredLocal ? 'none' : 'grayscale(1) opacity(0.3)'; 
+
+                let innerHTML = `
+                    <div class="list-row">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
+                            <span class="boss-name">${boss.name}</span>
+                            <span class="boss-eta" id="time-${boss.id}">...</span>
+                        </div>
+                        <div class="hover-actions">
+                            <button class="btn-icon standby" onclick="toggleStandbyBoss(${boss.id})" title="สลีป">💤</button>
+                            <button class="btn-icon edit" onclick="startEditBoss(${boss.id})">✏️</button>
+                            <button class="btn-icon delete" onclick="removeBoss(${boss.id}, false)">🗑️</button>
+                        </div>
+                    </div>`;
+                
+                // Accordion ลงมาถ้าถูก Edit
+                if (boss.id === editingBossId) { innerHTML += `<div class="edit-accordion">${getEditFormHtml(boss, dist)}</div>`; }
+                div.innerHTML = innerHTML;
+                upcomingCont.appendChild(div);
+            });
+
+            // 💤 วาดการ์ด Standby (บรรทัดเดียว ซ่อนปุ่ม Sleep)
+            standbyBosses.forEach(boss => {
+                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
+                div.className = 'list-card standby-mode';
+                const dist = boss.spawnTime - nowTime;
+                
+                const isStarredLocal = localStarredBosses.includes(boss.id);
+                let starFilter = isStarredLocal ? 'opacity(0.4)' : 'grayscale(1) opacity(0.3)'; 
+
+                let innerHTML = `
+                    <div class="list-row">
+                        <div style="display:flex; align-items:center; gap:10px; filter: grayscale(1);">
+                            <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
+                            <span class="boss-name">${boss.name}</span>
+                            <span class="boss-eta" style="color:var(--text-secondary);">${boss.isAutoSlept ? '[💤 พักอัตโนมัติ]' : '[💤 พักการ์ด]'}</span>
+                        </div>
+                        <div class="hover-actions">
+                            <button class="btn-icon edit" onclick="startEditBoss(${boss.id})" title="แก้ไขเพื่อปลุก">✏️</button>
+                            <button class="btn-icon delete" onclick="removeBoss(${boss.id}, false)">🗑️</button>
+                        </div>
+                    </div>`;
+                
+                if (boss.id === editingBossId) { innerHTML += `<div class="edit-accordion" style="filter: none;">${getEditFormHtml(boss, dist)}</div>`; }
+                div.innerHTML = innerHTML;
+                standbyCont.appendChild(div);
+            });
+
             updateTimers();
         }
 
@@ -1257,11 +1331,6 @@
 
                 if (!isCurrentlySpawned) {
                     if (boss.isStandby) return; 
-                    
-                    document.getElementById(`countdown-wrap-${boss.id}`).style.display = 'block';
-                    if (isStageSystemEnabled) { document.getElementById(`state-wrap-${boss.id}`).style.display = 'none'; document.getElementById(`eta-wrap-${boss.id}`).style.display = 'none'; }
-                    document.getElementById(`elapsed-${boss.id}`).innerText = "";
-                    cardEl.classList.remove("is-spawned", "is-stage4");
 
                     if (document.getElementById('enablePreAlert')?.checked && distance <= preAlertTimeMs && !boss.isPreAlertPlayed) { playDingSound(); boss.isPreAlertPlayed = true; }
 
@@ -1273,7 +1342,6 @@
                 } else {
                     const elapsed = Math.abs(distance);
                     
-                    // 🔥 ให้เฉพาะเครื่องแอดมินเป็นคนส่งคำสั่ง Auto เพื่อป้องกันพายุ Request จากทุกเครื่อง
                     if (autoDelEnable && elapsed >= autoDelHrs * 3600000) { 
                         if (isAdmin) removeBoss(boss.id, true); 
                         return; 
@@ -1283,19 +1351,13 @@
                         return; 
                     }
 
-                    if (boss.isStandby) {
-                        const elap = document.getElementById(`elapsed-${boss.id}`);
-                        if (elap) elap.innerText = boss.isAutoSlept ? "[💤 พักอัตโนมัติ]" : "[💤 พักการ์ด]";
-                        return; 
-                    }
+                    if (boss.isStandby) return; 
 
-                    document.getElementById(`countdown-wrap-${boss.id}`).style.display = 'none';
-                    if (isStageSystemEnabled) { document.getElementById(`state-wrap-${boss.id}`).style.display = 'flex'; } 
-                    else { document.getElementById(`countdown-wrap-${boss.id}`).style.display = 'block'; timeEl.innerHTML = `<span style="color: var(--color-warning);">บอสเกิดแล้ว!</span>`; }
-                    
                     const eH = Math.floor(elapsed / 3600000); const eM = Math.floor((elapsed % 3600000) / 60000); const eS = Math.floor((elapsed % 60000) / 1000);
                     const elapsedStr = eH > 0 ? `[+${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}:${String(eS).padStart(2,'0')}]` : `[+${String(eM).padStart(2,'0')}:${String(eS).padStart(2,'0')}]`;
-                    document.getElementById(`elapsed-${boss.id}`).innerText = elapsedStr;
+                    
+                    const elapEl = document.getElementById(`elapsed-${boss.id}`);
+                    if(elapEl) elapEl.innerText = elapsedStr;
 
                     if (!boss.isSpawnSoundPlayed) { playDingSound(); boss.isSpawnSoundPlayed = true; }
                     if (document.getElementById('enableRepeatAlert')?.checked) {
@@ -1307,33 +1369,35 @@
                         try {
                             const actualVal = parseFloat(boss.stateInput) || 1.0;
                             const etaWrap = document.getElementById(`eta-wrap-${boss.id}`);
-                            etaWrap.style.display = 'flex';
+                            if(etaWrap) etaWrap.style.display = 'flex';
                             
                             const lastLog = boss.stateHistory[boss.stateHistory.length - 1];
                             const elapsedSinceLogSec = (now - lastLog.t) / 1000;
                             
-                            const inputStateEl = document.getElementById(`state-input-${boss.id}`);
-                            if (elapsedSinceLogSec > 60) { inputStateEl.classList.add('needs-update'); } 
-                            else { inputStateEl.classList.remove('needs-update'); }
-
-                            const updateTimeEl = document.getElementById(`update-time-${boss.id}`);
-                            if (!boss.hasManualUpdate) {
-                                updateTimeEl.innerHTML = `<span class="warning">⚠️ รอการอัปเดตครั้งแรก</span>`;
-                            } else {
-                                const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
-                                const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')} วิ.`;
-                                updateTimeEl.innerHTML = `ล่าสุด: ${boss.stateInput} (<span class="hl">${timeStr}</span> ที่แล้ว)`;
+                            const inputStateInner = document.getElementById(`progress-text-${boss.id}`);
+                            if(inputStateInner) {
+                                if (elapsedSinceLogSec > 60) { inputStateInner.classList.add('needs-update'); } 
+                                else { inputStateInner.classList.remove('needs-update'); }
                             }
 
-                            let predStage = 1.0; let eta4Ms = 0; let etaBossMs = 0;
+                            const updateTimeEl = document.getElementById(`update-time-${boss.id}`);
+                            if(updateTimeEl) {
+                                if (!boss.hasManualUpdate) {
+                                    updateTimeEl.innerHTML = `<span class="warning">⚠️ รอการอัปเดตครั้งแรก</span>`;
+                                } else {
+                                    const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
+                                    const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')} วิ.`;
+                                    updateTimeEl.innerHTML = `ล่าสุด: Phase ${boss.stateInput} (<span class="hl">${timeStr}</span> ที่แล้ว)`;
+                                }
+                            }
+
+                            let predPhase = 1.0; let etaBossMs = 0;
 
                             if (!boss.hasManualUpdate || boss.stateHistory.length < 2) {
                                 const totalElapsedSec = (now - boss.spawnTime) / 1000;
-                                predStage = getStageFromTime(totalElapsedSec, isEndGameMap);
-                                
-                                const remainingTo4Sec = Math.max(0, getCumulativeBaselineTime(4.0, isEndGameMap) - totalElapsedSec);
+                                predPhase = getPhaseFromTime(totalElapsedSec, isEndGameMap);
                                 const remainingTo5Sec = Math.max(0, getCumulativeBaselineTime(5.0, isEndGameMap) - totalElapsedSec);
-                                eta4Ms = now + (remainingTo4Sec * 1000); etaBossMs = now + (remainingTo5Sec * 1000);
+                                etaBossMs = now + (remainingTo5Sec * 1000);
                             } else {
                                 let dynamicScale = 1.0;
                                 if (boss.stateHistory.length > 1) {
@@ -1364,49 +1428,50 @@
                                 const virtualElapsedSec = elapsedSinceLogSec * mEma;
                                 const currentExpectedCumulative = baselineSecAtLastLog + virtualElapsedSec;
 
-                                predStage = getStageFromTime(currentExpectedCumulative / dynamicScale, isEndGameMap);
-                                const remainingTo4Sec = Math.max(0, getCumulativeBaselineTime(4.0, isEndGameMap) * dynamicScale - baselineSecAtLastLog);
+                                predPhase = getPhaseFromTime(currentExpectedCumulative / dynamicScale, isEndGameMap);
                                 const remainingTo5Sec = Math.max(0, getCumulativeBaselineTime(5.0, isEndGameMap) * dynamicScale - baselineSecAtLastLog);
-                                
-                                eta4Ms = lastLog.t + ((remainingTo4Sec / mEma) * 1000); 
                                 etaBossMs = lastLog.t + ((remainingTo5Sec / mEma) * 1000);
                             }
 
-                            predStage = Math.min(5.0, predStage); 
-                            document.getElementById(`progress-text-${boss.id}`).innerText = Math.floor(predStage) >= 5 ? "ON" : Math.floor(predStage).toString();
+                            predPhase = Math.min(5.0, predPhase); 
+                            if(inputStateInner) {
+                                inputStateInner.innerText = Math.floor(predPhase) >= 5 ? "ON" : Math.floor(predPhase).toString();
+                            }
                             
-                            const predPct = (predStage % 1) * 100;
+                            const predPct = (predPhase % 1) * 100;
                             const ringEl = document.getElementById(`progress-circle-${boss.id}`);
                             
-                            if (predStage >= 4.0) { ringEl.style.background = `conic-gradient(var(--color-stage4) ${predPct}%, transparent 0)`; } 
-                            else { ringEl.style.background = `conic-gradient(var(--color-ghost) ${predPct}%, transparent 0)`; }
+                            if(ringEl) {
+                                if (predPhase >= 4.0) { ringEl.style.background = `conic-gradient(var(--color-stage4) ${predPct}%, transparent 0)`; } 
+                                else { ringEl.style.background = `conic-gradient(var(--color-ghost) ${predPct}%, transparent 0)`; }
+                                if (predPhase >= 3.8 && predPhase < 4.0) { ringEl.classList.add('is-hype'); } else { ringEl.classList.remove('is-hype'); }
+                            }
 
-                            if (predStage >= 3.8 && predStage < 4.0) { ringEl.classList.add('is-hype'); } else { ringEl.classList.remove('is-hype'); }
-
-                            document.getElementById(`mt-actual-${boss.id}`).style.width = `${Math.max(0, Math.min(100, ((actualVal - 1) / 4) * 100))}%`;
-                            document.getElementById(`mt-ghost-${boss.id}`).style.width = `${Math.max(0, Math.min(100, ((predStage - 1) / 4) * 100))}%`;
+                            const mtActual = document.getElementById(`mt-actual-${boss.id}`);
+                            const mtGhost = document.getElementById(`mt-ghost-${boss.id}`);
+                            if(mtActual) mtActual.style.width = `${Math.max(0, Math.min(100, ((actualVal - 1) / 4) * 100))}%`;
+                            if(mtGhost) mtGhost.style.width = `${Math.max(0, Math.min(100, ((predPhase - 1) / 4) * 100))}%`;
 
                             for (let i = 1; i <= 5; i++) {
                                 const dotEl = document.getElementById('mt-dot-' + i + '-' + boss.id); if (!dotEl) continue;
                                 let baseClass = i === 5 ? "mt-dot taurus" : "mt-dot";
                                 if (actualVal >= i) { dotEl.className = baseClass + " active"; } 
-                                else if (predStage >= i) { dotEl.className = baseClass + " active-ghost"; } 
+                                else if (predPhase >= i) { dotEl.className = baseClass + " active-ghost"; } 
                                 else { dotEl.className = baseClass; }
                             }
 
-                            document.getElementById(`eta4-text-${boss.id}`).innerHTML = formatCountdownOnly(eta4Ms, now);
-                            document.getElementById(`eta5-text-${boss.id}`).innerHTML = formatCountdownOnly(etaBossMs, now);
+                            const eta5Text = document.getElementById(`eta5-text-${boss.id}`);
+                            if(eta5Text) eta5Text.innerHTML = formatCountdownOnly(etaBossMs, now);
 
-                            if (predStage >= 4.0) {
+                            if (predPhase >= 4.0) {
                                 cardEl.classList.add("is-stage4"); cardEl.classList.remove("is-spawned");
-                                document.getElementById(`label-4-${boss.id}`).innerHTML = "🎯 ลุย (4.0):";
                                 
                                 if (!boss.isStage4AlertPlayed) { 
                                     if(epicSoundEnable) playEpicStage4Sound(); 
                                     boss.isStage4AlertPlayed = true; 
                                 }
 
-                                if (predStage >= 5.0) {
+                                if (predPhase >= 5.0) {
                                     if (!boss.isStage5AlertPlayed) {
                                         if(document.getElementById('enableStage5Sound')?.checked) playStage5HornSound();
                                         boss.isStage5AlertPlayed = true; 
@@ -1416,7 +1481,6 @@
                                 }
                             } else {
                                 cardEl.classList.add("is-spawned"); cardEl.classList.remove("is-stage4");
-                                document.getElementById(`label-4-${boss.id}`).innerHTML = "🎯 รวมพล (4.0):";
                                 if (boss.isStage4AlertPlayed) { boss.isStage4AlertPlayed = false; }
                                 if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
                             }
