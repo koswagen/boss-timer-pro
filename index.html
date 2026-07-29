@@ -48,7 +48,6 @@
         .btn-trigger-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-trigger { padding: 8px 16px; border-radius: var(--radius-sm); font-size: 0.95rem; cursor: pointer; font-weight: bold; white-space: nowrap; height: 38px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; border: 1px solid transparent; }
         .btn-trigger.normal { background-color: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: var(--text-accent); }
-        /* เปลี่ยนคำจาก Stage เป็น Phase */
         .btn-trigger.instant { background-color: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: var(--color-warning); }
         .btn-trigger:hover { filter: brightness(1.2); }
 
@@ -67,9 +66,9 @@
         .section-header { font-size: 1.1rem; color: var(--text-secondary); margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;}
         .count-badge { background: #334155; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;}
 
-        /* 💳 สไตล์ของการ์ดบอสแบบ Active (Grid) */
-        .boss-list.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; margin-bottom: 20px;}
-        .boss-card { background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 14px; border-left: 4px solid var(--text-accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; transition: all 0.3s ease; overflow: hidden; z-index: 1;}
+        /* 💳 สไตล์ของการ์ดบอสแบบ Active (Grid) - ย่อความกว้างลงเพื่อให้ได้ 4 การ์ดต่อแถว */
+        .boss-list.grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;}
+        .boss-card { background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 12px; border-left: 4px solid var(--text-accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; transition: all 0.3s ease; overflow: hidden; z-index: 1;}
         .boss-card.is-spawned { border-left-color: var(--color-warning); background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-surface) 100%); }
         
         @keyframes heartbeatCard {
@@ -89,19 +88,26 @@
 
         /* 📝 สไตล์ของ Upcoming และ Standby (List View บรรทัดเดียว) */
         .boss-list.list-view { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;}
-        .list-card { background-color: var(--bg-surface); border-radius: var(--radius-sm); display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 3px solid var(--text-accent); transition: all 0.3s ease; }
+        .list-card { background-color: var(--bg-surface); border-radius: var(--radius-sm); display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 3px solid var(--text-accent); transition: all 0.2s ease; }
+        .list-card:hover { background-color: rgba(30, 41, 59, 0.8); } /* Dynamic Hover Color ให้การ์ดสว่างขึ้นเบาๆ */
         .list-card.standby-mode { border-left-color: #475569; background-color: rgba(30, 41, 59, 0.4); opacity: 0.6; }
-        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; position: relative; min-height: 48px;}
+        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; position: relative; min-height: 55px;}
         
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2;}
-        .boss-name-group { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; line-height: 1.3; }
-        .boss-name { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
-        .list-row .boss-name { font-size: 1.05rem; }
-        .boss-eta { font-size: 0.85rem; color: var(--text-secondary); background: rgba(0,0,0,0.25); padding: 3px 8px; border-radius: 6px; font-weight: 500; display: flex; gap: 6px; align-items: center;}
+        .boss-name-group { display: flex; align-items: flex-start; gap: 8px; line-height: 1.3; flex: 1; padding-right: 10px;}
+        
+        /* จัดการชื่อบอสยาวให้ขึ้นบรรทัดใหม่ และตัดไข่ปลาถ้าเกิน 2 บรรทัด */
+        .boss-name { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+        .list-row .boss-name { font-size: 1.1rem; -webkit-line-clamp: 1; } /* ในลิสต์บังคับ 1 บรรทัด */
+        
         .boss-elapsed { font-family: ui-monospace, Consolas, monospace; color: var(--color-warning); font-weight: bold; letter-spacing: 0.5px;}
         
+        /* เวลานับถอยหลังตัวใหญ่สะใจสำหรับ Upcoming */
+        .list-eta-large { font-size: 1.5rem; font-weight: bold; font-family: ui-monospace, Consolas, monospace; color: var(--text-primary); text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
+        .list-card.standby-mode .list-eta-large { font-size: 0.95rem; font-family: inherit; font-weight: normal; color: var(--text-secondary); text-shadow: none; }
+
         /* 🖱️ ปุ่มลอยแบบซ่อนได้ (Hover Actions) จองพื้นที่ขวาไว้เสมอเพื่อไม่ให้ Layout เด้ง */
-        .hover-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; width: 110px; justify-content: flex-end; align-items: flex-start;}
+        .hover-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; min-width: 110px; justify-content: flex-end; align-items: flex-start;}
         .list-row:hover .hover-actions, .card-header:hover .hover-actions { opacity: 1; }
         @media (hover: none) { .hover-actions { opacity: 0.35; } .hover-actions:active { opacity: 1; } }
 
@@ -109,17 +115,16 @@
         .btn-icon.edit { color: var(--color-edit); } .btn-icon.delete { color: var(--color-danger); } 
         .btn-icon.standby { color: #94a3b8; } .btn-icon.standby:hover { background: #475569; color: #fff; }
         .btn-icon:hover { filter: brightness(1.2); }
-
-        .countdown-container { text-align: right; z-index: 2;}
-        .countdown-display { font-size: 1.6rem; font-weight: bold; font-family: ui-monospace, Consolas, monospace; color: var(--text-primary); background: rgba(0,0,0,0.25); padding: 6px 12px; border-radius: var(--radius-sm); display: inline-block;}
         
-        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด (ปรับใหม่ วงกลมกดได้) */
-        .state-container { display: flex; flex-direction: column; gap: 12px; z-index: 2; background: rgba(0,0,0,0.15); padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
+        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด */
+        .state-container { display: flex; flex-direction: column; gap: 12px; z-index: 2; background: rgba(0,0,0,0.15); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
         .state-body { display: flex; align-items: center; gap: 14px; }
         
-        .state-right { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative;}
+        .state-right { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative; padding-right: 10px;}
         .micro-timeline { position: relative; width: 100%; height: 10px; display: flex; align-items: center; margin-bottom: 8px;}
-        .mt-track { position: absolute; width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; }
+        
+        /* ปรับพื้นหลังเส้น Timeline ให้สว่างขึ้นเพื่อให้เห็นว่ามีเส้นเชื่อมกัน */
+        .mt-track { position: absolute; width: 100%; height: 4px; background: rgba(255,255,255,0.25); border-radius: 2px; }
         
         .mt-actual { position: absolute; height: 4px; background: var(--text-accent); border-radius: 2px; z-index: 2; transition: width 0.3s; box-shadow: 0 0 6px var(--text-accent);}
         .mt-ghost { position: absolute; height: 4px; background: var(--color-warning); opacity: 0.9; border-radius: 2px; z-index: 1; transition: width 0.5s linear; box-shadow: 0 0 8px var(--color-warning);}
@@ -135,18 +140,17 @@
         .mt-dot.taurus.active-ghost { background: transparent; color: var(--color-warning); text-shadow: 0 0 6px var(--color-warning); }
         .boss-card.is-stage4 .mt-dot.taurus.active-ghost { color: var(--color-stage4); text-shadow: 0 0 6px var(--color-stage4); }
         
-        .timeline-status-text { font-size: 0.75rem; color: #94a3b8; font-weight: 500; white-space: nowrap; letter-spacing: -0.2px; margin-top: 4px;}
-        .timeline-status-text .hl { font-family: ui-monospace, monospace; color: var(--text-secondary); font-size: 0.8rem;}
-        .timeline-status-text .warning { color: var(--color-warning); animation: pulseAmber 1.5s infinite; font-weight: bold;}
-
-        /* วงกลมกดได้ (แทนช่อง Input) */
-        .state-left { flex-shrink: 0; padding-left: 10px;} 
+        /* วงกลมกดได้ (ปุ่ม Phase หลัก) */
+        .state-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;} 
         .progress-circle { width: 55px; height: 55px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s linear;}
         .progress-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(transparent 0deg, transparent 34deg, var(--bg-surface) 34deg, var(--bg-surface) 36deg); z-index: 1; pointer-events: none; }
         .progress-inner { width: 43px; height: 43px; border-radius: 50%; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; color: var(--text-primary); z-index: 2; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);}
         .progress-inner:hover { border-color: var(--text-accent); background: var(--bg-surface); transform: scale(1.05);}
         .boss-card.is-stage4 .progress-inner { background: rgba(30, 41, 59, 1); }
         
+        .timeline-status-text { font-size: 0.75rem; color: #94a3b8; font-weight: 500; text-align: center; line-height: 1.1;}
+        .timeline-status-text .hl { font-family: ui-monospace, monospace; color: var(--text-primary); }
+
         @keyframes pulseAmber { 0% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0.6); border-color: rgba(245, 158, 11, 0.6); } 70% { box-shadow: inset 0 0 0 8px rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } 100% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } }
         .progress-inner.needs-update { animation: pulseAmber 1.5s infinite; color: var(--color-warning); }
 
@@ -161,7 +165,7 @@
         .boss-card.is-stage4 .eta-label { color: #cbd5e1; }
         .eta-time { font-family: ui-monospace, monospace; font-weight: bold; color: var(--text-primary); font-size: 1rem;}
         
-        /* --- Logs & Footer & Edit --- */
+        /* --- Logs & Footer & Edit Accordion --- */
         .edit-accordion { padding: 12px 16px; background: rgba(0,0,0,0.2); border-top: 1px dashed #334155; display: flex; flex-direction: column; gap: 10px; border-radius: 0 0 var(--radius-sm) var(--radius-sm);}
         .edit-mode-container { display: flex; flex-direction: column; gap: 10px; z-index: 2;}
         .edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
@@ -260,7 +264,6 @@
 
                     <div class="btn-trigger-group">
                         <button type="button" class="btn-trigger normal" onclick="openNumpad('inputHours', 'inputMinutes', 2, 'ตั้งเวลาบอส (รอเกิด)')">⏱️ ระบุเวลา</button>
-                        <!-- เปลี่ยนคำว่า Stage เป็น Phase -->
                         <button type="button" class="btn-trigger instant" id="btnInstantStage" onclick="openNumpad('inputInstantStage', null, 4, 'กรอก Phase ปัจจุบัน')">⚡ ระบุ Phase</button>
                     </div>
                 </div>
@@ -1000,7 +1003,7 @@
         function toggleStandbyBoss(id, isAuto = false) {
             const boss = bosses.find(b => b.id === id); if (!boss) return;
             if (!boss.isStandby) {
-                // อนิเมชั่นหน่วงเวลา (Fade & Shrink)
+                // อนิเมชั่นหน่วงเวลา (Fade & Shrink) ก่อนหายไปอยู่ Standby
                 const cardEl = document.getElementById(`boss-card-${boss.id}`);
                 if(cardEl) {
                     cardEl.classList.add('entering-standby');
@@ -1158,7 +1161,7 @@
             document.getElementById('countUpcoming').innerText = upcomingBosses.length;
             document.getElementById('countStandby').innerText = standbyBosses.length;
 
-            // 🔥 วาดการ์ด Active (เต็มใบ)
+            // 🔥 วาดการ์ด Active (Grid ย่อขนาดลง ตัดเวลา ... ทิ้งไปเลย)
             activeBosses.forEach(boss => {
                 const div = document.createElement('div'); 
                 div.id = 'boss-card-' + boss.id;
@@ -1178,7 +1181,6 @@
                             <div class="boss-name-group">
                                 <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
                                 <span class="boss-name">${boss.name}</span>
-                                <span style="font-size:0.8rem; color:var(--text-secondary); margin-left: 8px;">(อัปเดตล่าสุด: เฟส ${boss.stateInput || '1.0'})</span>
                             </div>
                             <div class="hover-actions">
                                 <button class="btn-icon standby" onclick="toggleStandbyBoss(${boss.id})" title="จบงาน / พักการ์ด">💤</button>
@@ -1189,8 +1191,6 @@
                         <div style="font-size: 0.85rem; color: var(--text-secondary); display: flex; gap: 6px; align-items: center;">
                             🕒 เริ่ม: ${spawnTimeString} <span class="boss-elapsed" id="elapsed-${boss.id}"></span>
                         </div>
-                        
-                        <div class="countdown-container" id="countdown-wrap-${boss.id}"><div class="countdown-display" id="time-${boss.id}">...</div></div>
                         
                         <div class="state-container" id="state-wrap-${boss.id}" style="${!isStageSystemEnabled ? 'display: none !important;' : ''}">
                             <div class="state-body">
@@ -1212,6 +1212,10 @@
                                     <div class="progress-circle" id="progress-circle-${boss.id}">
                                         <div class="progress-inner" id="progress-text-${boss.id}" onclick="openNumpad('state-input-${boss.id}', null, 4, 'อัปเดต Phase: ${boss.name}')">1</div>
                                     </div>
+                                    <!-- ย้ายตัวหนังสือ "ล่าสุด" มาไว้ใต้กงล้อตัวเลขตามที่ต้องการ -->
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 2px;">
+                                        ล่าสุด: ${boss.stateInput || '1.0'}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1223,7 +1227,7 @@
                 activeCont.appendChild(div);
             });
 
-            // ⏳ วาดการ์ด Upcoming (บรรทัดเดียว)
+            // ⏳ วาดการ์ด Upcoming (บรรทัดเดียว โชว์เวลาตัวใหญ่)
             upcomingBosses.forEach(boss => {
                 const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
                 div.className = 'list-card';
@@ -1234,19 +1238,21 @@
 
                 let innerHTML = `
                     <div class="list-row">
-                        <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:10px; flex: 1;">
                             <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
                             <span class="boss-name">${boss.name}</span>
-                            <span class="boss-eta" id="time-${boss.id}">...</span>
                         </div>
-                        <div class="hover-actions">
-                            <button class="btn-icon standby" onclick="toggleStandbyBoss(${boss.id})" title="สลีป">💤</button>
-                            <button class="btn-icon edit" onclick="startEditBoss(${boss.id})">✏️</button>
-                            <button class="btn-icon delete" onclick="removeBoss(${boss.id}, false)">🗑️</button>
+                        <div style="display:flex; align-items:center; gap: 16px;">
+                            <span class="list-eta-large" id="time-${boss.id}">...</span>
+                            <div class="hover-actions">
+                                <button class="btn-icon standby" onclick="toggleStandbyBoss(${boss.id})" title="สลีป">💤</button>
+                                <button class="btn-icon edit" onclick="startEditBoss(${boss.id})">✏️</button>
+                                <button class="btn-icon delete" onclick="removeBoss(${boss.id}, false)">🗑️</button>
+                            </div>
                         </div>
                     </div>`;
                 
-                // Accordion ลงมาถ้าถูก Edit
+                // ใช้ Accordion กางลงมาตามที่คอนเฟิร์มไว้
                 if (boss.id === editingBossId) { innerHTML += `<div class="edit-accordion">${getEditFormHtml(boss, dist)}</div>`; }
                 div.innerHTML = innerHTML;
                 upcomingCont.appendChild(div);
@@ -1263,14 +1269,16 @@
 
                 let innerHTML = `
                     <div class="list-row">
-                        <div style="display:flex; align-items:center; gap:10px; filter: grayscale(1);">
+                        <div style="display:flex; align-items:center; gap:10px; filter: grayscale(1); flex: 1;">
                             <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
                             <span class="boss-name">${boss.name}</span>
-                            <span class="boss-eta" style="color:var(--text-secondary);">${boss.isAutoSlept ? '[💤 พักอัตโนมัติ]' : '[💤 พักการ์ด]'}</span>
                         </div>
-                        <div class="hover-actions">
-                            <button class="btn-icon edit" onclick="startEditBoss(${boss.id})" title="แก้ไขเพื่อปลุก">✏️</button>
-                            <button class="btn-icon delete" onclick="removeBoss(${boss.id}, false)">🗑️</button>
+                        <div style="display:flex; align-items:center; gap: 16px;">
+                            <span class="list-eta-large">${boss.isAutoSlept ? '[💤 พักอัตโนมัติ]' : '[💤 พักการ์ด]'}</span>
+                            <div class="hover-actions">
+                                <button class="btn-icon edit" onclick="startEditBoss(${boss.id})" title="แก้ไขเพื่อปลุก">✏️</button>
+                                <button class="btn-icon delete" onclick="removeBoss(${boss.id}, false)">🗑️</button>
+                            </div>
                         </div>
                     </div>`;
                 
@@ -1315,7 +1323,7 @@
                 if (boss.id === editingBossId) return;
                 const cardEl = document.getElementById(`boss-card-${boss.id}`);
                 const timeEl = document.getElementById(`time-${boss.id}`);
-                if (!cardEl || !timeEl) return;
+                if (!cardEl) return;
 
                 const distance = boss.spawnTime - now;
                 const isCurrentlySpawned = distance <= 0;
@@ -1334,10 +1342,12 @@
 
                     if (document.getElementById('enablePreAlert')?.checked && distance <= preAlertTimeMs && !boss.isPreAlertPlayed) { playDingSound(); boss.isPreAlertPlayed = true; }
 
-                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                    timeEl.innerHTML = (hours > 0 ? `${hours}:` : "") + (minutes < 10 && hours > 0 ? `0${minutes}:` : `${minutes}:`) + (seconds < 10 ? `0${seconds}` : seconds);
+                    if (timeEl) {
+                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                        timeEl.innerHTML = (hours > 0 ? `${hours}:` : "") + (minutes < 10 && hours > 0 ? `0${minutes}:` : `${minutes}:`) + (seconds < 10 ? `0${seconds}` : seconds);
+                    }
                 
                 } else {
                     const elapsed = Math.abs(distance);
@@ -1387,7 +1397,7 @@
                                 } else {
                                     const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
                                     const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')} วิ.`;
-                                    updateTimeEl.innerHTML = `ล่าสุด: Phase ${boss.stateInput} (<span class="hl">${timeStr}</span> ที่แล้ว)`;
+                                    updateTimeEl.innerHTML = `ผ่านไปแล้ว <span class="hl">${timeStr}</span>`;
                                 }
                             }
 
