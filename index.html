@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Boss Timer Pro">
-    <title>Boss Timer Pro | v2.0.7 Audio & Sync Fix</title>
+    <title>Boss Timer Pro | v2.0.8 Firestore Subcollections</title>
     <link rel="icon" href="data:,">
     <style>
         /* 🎨 หมวดหมู่สีและการตั้งค่าตัวแปร (CSS Variables) สำหรับใช้ทั้งโปรเจกต์ */
@@ -66,7 +66,7 @@
         .section-header { font-size: 1.1rem; color: var(--text-secondary); margin: 24px 0 12px 0; display: flex; align-items: center; gap: 8px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;}
         .count-badge { background: #334155; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: bold;}
 
-        /* 💳 สไตล์ของการ์ดบอสทั้งหมดเป็น Grid (ตั้งค่า minmax(300px) เพื่อให้ได้ 4-5 ใบต่อแถวแบบพอดีๆ) */
+        /* 💳 สไตล์ของการ์ดบอสทั้งหมดเป็น Grid */
         .boss-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 20px;}
         
         .boss-card { background-color: var(--bg-surface); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px; border-left: 4px solid var(--text-accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; transition: all 0.3s ease; overflow: hidden; z-index: 1;}
@@ -87,10 +87,7 @@
             background-image: none !important; transition: all 0.4s ease !important;
         }
 
-        /* 📝 สไตล์ของ Upcoming และ Standby (แบบ Grid Cards 4 ใบต่อแถว) */
         .list-card { background-color: var(--bg-surface); border-radius: var(--radius-sm); display: flex; flex-direction: column; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 3px solid var(--text-accent); transition: all 0.2s ease; overflow: hidden; }
-        
-        /* 🔥 Hover Effect จัดเต็มสำหรับ Upcoming/Standby: สว่างขึ้น 30% พร้อมออร่านีออนด้านซ้าย */
         .list-card:hover { 
             filter: brightness(1.3); 
             box-shadow: -4px 0 15px rgba(56, 189, 248, 0.4), 0 4px 12px rgba(0,0,0,0.2); 
@@ -107,22 +104,15 @@
         .list-row { display: flex; flex-direction: column; padding: 12px 14px; gap: 8px; min-height: 90px;}
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2;}
         .boss-name-group { display: flex; align-items: center; gap: 8px; line-height: 1.3; flex: 1; padding-right: 4px;}
-        
-        /* จัดการชื่อบอสยาวให้ขึ้นบรรทัดใหม่ และตัดไข่ปลาถ้าเกิน 2 บรรทัด */
         .boss-name { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
-        
         .boss-elapsed { font-family: ui-monospace, Consolas, monospace; color: var(--color-warning); font-weight: bold; letter-spacing: 0.5px;}
-        
-        /* ป้ายบอกเวลาเริ่ม (เริ่ม: 02:29) ของ Upcoming */
         .start-badge { font-size: 0.75rem; background: rgba(255,255,255,0.1); color: var(--text-secondary); padding: 2px 8px; border-radius: 12px; font-weight: 500; white-space: nowrap; margin-left: 4px; }
-        .boss-card .start-badge { display: none; } /* ซ่อนใน Active เพราะมีบรรทัดเวลาต่างหากอยู่แล้ว */
+        .boss-card .start-badge { display: none; }
 
-        /* เวลานับถอยหลังตัวใหญ่สะใจสำหรับ Upcoming (Grid Format) */
         .list-bottom-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: auto;}
         .list-eta-large { font-size: 1.5rem; font-weight: bold; font-family: ui-monospace, Consolas, monospace; color: var(--text-primary); text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
         .list-card.standby-mode .list-eta-large { font-size: 0.95rem; font-family: inherit; font-weight: normal; color: var(--text-secondary); text-shadow: none; }
 
-        /* 🖱️ ปุ่มลอยแบบซ่อนได้ (Hover Actions) */
         .hover-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; justify-content: flex-end;}
         .list-card:hover .hover-actions, .boss-card:hover .hover-actions { opacity: 1; }
         @media (hover: none) { .hover-actions { opacity: 0.4; } .hover-actions:active { opacity: 1; } }
@@ -132,23 +122,17 @@
         .btn-icon.standby { color: #94a3b8; } .btn-icon.standby:hover { background: #475569; color: #fff; }
         .btn-icon:hover { filter: brightness(1.2); }
         
-        /* ⚙️ โครงสร้างกล่องแสดงสถานะเมื่อบอสเกิด (ปรับให้แบนและเพรียวบางลงมาก) */
         .state-container { display: flex; flex-direction: column; gap: 8px; z-index: 2; background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.02);}
         .state-body { display: flex; align-items: center; gap: 14px; }
-        
         .state-right { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; height: 100%; position: relative; padding-right: 6px; overflow: hidden; }
         .micro-timeline { position: relative; width: 100%; height: 10px; display: flex; align-items: center; margin-bottom: 6px;}
-        
-        /* ปรับพื้นหลังเส้น Timeline ให้สว่างขึ้นเล็กน้อย เป็นสีเดียวกับจุด (ความหนา 4px เท่าเดิม) */
         .mt-track { position: absolute; width: 100%; height: 4px; background: rgba(71, 85, 105, 0.5); border-radius: 2px; }
-        
         .mt-actual { position: absolute; height: 4px; background: var(--text-accent); border-radius: 2px; z-index: 2; transition: width 0.3s; box-shadow: 0 0 6px var(--text-accent);}
         .mt-ghost { position: absolute; height: 4px; background: var(--color-warning); opacity: 0.9; border-radius: 2px; z-index: 1; transition: width 0.5s linear; box-shadow: 0 0 8px var(--color-warning);}
         .boss-card.is-stage4 .mt-ghost { background: var(--color-stage4); box-shadow: 0 0 8px var(--color-stage4); }
         
         .mt-dot { position: absolute; z-index: 3; transform: translate(-50%, -50%); top: 50%; width: 8px; height: 8px; background: #475569; border-radius: 50%; transition: all 0.3s; box-shadow: 0 0 0 2px var(--bg-surface); display: flex; align-items: center; justify-content: center;}
         .mt-dot.taurus { width: auto; height: auto; background: transparent; border-radius: 0; box-shadow: none; font-size: 0.95rem; color: #475569; }
-        
         .mt-dot.active { background: var(--text-accent); }
         .mt-dot.taurus.active { background: transparent; color: var(--text-accent); text-shadow: 0 0 6px var(--text-accent); }
         .mt-dot.active-ghost { background: var(--color-warning); }
@@ -156,7 +140,6 @@
         .mt-dot.taurus.active-ghost { background: transparent; color: var(--color-warning); text-shadow: 0 0 6px var(--color-warning); }
         .boss-card.is-stage4 .mt-dot.taurus.active-ghost { color: var(--color-stage4); text-shadow: 0 0 6px var(--color-stage4); }
         
-        /* วงกลมกดได้ (ปุ่ม Phase หลัก หดขนาดลงให้กล่องเตี้ยลง) */
         .state-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 0;} 
         .progress-circle { width: 48px; height: 48px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.5s linear;}
         .progress-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(transparent 0deg, transparent 34deg, var(--bg-surface) 34deg, var(--bg-surface) 36deg); z-index: 1; pointer-events: none; }
@@ -164,17 +147,14 @@
         .progress-inner:hover { border-color: var(--text-accent); background: var(--bg-surface); transform: scale(1.05);}
         .boss-card.is-stage4 .progress-inner { background: rgba(30, 41, 59, 1); }
         
-        /* จัดเรียงข้อความ "ล่าสุด" และ "ผ่านไปแล้ว" ไว้บรรทัดเดียวกันซ้ายขวา เพื่อลดความสูงกล่อง */
         .timeline-status-text { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #94a3b8; font-weight: 500; width: 100%;}
         .timeline-status-text .hl { font-family: ui-monospace, monospace; color: var(--text-primary); }
 
         @keyframes pulseAmber { 0% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0.6); border-color: rgba(245, 158, 11, 0.6); } 70% { box-shadow: inset 0 0 0 8px rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } 100% { box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0); border-color: rgba(245, 158, 11, 0); } }
         .progress-inner.needs-update { animation: pulseAmber 1.5s infinite; color: var(--color-warning); }
-
         @keyframes ringPulseAlert { 0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0); } 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); } }
         .progress-circle.is-hype { animation: ringPulseAlert 1.5s infinite; }
 
-        /* --- Capsule ETA UI --- */
         .eta-capsule { display: none; justify-content: center; align-items: center; font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: var(--radius-pill); border: 1px solid rgba(56, 189, 248, 0.2); gap: 8px; white-space: nowrap; flex-wrap: nowrap;}
         .boss-card.is-stage4 .eta-capsule { border-color: rgba(225, 29, 72, 0.4); background: rgba(225, 29, 72, 0.12);}
         .eta-item { display: flex; align-items: center; gap: 6px; white-space: nowrap;}
@@ -182,7 +162,6 @@
         .boss-card.is-stage4 .eta-label { color: #cbd5e1; }
         .eta-time { font-family: ui-monospace, monospace; font-weight: bold; color: var(--text-primary); font-size: 1rem;}
         
-        /* --- Edit Accordion --- */
         .edit-accordion { padding: 12px 16px; background: rgba(0,0,0,0.2); border-top: 1px dashed #334155; display: flex; flex-direction: column; gap: 10px; border-radius: 0 0 var(--radius-sm) var(--radius-sm); margin: 0 -14px -14px -14px;}
         .edit-mode-container { display: flex; flex-direction: column; gap: 10px; z-index: 2;}
         .edit-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
@@ -201,7 +180,7 @@
         .watermark span { color: var(--text-accent); font-weight: bold;}
         .version-tag { background: #1e293b; padding: 4px 10px; border-radius: 4px; display: inline-block; margin-top: 8px; letter-spacing: 0.5px; border: 1px solid #334155; font-size: 0.75rem;}
 
-        /* --- Numpad (แป้นพิมพ์ตัวเลข) --- */
+        /* --- Numpad --- */
         .numpad-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(1px); z-index: 9999; display: none; align-items: flex-end; justify-content: center; }
         .numpad-panel { background: var(--bg-surface); width: 100%; max-width: 450px; border-radius: 20px 20px 0 0; padding: 25px 20px; box-shadow: 0 -10px 25px rgba(0,0,0,0.5); animation: slideUp 0.2s ease-out; border-top: 1px solid #334155; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -335,7 +314,7 @@
 
         <div class="watermark">
             © 2026 Crafted by <span>Gensu</span>. All rights reserved.<br>
-            <div class="version-tag">Version 2.0.7 | Audio Queue & Debounced Save</div>
+            <div class="version-tag">Version 2.0.8 | Subcollection Architecture</div>
         </div>
     </div>
 
@@ -408,11 +387,7 @@
                     <h4 style="color:#a855f7; border-bottom-color: rgba(168, 85, 247, 0.3);">🧠 ขั้นสูง (Admin Only)</h4>
                     <label class="setting-row" style="cursor:pointer; color: #cbd5e1;"><input type="checkbox" id="showAiPanel" onchange="saveSettings(); toggleAiPanelVisibility();"> แสดงแผงควบคุม AI Telemetry ด้านล่าง</label>
                     
-                    <div style="display:flex; gap:10px; margin-top: 15px; margin-bottom: 10px;">
-                        <button class="btn-sync" onclick="importData()" style="flex:1; justify-content:center;">📥 นำเข้าเซฟ (Import)</button>
-                        <button class="btn-sync" onclick="exportData()" style="flex:1; justify-content:center;">📤 ส่งออกเซฟ (Export)</button>
-                    </div>
-                    <button class="btn-sync" style="width:100%; justify-content:center; background-color:rgba(239, 68, 68, 0.1); color:var(--color-danger); border:1px solid var(--color-danger);" onclick="clearAllBosses()">🔴 ล้างกระดานบอสส่วนกลางทั้งหมด (Reset Board)</button>
+                    <button class="btn-sync" style="width:100%; justify-content:center; margin-top: 15px; background-color:rgba(239, 68, 68, 0.1); color:var(--color-danger); border:1px solid var(--color-danger);" onclick="clearAllBosses()">🔴 ล้างกระดานบอสส่วนกลางทั้งหมด (Reset Board)</button>
                 </div>
             </div>
         </div>
@@ -437,14 +412,6 @@
                         <li><b>การติดดาวส่วนตัว (⭐):</b> กดที่รูปดาวหน้าชื่อบอส หากบอสนั้นเกิดแล้ว การ์ดจะถูกดันขึ้นไปอยู่บนสุดของหน้าจอเสมอ <b>(สถานะดาวจะบันทึกแยกไว้ในเครื่องใครเครื่องมัน ไม่รบกวนหน้าจอเพื่อน)</b></li>
                         <li><b>ปุ่ม ✏️ (ดินสอ):</b> ใช้สำหรับแก้ไขเวลาหรือแก้ชื่อบอส</li>
                         <li><b>ปุ่ม 🗑️ (ถังขยะ):</b> ใช้สำหรับลบบอสตัวนั้นทิ้งออกจากกระดาน</li>
-                    </ul>
-                </div>
-                <div class="help-section">
-                    <h4>🤖 3. ระบบพยากรณ์เวลา (AI & Phase)</h4>
-                    <ul class="help-list">
-                        <li>เมื่อเวลาบอสเกิดแล้ว การ์ดจะเปลี่ยนเป็นแถบเครื่องมือสำหรับ <b>อัปเดตเฟส (Phase)</b></li>
-                        <li>เมื่อมีคนในเกมแจ้งเฟส (หรือสเตจ) ให้เรากดที่ <b>วงกลมตัวเลข</b> เพื่ออัปเดตตาม</li>
-                        <li>ระบบจะคำนวณความเร็วในการตีของคนในเซิร์ฟเวอร์ และพยากรณ์ว่าบอสจะเกิดตอนกี่โมง</li>
                     </ul>
                 </div>
             </div>
@@ -492,6 +459,10 @@
             targetDbDoc = 'local-server'; 
         }
 
+        // 🌟 ย้ายมาใช้ Collection (ตู้เอกสารใหม่) แยกตามเซิร์ฟเวอร์
+        const targetCollection = 'bosses_' + targetDbDoc;
+        const targetLogDoc = 'logs_' + targetDbDoc;
+
         if (!currentDomain.includes(ALLOWED_DOMAIN) && currentDomain !== "localhost" && currentDomain !== "127.0.0.1") {
             document.body.innerHTML = `
                 <div style="display:flex; height:100vh; background:#0f172a; color:#ef4444; justify-content:center; align-items:center; flex-direction:column; font-family:sans-serif;">
@@ -536,7 +507,7 @@
         
         let activeInputId = null; let nextTargetId = null; let maxInputDigits = 2; let isNewInputSession = true;
         let currentSettings = {}; let standbyTimeout = null; 
-        let lastAudioPlayTime = 0; // ตัวแปรสำหรับป้องกันเสียงตีกันข้ามรอบ
+        let lastAudioPlayTime = 0;
 
         function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
         function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
@@ -626,7 +597,7 @@
         function closeNumpad() { 
             document.getElementById('numpadOverlay').style.display = 'none'; 
             activeInputId = null; 
-            applySort(true); // บังคับให้จอวาดใหม่ทันทีเพื่อรับข้อมูลที่ค้างอยู่ตอนพิมพ์
+            applySort(true); 
         }
 
         function numpadType(char) {
@@ -701,19 +672,24 @@
                 const bossId = parseInt(activeInputId.replace('state-input-', '')); const boss = bosses.find(b => b.id === bossId);
                 if (boss && !boss.isStandby) {
                     const newVal = parseFloat(document.getElementById(activeInputId).value) || 1.0;
-                    boss.stateInput = Math.max(1.0, newVal).toString();
+                    const finalStateStr = Math.max(1.0, newVal).toString();
                     
-                    // ป้องกันเสียงแจ้งเตือนย้อนหลัง หากพิมพ์ข้าม Phase มา
-                    if (newVal >= 4.0) boss.isStage4AlertPlayed = true; 
-                    if (newVal >= 5.0) boss.isStage5AlertPlayed = true;
-
-                    if (!boss.stateHistory) boss.stateHistory = [{ s: 1.0, t: boss.spawnTime }];
+                    const newHistory = [...(boss.stateHistory || [])];
+                    const nowTime = Date.now();
+                    if (newHistory.length > 0 && (nowTime - newHistory[newHistory.length-1].t < 15000)) { 
+                        newHistory[newHistory.length-1] = { s: finalStateStr, t: nowTime }; 
+                    } else { 
+                        newHistory.push({ s: finalStateStr, t: nowTime }); 
+                    }
                     
-                    const nowTime = Date.now(); boss.hasManualUpdate = true;
-                    if (boss.stateHistory.length > 0 && (nowTime - boss.stateHistory[boss.stateHistory.length-1].t < 15000)) { boss.stateHistory[boss.stateHistory.length-1] = { s: boss.stateInput, t: nowTime }; } 
-                    else { boss.stateHistory.push({ s: boss.stateInput, t: nowTime }); }
-                    
-                    saveData();
+                    // 🌟 ใช้ .update() อัปเดตเฉพาะข้อมูลการ์ดนี้ใบเดียว
+                    db.collection(targetCollection).doc(bossId.toString()).update({
+                        stateInput: finalStateStr,
+                        stateHistory: newHistory,
+                        isStage4AlertPlayed: newVal >= 4.0,
+                        isStage5AlertPlayed: newVal >= 5.0,
+                        hasManualUpdate: true
+                    });
                 }
             } else if (activeInputId === 'inputInstantStage') {
                 const newVal = parseFloat(document.getElementById('inputInstantStage').value) || 1.0;
@@ -724,24 +700,8 @@
         }
 
         // ==========================================
-        // ☁️ ส่วนที่ 4: การบันทึก/โหลดข้อมูลจาก Firebase
+        // ☁️ ส่วนที่ 4: การโหลดข้อมูลจาก Firebase (เปลี่ยนเป็น docChanges)
         // ==========================================
-        function saveData() { 
-            db.collection('bossData').doc(targetDbDoc).set({
-                bosses: bosses,
-                deletedLogs: deletedLogs
-            }).catch(error => console.error("Error saving data: ", error));
-        }
-
-        // ตัวแปรหน่วงเวลาการเซฟออโต้เพื่อไม่ให้ยิง Firestore ถี่เกินไปเวลาเสียงตีกัน
-        let autoSaveTimeout = null;
-        function debouncedSave() {
-            clearTimeout(autoSaveTimeout);
-            autoSaveTimeout = setTimeout(() => {
-                saveData();
-            }, 3000); 
-        }
-        
         function saveSettings() {
             currentSettings = {
                 enableStages: document.getElementById('enableStages').checked,
@@ -803,19 +763,25 @@
             localStorage.setItem('bossAiDataset', JSON.stringify(aiDataset)); updateAiCounterDisplay();
         }
 
-        function exportAiDataset() {
-            if (ENABLE_AI_TELEMETRY !== 1) return;
-            if (aiDataset.length === 0) { alert("ยังไม่มีข้อมูล AI ในขณะนี้ครับ"); return; }
-            const dataStr = JSON.stringify(aiDataset, null, 2);
-            if (navigator.clipboard && window.isSecureContext) { 
-                navigator.clipboard.writeText(dataStr).then(() => alert(`🧠 คัดลอก AI Dataset สำเร็จ! (${aiDataset.length} Cycles)`)).catch(e => prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr));
-            } else { prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr); }
-        }
-
         function clearAiDataset() {
             if(confirm("⚠️ ยืนยันการล้างข้อมูล AI Dataset สะสมทั้งหมดหรือไม่?")) {
                 aiDataset = []; localStorage.removeItem('bossAiDataset'); updateAiCounterDisplay(); alert("🗑️ ล้างข้อมูล AI เรียบร้อยแล้วครับ");
             }
+        }
+
+        function sanitizeBossData(b) {
+            if (!b.stateHistory) b.stateHistory = [{ s: Math.max(1.0, parseFloat(b.stateInput)||1.0), t: b.spawnTime }];
+            if (parseFloat(b.stateInput) < 1.0) b.stateInput = "1.0";
+            if (!b.addedAt) b.addedAt = b.id; 
+            if (b.hasManualUpdate === undefined) { b.hasManualUpdate = b.stateHistory.length > 1 || b._wasSpawned; }
+            if (b.spawnTime <= Date.now() && !b.spawnedAt) { b.spawnedAt = b.spawnTime; }
+            if (b.isStandby === undefined) b.isStandby = false;
+            if (b.isAutoSlept === undefined) b.isAutoSlept = false;
+            if (b.telemetrySaved === undefined) b.telemetrySaved = false;
+            if (b.sleptAt === undefined && b.isStandby) b.sleptAt = b.spawnTime;
+            if (b.isStage4AlertPlayed === undefined) b.isStage4AlertPlayed = false;
+            if (b.isStage5AlertPlayed === undefined) b.isStage5AlertPlayed = false;
+            return b;
         }
 
         function loadData() {
@@ -823,44 +789,32 @@
             const savedAiDataset = localStorage.getItem('bossAiDataset');
             if (savedAiDataset) aiDataset = JSON.parse(savedAiDataset);
             
-            db.collection('bossData').doc(targetDbDoc).onSnapshot((doc) => {
+            // 🌟 เปลี่ยนมารับข้อมูลจาก Collection ใหม่แบบแยกรายตัว
+            db.collection(targetCollection).onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    const data = sanitizeBossData(change.doc.data());
+                    if (change.type === 'added') {
+                        bosses.push(data);
+                    } else if (change.type === 'modified') {
+                        const index = bosses.findIndex(b => b.id === data.id);
+                        if (index !== -1) bosses[index] = data;
+                    } else if (change.type === 'removed') {
+                        bosses = bosses.filter(b => b.id !== data.id);
+                    }
+                });
+                applySort(true); 
+            });
+
+            // 🌟 ดึงข้อมูลประวัติการลบที่แยกมาอยู่อีก Document
+            db.collection('systemData').doc(targetLogDoc).onSnapshot(doc => {
                 if (doc.exists) {
-                    const data = doc.data();
-                    
-                    // ปล่อยให้ข้อมูลจาก Firestore ทับลงไปตรงๆ เพื่อแก้ปัญหาการแก้ไขเลขย้อนกลับ
-                    bosses = data.bosses || [];
-                    deletedLogs = data.deletedLogs || [];
-                    
-                    bosses.forEach(b => { 
-                        if (!b.stateHistory) b.stateHistory = [{ s: Math.max(1.0, parseFloat(b.stateInput)||1.0), t: b.spawnTime }];
-                        if (parseFloat(b.stateInput) < 1.0) b.stateInput = "1.0";
-                        if (!b.addedAt) b.addedAt = b.id; 
-                        if (b.hasManualUpdate === undefined) { b.hasManualUpdate = b.stateHistory.length > 1 || b._wasSpawned; }
-                        if (b.spawnTime <= Date.now() && !b.spawnedAt) { b.spawnedAt = b.spawnTime; }
-                        if (b.isStandby === undefined) b.isStandby = false;
-                        if (b.isAutoSlept === undefined) b.isAutoSlept = false;
-                        if (b.telemetrySaved === undefined) b.telemetrySaved = false;
-                        if (b.sleptAt === undefined && b.isStandby) b.sleptAt = b.spawnTime;
-                        // ป้องกันค่า Undefined ทำให้เสียงดังเอง
-                        if (b.isStage4AlertPlayed === undefined) b.isStage4AlertPlayed = false;
-                        if (b.isStage5AlertPlayed === undefined) b.isStage5AlertPlayed = false;
-                    });
-                    
-                    applySort(true); 
+                    deletedLogs = doc.data().logs || [];
                     renderLogs();
-                } else {
-                    bosses = [];
-                    deletedLogs = [];
-                    applySort(true);
                 }
             });
 
             if (savedSettings) {
                 currentSettings = JSON.parse(savedSettings);
-                if (currentSettings.patch153Applied !== true) {
-                    currentSettings.endGameMap = "153"; currentSettings.patch153Applied = true;
-                    localStorage.setItem('bossSettings', JSON.stringify(currentSettings)); 
-                }
                 document.getElementById('enableStages').checked = currentSettings.enableStages !== false; 
                 document.getElementById('volumeControl').value = currentSettings.vol !== undefined ? currentSettings.vol : 100;
                 document.getElementById('enablePreAlert').checked = currentSettings.enablePreAlert || false;
@@ -873,7 +827,6 @@
                 document.getElementById('autoDeleteHrs').value = currentSettings.autoDeleteHrs || 12; 
                 document.getElementById('enableEpicSound').checked = currentSettings.enableEpicSound !== undefined ? currentSettings.enableEpicSound : false;
                 document.getElementById('enableStage5Sound').checked = currentSettings.enableStage5Sound !== undefined ? currentSettings.enableStage5Sound : true;
-                
                 document.getElementById('showAiPanel').checked = currentSettings.showAiPanel || false;
                 document.getElementById('endGameMap').value = currentSettings.endGameMap || "153";
             } else { saveSettings(); }
@@ -892,42 +845,14 @@
             }
         }
 
-        function exportData() {
-            if (!isAdmin) return;
-            const data = { bosses: bosses, settings: JSON.parse(localStorage.getItem('bossSettings') || '{}') };
-            const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
-            const preview = encoded.length > 20 ? encoded.substring(0, 12) + "........" + encoded.substring(encoded.length - 8) : encoded;
-            if (navigator.clipboard && window.isSecureContext) { 
-                navigator.clipboard.writeText(encoded).then(() => alert(`📋 คัดลอกรหัสเซฟสำเร็จ!\n[ รหัส: ${preview} ]`)).catch(e => prompt("คัดลอกรหัสเซฟนี้:", encoded));
-            } else { prompt("คัดลอกรหัสเซฟนี้:", encoded); }
-        }
-
-        function importData() {
-            if (!isAdmin) return;
-            const inputCode = prompt("📥 วางรหัสเซฟที่คัดลอกมา:"); if (!inputCode || inputCode.trim() === "") return;
-            try {
-                const decoded = JSON.parse(decodeURIComponent(atob(inputCode.trim())));
-                if(confirm("🔄 รวมข้อมูล (Merge) ใช่หรือไม่?")) {
-                    if (decoded.bosses) {
-                        decoded.bosses.forEach(newBoss => {
-                            const dupIdx = bosses.findIndex(b => b.name.toLowerCase() === newBoss.name.toLowerCase());
-                            if (dupIdx !== -1) { 
-                                if (!bosses[dupIdx].telemetrySaved && !bosses[dupIdx].isStandby) processTelemetry(bosses[dupIdx]);
-                                bosses[dupIdx] = newBoss; 
-                            } else { bosses.push(newBoss); }
-                        });
-                    }
-                    if (decoded.settings && Object.keys(decoded.settings).length > 0) { localStorage.setItem('bossSettings', JSON.stringify(decoded.settings)); }
-                    saveData(); loadData(); alert("✅ นำเข้าเซฟเรียบร้อยครับ!");
-                }
-            } catch (e) { alert("❌ รหัสเซฟไม่ถูกต้อง กรุณาลองใหม่"); }
-        }
-
         function clearAllBosses() {
             if (!isAdmin) return;
             if(confirm("🔴 คำเตือนแอดมิน: คุณต้องการล้างกระดานบอสส่วนกลางทั้งหมด ใช่หรือไม่?")) {
-                bosses.forEach(boss => { if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); });
-                bosses = []; saveData(); closeSettings();
+                bosses.forEach(boss => { 
+                    if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); 
+                    db.collection(targetCollection).doc(boss.id.toString()).delete();
+                });
+                closeSettings();
             }
         }
 
@@ -995,8 +920,6 @@
                 historyLog.push({ s: 1.0, t: sTime });
                 if (inputStage > 1.0) historyLog.push({ s: inputStage, t: now });
                 isManual = true;
-                
-                // Mute เสียงถ้าระบุข้ามเฟสมา
                 if (inputStage >= 4.0) muteStage4 = true;
                 if (inputStage >= 5.0) muteStage5 = true;
             } else {
@@ -1010,20 +933,21 @@
                 isManual = false;
             }
 
-            bosses.push({
+            const newBoss = {
                 id: Date.now(), addedAt: Date.now(), hasManualUpdate: isManual,
                 name: nameInput, spawnTime: sTime, spawnedAt: (mode === 'instant') ? now : null, stateInput: initialStageStr, stateHistory: historyLog,
                 isPreAlertPlayed: false, isSpawnSoundPlayed: false, 
                 isStage4AlertPlayed: muteStage4, lastIntervalPlayed: 0, _wasSpawned: (mode === 'instant'),
                 isStandby: false, isAutoSlept: false, telemetrySaved: false,
                 sleptAt: null, isStage5AlertPlayed: muteStage5
-            });
+            };
+            
+            // 🌟 เขียนข้อมูลลง Document ของตัวเอง
+            db.collection(targetCollection).doc(newBoss.id.toString()).set(newBoss);
             
             document.getElementById('bossName').value = ''; 
             document.getElementById('inputHours').value = '0'; document.getElementById('inputMinutes').value = '0'; document.getElementById('inputSeconds').value = '0';
             document.getElementById('inputInstantStage').value = '1.0';
-            
-            saveData();
         }
 
         function toggleStar(id) {
@@ -1044,17 +968,13 @@
                 if(cardEl) {
                     cardEl.classList.add('entering-standby');
                     setTimeout(() => {
-                        boss.isStandby = true; boss.isAutoSlept = isAuto; boss.sleptAt = Date.now(); 
                         processTelemetry(boss); 
+                        db.collection(targetCollection).doc(boss.id.toString()).update({ isStandby: true, isAutoSlept: isAuto, sleptAt: Date.now() });
                         if (!isAuto) showToast(`💤 พักการ์ด <b>${boss.name}</b> สำเร็จ`);
-                        saveData(); 
-                        renderBosses(); 
                     }, 400); 
-                    return; 
                 } else {
-                    boss.isStandby = true; boss.isAutoSlept = isAuto; boss.sleptAt = Date.now(); 
                     processTelemetry(boss); 
-                    saveData();
+                    db.collection(targetCollection).doc(boss.id.toString()).update({ isStandby: true, isAutoSlept: isAuto, sleptAt: Date.now() });
                 }
             }
         }
@@ -1070,20 +990,31 @@
             const secondsInput = parseInt(document.getElementById(`editSeconds-${id}`).value) || 0;
 
             if (hoursInput === boss._tempPrefillH && minutesInput === boss._tempPrefillM && secondsInput === boss._tempPrefillS) {
-                boss.name = nameInput;
+                db.collection(targetCollection).doc(id.toString()).update({ name: nameInput });
             } else {
                 if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); 
-
-                boss.name = nameInput;
                 const sTime = new Date().getTime() + (hoursInput*3600000) + (minutesInput*60000) + (secondsInput*1000);
                 
-                boss.spawnTime = sTime; boss.stateInput = "1.0"; boss.stateHistory = [{ s: 1.0, t: sTime }];
-                boss.hasManualUpdate = false; boss.spawnedAt = null;
-                boss.isPreAlertPlayed = false; boss.isSpawnSoundPlayed = false; boss.isStage4AlertPlayed = false; boss.lastIntervalPlayed = 0; boss._wasSpawned = false;
-                
-                boss.isStandby = false; boss.isAutoSlept = false; boss.telemetrySaved = false; boss.sleptAt = null; boss.isStage5AlertPlayed = false;
+                db.collection(targetCollection).doc(id.toString()).update({
+                    name: nameInput,
+                    spawnTime: sTime,
+                    stateInput: "1.0",
+                    stateHistory: [{ s: 1.0, t: sTime }],
+                    hasManualUpdate: false,
+                    spawnedAt: null,
+                    isPreAlertPlayed: false,
+                    isSpawnSoundPlayed: false,
+                    isStage4AlertPlayed: false,
+                    lastIntervalPlayed: 0,
+                    _wasSpawned: false,
+                    isStandby: false,
+                    isAutoSlept: false,
+                    telemetrySaved: false,
+                    sleptAt: null,
+                    isStage5AlertPlayed: false
+                });
             }
-            editingBossId = null; saveData();
+            editingBossId = null; 
         }
 
         function removeBoss(id, isAutoDelete = false) {
@@ -1098,16 +1029,16 @@
                 id: Date.now(), name: boss.name, spawnTimeStr: new Date(boss.spawnTime).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}),
                 statusText: elapsedTimeText, reasonText: isAutoDelete ? `(ลบอัตโนมัติ)` : `(ลบด้วยตัวเอง)`
             });
-            
             if (deletedLogs.length > 10) deletedLogs.length = 10;
-            bosses = bosses.filter(b => b.id !== id); 
-            saveData();
+            
+            db.collection(targetCollection).doc(id.toString()).delete();
+            db.collection('systemData').doc(targetLogDoc).set({ logs: deletedLogs });
         }
 
         function clearLogs() { 
             if(!isAdmin) return;
             if(confirm("ล้างประวัติส่วนกลางทั้งหมด?")) { 
-                deletedLogs = []; saveData(); 
+                db.collection('systemData').doc(targetLogDoc).set({ logs: [] });
             } 
         }
 
@@ -1131,21 +1062,15 @@
             bosses.sort((a, b) => {
                 if (a.isStandby && !b.isStandby) return 1;
                 if (!a.isStandby && b.isStandby) return -1;
-                
-                if (a.isStandby && b.isStandby) {
-                    return (a.sleptAt || a.spawnTime) - (b.sleptAt || b.spawnTime);
-                }
-
+                if (a.isStandby && b.isStandby) return (a.sleptAt || a.spawnTime) - (b.sleptAt || b.spawnTime);
                 const aSpawned = now >= a.spawnTime; const bSpawned = now >= b.spawnTime;
 
                 if (sortMode === 'time') {
                     const aIsStarred = localStarredBosses.includes(a.id);
                     const bIsStarred = localStarredBosses.includes(b.id);
-                    
                     const aStarredReady = aIsStarred && aSpawned; const bStarredReady = bIsStarred && bSpawned;
                     if (aStarredReady && !bStarredReady) return -1;
                     if (!aStarredReady && bStarredReady) return 1;
-                    
                     if (aSpawned && bSpawned) { return (a.spawnedAt || a.spawnTime) - (b.spawnedAt || b.spawnTime); } 
                     else if (aSpawned && !bSpawned) { return -1; } 
                     else if (!aSpawned && bSpawned) { return 1; } 
@@ -1156,11 +1081,9 @@
                 }
             });
             
-            // 🛡️ Numpad Guard: ห้ามเคลียร์จอวาดใหม่เด็ดขาด ถ้าคุณกำลังพิมพ์ Numpad ค้างอยู่
             if (forceRender && editingBossId === null && activeInputId === null) { renderBosses(); }
         }
 
-        // ฟังก์ชันสร้างฟอร์ม Edit
         function getEditFormHtml(boss, dist) {
             let eh = 0, em = 0, es = 0;
             if (dist > 0) { eh = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); em = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60)); es = Math.floor((dist % (1000 * 60)) / 1000); }
@@ -1196,10 +1119,8 @@
             document.getElementById('countUpcoming').innerText = upcomingBosses.length;
             document.getElementById('countStandby').innerText = standbyBosses.length;
 
-            // 🔥 วาดการ์ด Active
             activeBosses.forEach(boss => {
-                const div = document.createElement('div'); 
-                div.id = 'boss-card-' + boss.id;
+                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
                 const dist = boss.spawnTime - nowTime;
 
                 if (boss.id === editingBossId) {
@@ -1258,12 +1179,9 @@
                 activeCont.appendChild(div);
             });
 
-            // ⏳ วาดการ์ด Upcoming 
             upcomingBosses.forEach(boss => {
-                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
-                div.className = 'list-card';
+                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id; div.className = 'list-card';
                 const dist = boss.spawnTime - nowTime;
-                
                 const spawnTimeString = new Date(boss.spawnTime).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
                 const isStarredLocal = localStarredBosses.includes(boss.id);
                 let starFilter = isStarredLocal ? 'none' : 'grayscale(1) opacity(0.3)'; 
@@ -1292,12 +1210,9 @@
                 upcomingCont.appendChild(div);
             });
 
-            // 💤 วาดการ์ด Standby
             standbyBosses.forEach(boss => {
-                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id;
-                div.className = 'list-card standby-mode';
+                const div = document.createElement('div'); div.id = 'boss-card-' + boss.id; div.className = 'list-card standby-mode';
                 const dist = boss.spawnTime - nowTime;
-                
                 const spawnTimeString = new Date(boss.spawnTime).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
                 const isStarredLocal = localStarredBosses.includes(boss.id);
                 let starFilter = isStarredLocal ? 'opacity(0.4)' : 'grayscale(1) opacity(0.3)'; 
@@ -1336,28 +1251,24 @@
         }
 
         // ==========================================
-        // ⏱️ ส่วนที่ 9: ฟังก์ชันวนรอบเพื่ออัปเดตตัวเลขและเสียง (แก้เสียงตีกัน)
+        // ⏱️ ส่วนที่ 9: ฟังก์ชันวนรอบเพื่ออัปเดตตัวเลขและเสียง
         // ==========================================
         function updateTimers() {
             const now = new Date().getTime();
             const preAlertTimeMs = (parseInt(document.getElementById('preAlertTime')?.value || 2)) * 60 * 1000;
             const repeatIntervalMs = (parseInt(document.getElementById('alertInterval')?.value || 10)) * 60 * 1000;
-            
             const autoSleepEnable = document.getElementById('autoSleepEnable')?.checked;
             const autoSleepHrs = parseFloat(document.getElementById('autoSleepHrs')?.value || 6);
             const autoDelEnable = document.getElementById('autoDeleteEnable')?.checked;
             const autoDelHrs = parseFloat(document.getElementById('autoDeleteHrs')?.value || 12);
-            
             const epicSoundEnable = document.getElementById('enableEpicSound')?.checked;
             const isStageSystemEnabled = currentSettings.enableStages !== false; 
-            
             const currentEndMap = document.getElementById('endGameMap')?.value.trim() || "";
             const emaAlpha = 1.0; 
 
             const filteredBosses = bosses.filter(b => b.name.toLowerCase().includes(document.getElementById('searchInput')?.value.toLowerCase() || ''));
             let needsSort = false; 
 
-            // 🎵 ชุดคิวเสียงที่แก้บัค (เสียงจะไม่โดนปัดตกให้หายไปถาวร)
             let pendingHorn = [];
             let pendingEpic = [];
             let pendingSpawn = [];
@@ -1382,43 +1293,27 @@
 
                 if (!isCurrentlySpawned) {
                     if (boss.isStandby) return; 
-
-                    if (document.getElementById('enablePreAlert')?.checked && distance <= preAlertTimeMs && !boss.isPreAlertPlayed) { 
-                        pendingSpawn.push({b: boss, type: 'pre'});
-                    }
-
+                    if (document.getElementById('enablePreAlert')?.checked && distance <= preAlertTimeMs && !boss.isPreAlertPlayed) { pendingSpawn.push({b: boss, type: 'pre'}); }
                     if (timeEl) {
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
                         timeEl.innerHTML = (hours > 0 ? `${hours}:` : "") + (minutes < 10 && hours > 0 ? `0${minutes}:` : `${minutes}:`) + (seconds < 10 ? `0${seconds}` : seconds);
                     }
-                
                 } else {
                     const elapsed = Math.abs(distance);
-                    
-                    if (autoDelEnable && elapsed >= autoDelHrs * 3600000) { 
-                        if (isAdmin) removeBoss(boss.id, true); 
-                        return; 
-                    } 
-                    if (autoSleepEnable && !boss.isStandby && elapsed >= autoSleepHrs * 3600000) { 
-                        if (isAdmin) toggleStandbyBoss(boss.id, true); 
-                        return; 
-                    }
-
+                    if (autoDelEnable && elapsed >= autoDelHrs * 3600000) { if (isAdmin) removeBoss(boss.id, true); return; } 
+                    if (autoSleepEnable && !boss.isStandby && elapsed >= autoSleepHrs * 3600000) { if (isAdmin) toggleStandbyBoss(boss.id, true); return; }
                     if (boss.isStandby) return; 
 
                     const eH = Math.floor(elapsed / 3600000); const eM = Math.floor((elapsed % 3600000) / 60000); const eS = Math.floor((elapsed % 60000) / 1000);
                     const elapsedStr = eH > 0 ? `[+${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}:${String(eS).padStart(2,'0')}]` : `[+${String(eM).padStart(2,'0')}:${String(eS).padStart(2,'0')}]`;
-                    
                     const elapEl = document.getElementById(`elapsed-${boss.id}`);
                     if(elapEl) elapEl.innerText = elapsedStr;
 
                     if (document.getElementById('enableRepeatAlert')?.checked) {
                         const currentInterval = Math.floor(elapsed / repeatIntervalMs);
-                        if (currentInterval >= 1 && currentInterval > boss.lastIntervalPlayed) { 
-                            pendingSpawn.push({b: boss, type: 'interval', val: currentInterval}); 
-                        }
+                        if (currentInterval >= 1 && currentInterval > boss.lastIntervalPlayed) { pendingSpawn.push({b: boss, type: 'interval', val: currentInterval}); }
                     }
 
                     if (isStageSystemEnabled) {
@@ -1432,14 +1327,12 @@
                             
                             const inputStateInner = document.getElementById(`progress-text-${boss.id}`);
                             if(inputStateInner) {
-                                if (elapsedSinceLogSec > 60) { inputStateInner.classList.add('needs-update'); } 
-                                else { inputStateInner.classList.remove('needs-update'); }
+                                if (elapsedSinceLogSec > 60) { inputStateInner.classList.add('needs-update'); } else { inputStateInner.classList.remove('needs-update'); }
                             }
 
                             const updateTimeEl = document.getElementById(`update-time-${boss.id}`);
                             if(updateTimeEl) {
-                                if (!boss.hasManualUpdate) {
-                                    updateTimeEl.innerHTML = `<span>เฟสล่าสุด: <b>${boss.stateInput}</b></span> <span><span class="warning">⚠️ รออัปเดต</span></span>`;
+                                if (!boss.hasManualUpdate) { updateTimeEl.innerHTML = `<span>เฟสล่าสุด: <b>${boss.stateInput}</b></span> <span><span class="warning">⚠️ รออัปเดต</span></span>`;
                                 } else {
                                     const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
                                     const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')}วิ`;
@@ -1470,11 +1363,9 @@
                                     let prev = boss.stateHistory[i-1]; let curr = boss.stateHistory[i];
                                     let actualSec = (curr.t - prev.t) / 1000;
                                     let expectedSec = (getCumulativeBaselineTime(curr.s, isEndGameMap) - getCumulativeBaselineTime(prev.s, isEndGameMap)) * dynamicScale;
-                                    
                                     if (expectedSec > 0 && actualSec > 0) {
                                         let currentSpeed = expectedSec / actualSec; 
-                                        if (mEma === null) { mEma = currentSpeed; } 
-                                        else { mEma = (emaAlpha * currentSpeed) + ((1 - emaAlpha) * mEma); } 
+                                        if (mEma === null) { mEma = currentSpeed; } else { mEma = (emaAlpha * currentSpeed) + ((1 - emaAlpha) * mEma); } 
                                     }
                                 }
 
@@ -1489,16 +1380,11 @@
                                 etaBossMs = lastLog.t + ((remainingTo5Sec / mEma) * 1000);
                             }
 
-                            // 🛡️ ปัดเศษทศนิยมเพื่อแก้ปัญหา Floating point ที่ทำให้เสียงเฟส 4 และ 5 ดังไล่เลี่ยกันในเสี้ยววิ
                             predPhase = Math.round(Math.min(5.0, predPhase) * 100) / 100;
-                            
-                            if(inputStateInner) {
-                                inputStateInner.innerText = Math.floor(predPhase) >= 5 ? "ON" : Math.floor(predPhase).toString();
-                            }
+                            if(inputStateInner) { inputStateInner.innerText = Math.floor(predPhase) >= 5 ? "ON" : Math.floor(predPhase).toString(); }
                             
                             const predPct = (predPhase % 1) * 100;
                             const ringEl = document.getElementById(`progress-circle-${boss.id}`);
-                            
                             if(ringEl) {
                                 if (predPhase >= 4.0) { ringEl.style.background = `conic-gradient(var(--color-stage4) ${predPct}%, transparent 0)`; } 
                                 else { ringEl.style.background = `conic-gradient(var(--color-ghost) ${predPct}%, transparent 0)`; }
@@ -1523,81 +1409,45 @@
 
                             if (predPhase >= 4.0) {
                                 cardEl.classList.add("is-stage4"); cardEl.classList.remove("is-spawned");
-                                
                                 if (predPhase >= 5.0) {
                                     if (!boss.isStage5AlertPlayed) {
-                                        if (document.getElementById('enableStage5Sound')?.checked) {
-                                            pendingHorn.push(boss);
-                                        } else {
-                                            boss.isStage5AlertPlayed = true; 
-                                            boss.isStage4AlertPlayed = true;
-                                            boss.isSpawnSoundPlayed = true; 
-                                        }
+                                        if (document.getElementById('enableStage5Sound')?.checked) { pendingHorn.push(boss); } else { boss.isStage5AlertPlayed = true; boss.isStage4AlertPlayed = true; boss.isSpawnSoundPlayed = true; }
                                     }
                                 } else {
                                     if (!boss.isStage4AlertPlayed) { 
-                                        if (epicSoundEnable) {
-                                            pendingEpic.push(boss);
-                                        } else {
-                                            boss.isStage4AlertPlayed = true; 
-                                            boss.isSpawnSoundPlayed = true;
-                                        }
+                                        if (epicSoundEnable) { pendingEpic.push(boss); } else { boss.isStage4AlertPlayed = true; boss.isSpawnSoundPlayed = true; }
                                     }
                                     if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
                                 }
                             } else {
                                 cardEl.classList.add("is-spawned"); cardEl.classList.remove("is-stage4");
-                                
-                                if (!boss.isSpawnSoundPlayed) { 
-                                    pendingSpawn.push({b: boss, type: 'spawn'}); 
-                                }
+                                if (!boss.isSpawnSoundPlayed) { pendingSpawn.push({b: boss, type: 'spawn'}); }
                                 if (boss.isStage4AlertPlayed) { boss.isStage4AlertPlayed = false; }
                                 if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
                             }
                         } catch (err) {}
                     } else {
-                        if (!boss.isSpawnSoundPlayed) { 
-                            pendingSpawn.push({b: boss, type: 'spawn'}); 
-                        }
+                        if (!boss.isSpawnSoundPlayed) { pendingSpawn.push({b: boss, type: 'spawn'}); }
                     }
                 }
             });
 
-            // 🎵 ระบบจัดการคิวเสียงใหม่ จะจำว่า "เล่นแล้ว" และเรียก Auto-save ก็ต่อเมื่อทะลุ Cooldown ไปดังที่ลำโพงได้จริงๆ
-            let needsStateSave = false;
-            
+            // 🌟 เซฟสถานะเสียงเป็นรายตัว โดยไม่ต้องเหมาเซฟทั้งกระดานอีกต่อไป
             if (Date.now() - lastAudioPlayTime > 2000) { 
                 if (pendingHorn.length > 0) {
-                    playStage5HornSound();
-                    lastAudioPlayTime = Date.now();
-                    pendingHorn.forEach(boss => { 
-                        boss.isStage5AlertPlayed = true; 
-                        boss.isStage4AlertPlayed = true; 
-                        boss.isSpawnSoundPlayed = true; 
-                        needsStateSave = true;
-                    });
+                    playStage5HornSound(); lastAudioPlayTime = Date.now();
+                    pendingHorn.forEach(boss => { db.collection(targetCollection).doc(boss.id.toString()).update({ isStage5AlertPlayed: true, isStage4AlertPlayed: true, isSpawnSoundPlayed: true }); });
                 } else if (pendingEpic.length > 0) {
-                    playEpicStage4Sound();
-                    lastAudioPlayTime = Date.now();
-                    pendingEpic.forEach(boss => { 
-                        boss.isStage4AlertPlayed = true; 
-                        boss.isSpawnSoundPlayed = true; 
-                        needsStateSave = true;
-                    });
+                    playEpicStage4Sound(); lastAudioPlayTime = Date.now();
+                    pendingEpic.forEach(boss => { db.collection(targetCollection).doc(boss.id.toString()).update({ isStage4AlertPlayed: true, isSpawnSoundPlayed: true }); });
                 } else if (pendingSpawn.length > 0) {
-                    playDingSound();
-                    lastAudioPlayTime = Date.now();
+                    playDingSound(); lastAudioPlayTime = Date.now();
                     pendingSpawn.forEach(item => {
-                        if (item.type === 'pre') { item.b.isPreAlertPlayed = true; needsStateSave = true; }
-                        if (item.type === 'interval') { item.b.lastIntervalPlayed = item.val; needsStateSave = true; }
-                        if (item.type === 'spawn') { item.b.isSpawnSoundPlayed = true; needsStateSave = true; }
+                        if (item.type === 'pre') { db.collection(targetCollection).doc(item.b.id.toString()).update({ isPreAlertPlayed: true }); }
+                        if (item.type === 'interval') { db.collection(targetCollection).doc(item.b.id.toString()).update({ lastIntervalPlayed: item.val }); }
+                        if (item.type === 'spawn') { db.collection(targetCollection).doc(item.b.id.toString()).update({ isSpawnSoundPlayed: true }); }
                     });
                 }
-            }
-
-            // ถ้ามีเสียงถูกเล่นออกไปจริงๆ ให้หน่วงเวลาแล้วเขียนสถานะใหม่ทับขึ้น Firestore เพื่อป้องกันการหลอกหลอนตอนรีเฟรชหน้าเว็บ
-            if (needsStateSave) {
-                debouncedSave();
             }
 
             if (needsSort) applySort(true);
