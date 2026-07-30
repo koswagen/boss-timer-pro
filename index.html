@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Boss Timer Pro">
-    <title>Boss Timer Pro | v2.0.8 Firestore Subcollections</title>
+    <title>Boss Timer Pro | v2.0.9 Infinite Sound Fix</title>
     <link rel="icon" href="data:,">
     <style>
         /* 🎨 หมวดหมู่สีและการตั้งค่าตัวแปร (CSS Variables) สำหรับใช้ทั้งโปรเจกต์ */
@@ -314,7 +314,7 @@
 
         <div class="watermark">
             © 2026 Crafted by <span>Gensu</span>. All rights reserved.<br>
-            <div class="version-tag">Version 2.0.8 | Subcollection Architecture</div>
+            <div class="version-tag">Version 2.0.9 | Infinite Sound Fix & Subcollections</div>
         </div>
     </div>
 
@@ -387,7 +387,11 @@
                     <h4 style="color:#a855f7; border-bottom-color: rgba(168, 85, 247, 0.3);">🧠 ขั้นสูง (Admin Only)</h4>
                     <label class="setting-row" style="cursor:pointer; color: #cbd5e1;"><input type="checkbox" id="showAiPanel" onchange="saveSettings(); toggleAiPanelVisibility();"> แสดงแผงควบคุม AI Telemetry ด้านล่าง</label>
                     
-                    <button class="btn-sync" style="width:100%; justify-content:center; margin-top: 15px; background-color:rgba(239, 68, 68, 0.1); color:var(--color-danger); border:1px solid var(--color-danger);" onclick="clearAllBosses()">🔴 ล้างกระดานบอสส่วนกลางทั้งหมด (Reset Board)</button>
+                    <div style="display:flex; gap:10px; margin-top: 15px; margin-bottom: 10px;">
+                        <button class="btn-sync" onclick="importData()" style="flex:1; justify-content:center;">📥 นำเข้าเซฟ (Import)</button>
+                        <button class="btn-sync" onclick="exportData()" style="flex:1; justify-content:center;">📤 ส่งออกเซฟ (Export)</button>
+                    </div>
+                    <button class="btn-sync" style="width:100%; justify-content:center; background-color:rgba(239, 68, 68, 0.1); color:var(--color-danger); border:1px solid var(--color-danger);" onclick="clearAllBosses()">🔴 ล้างกระดานบอสส่วนกลางทั้งหมด (Reset Board)</button>
                 </div>
             </div>
         </div>
@@ -412,6 +416,14 @@
                         <li><b>การติดดาวส่วนตัว (⭐):</b> กดที่รูปดาวหน้าชื่อบอส หากบอสนั้นเกิดแล้ว การ์ดจะถูกดันขึ้นไปอยู่บนสุดของหน้าจอเสมอ <b>(สถานะดาวจะบันทึกแยกไว้ในเครื่องใครเครื่องมัน ไม่รบกวนหน้าจอเพื่อน)</b></li>
                         <li><b>ปุ่ม ✏️ (ดินสอ):</b> ใช้สำหรับแก้ไขเวลาหรือแก้ชื่อบอส</li>
                         <li><b>ปุ่ม 🗑️ (ถังขยะ):</b> ใช้สำหรับลบบอสตัวนั้นทิ้งออกจากกระดาน</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4>🤖 3. ระบบพยากรณ์เวลา (AI & Phase)</h4>
+                    <ul class="help-list">
+                        <li>เมื่อเวลาบอสเกิดแล้ว การ์ดจะเปลี่ยนเป็นแถบเครื่องมือสำหรับ <b>อัปเดตเฟส (Phase)</b></li>
+                        <li>เมื่อมีคนในเกมแจ้งเฟส (หรือสเตจ) ให้เรากดที่ <b>วงกลมตัวเลข</b> เพื่ออัปเดตตาม</li>
+                        <li>ระบบจะคำนวณความเร็วในการตีของคนในเซิร์ฟเวอร์ และพยากรณ์ว่าบอสจะเกิดตอนกี่โมง</li>
                     </ul>
                 </div>
             </div>
@@ -555,7 +567,7 @@
                 const sErr = sNum > 59;
                 if (mErr || sErr) hasError = true;
                 
-                const dispH = hVal === '' ? (activeInputId === group.h ? '' : '0') : hVal;
+                const dispH = hVal === '' ? (activeInputId === hVal ? '' : '0') : hVal;
                 const dispM = mVal === '' ? (activeInputId === group.m ? '' : '00') : (activeInputId === group.m ? mVal : String(mVal).padStart(2, '0'));
                 const dispS = sVal === '' ? (activeInputId === group.s ? '' : '00') : (activeInputId === group.s ? sVal : String(sVal).padStart(2, '0'));
 
@@ -763,6 +775,15 @@
             localStorage.setItem('bossAiDataset', JSON.stringify(aiDataset)); updateAiCounterDisplay();
         }
 
+        function exportAiDataset() {
+            if (ENABLE_AI_TELEMETRY !== 1) return;
+            if (aiDataset.length === 0) { alert("ยังไม่มีข้อมูล AI ในขณะนี้ครับ"); return; }
+            const dataStr = JSON.stringify(aiDataset, null, 2);
+            if (navigator.clipboard && window.isSecureContext) { 
+                navigator.clipboard.writeText(dataStr).then(() => alert(`🧠 คัดลอก AI Dataset สำเร็จ! (${aiDataset.length} Cycles)`)).catch(e => prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr));
+            } else { prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr); }
+        }
+
         function clearAiDataset() {
             if(confirm("⚠️ ยืนยันการล้างข้อมูล AI Dataset สะสมทั้งหมดหรือไม่?")) {
                 aiDataset = []; localStorage.removeItem('bossAiDataset'); updateAiCounterDisplay(); alert("🗑️ ล้างข้อมูล AI เรียบร้อยแล้วครับ");
@@ -773,6 +794,10 @@
             if (!b.stateHistory) b.stateHistory = [{ s: Math.max(1.0, parseFloat(b.stateInput)||1.0), t: b.spawnTime }];
             if (parseFloat(b.stateInput) < 1.0) b.stateInput = "1.0";
             if (!b.addedAt) b.addedAt = b.id; 
+            
+            // 🌟 เพิ่มบรรทัดนี้: เช็คทันทีว่าตอนที่โหลดข้อมูลมา บอสถึงเวลาเกิดไปหรือยัง
+            if (b._wasSpawned === undefined) { b._wasSpawned = (b.spawnTime <= Date.now()); }
+
             if (b.hasManualUpdate === undefined) { b.hasManualUpdate = b.stateHistory.length > 1 || b._wasSpawned; }
             if (b.spawnTime <= Date.now() && !b.spawnedAt) { b.spawnedAt = b.spawnTime; }
             if (b.isStandby === undefined) b.isStandby = false;
@@ -797,7 +822,11 @@
                         bosses.push(data);
                     } else if (change.type === 'modified') {
                         const index = bosses.findIndex(b => b.id === data.id);
-                        if (index !== -1) bosses[index] = data;
+                        if (index !== -1) {
+                            // 🌟 ป้องกันคลาวด์ลบความจำในเครื่องที่อาจส่งผลให้เสียงเตือนผิดพลาด
+                            data._wasSpawned = bosses[index]._wasSpawned;
+                            bosses[index] = data;
+                        }
                     } else if (change.type === 'removed') {
                         bosses = bosses.filter(b => b.id !== data.id);
                     }
@@ -842,6 +871,46 @@
                 document.getElementById('adminSettingsSection').style.display = 'none'; 
                 document.getElementById('btnAdminClearLogs').style.display = 'none';
                 document.getElementById('aiPanelContainer').style.display = 'none'; 
+            }
+        }
+
+        function exportData() {
+            if (!isAdmin) return;
+            const data = { bosses: bosses, settings: JSON.parse(localStorage.getItem('bossSettings') || '{}') };
+            const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+            const preview = encoded.length > 20 ? encoded.substring(0, 12) + "........" + encoded.substring(encoded.length - 8) : encoded;
+            if (navigator.clipboard && window.isSecureContext) { 
+                navigator.clipboard.writeText(encoded).then(() => alert(`📋 คัดลอกรหัสเซฟสำเร็จ!\n[ รหัส: ${preview} ]`)).catch(e => prompt("คัดลอกรหัสเซฟนี้:", encoded));
+            } else { prompt("คัดลอกรหัสเซฟนี้:", encoded); }
+        }
+
+        function importData() {
+            if (!isAdmin) return;
+            const inputCode = prompt("📥 วางรหัสเซฟที่คัดลอกมา:"); 
+            if (!inputCode || inputCode.trim() === "") return;
+            
+            try {
+                const decoded = JSON.parse(decodeURIComponent(atob(inputCode.trim())));
+                if(confirm("🔄 รวมข้อมูล (Merge) ลงใน Environment นี้ใช่หรือไม่?")) {
+                    
+                    // 🌟 นำข้อมูลบอสที่ดึงมา วนลูปสร้างเป็น Document แยกทีละตัว
+                    if (decoded.bosses && decoded.bosses.length > 0) {
+                        decoded.bosses.forEach(newBoss => {
+                            const cleanBoss = sanitizeBossData(newBoss);
+                            db.collection(targetCollection).doc(cleanBoss.id.toString()).set(cleanBoss);
+                        });
+                    }
+                    
+                    // นำเข้า Settings
+                    if (decoded.settings && Object.keys(decoded.settings).length > 0) { 
+                        localStorage.setItem('bossSettings', JSON.stringify(decoded.settings)); 
+                    }
+                    
+                    alert("✅ นำเข้าเซฟและแยก Document เรียบร้อยครับ! \nระบบจะรีเฟรชหน้าจอ 1 ครั้งเพื่อนำข้อมูลเข้า");
+                    location.reload();
+                }
+            } catch (e) { 
+                alert("❌ รหัสเซฟไม่ถูกต้อง กรุณาลองใหม่"); 
             }
         }
 
