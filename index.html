@@ -1343,7 +1343,7 @@
             const epicSoundEnable = document.getElementById('enableEpicSound')?.checked;
             const isStageSystemEnabled = currentSettings.enableStages !== false; 
             const currentEndMap = document.getElementById('endGameMap')?.value.trim() || "";
-            const emaAlpha = isEndGameMap ? 0.4 : 0.8;
+            
 
             const filteredBosses = bosses.filter(b => b.name.toLowerCase().includes(document.getElementById('searchInput')?.value.toLowerCase() || ''));
             let needsSort = false; 
@@ -1361,6 +1361,7 @@
                 const distance = boss.spawnTime - now;
                 const isCurrentlySpawned = distance <= 0;
                 const isEndGameMap = currentEndMap !== "" && boss.name.includes(currentEndMap);
+		const emaAlpha = isEndGameMap ? 0.4 : 0.8;
 
                 if (boss._wasSpawned !== isCurrentlySpawned) { 
                     boss._wasSpawned = isCurrentlySpawned; needsSort = true;
