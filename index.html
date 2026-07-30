@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Boss Timer Pro">
-    <title>Boss Timer Pro | v2.0.10 Final Polish</title>
+    <title>Boss Timer Pro | v2.0.11 Auto-Sync</title>
     <link rel="icon" href="data:,">
     <style>
         /* 🎨 หมวดหมู่สีและการตั้งค่าตัวแปร (CSS Variables) สำหรับใช้ทั้งโปรเจกต์ */
@@ -314,7 +314,7 @@
 
         <div class="watermark">
             © 2026 Crafted by <span>Gensu</span>. All rights reserved.<br>
-            <div class="version-tag">Version 2.0.10 | Final Polish & Cross-Platform Audio</div>
+            <div class="version-tag">Version 2.0.11 | Auto-Sync Version</div>
         </div>
     </div>
 
@@ -434,9 +434,13 @@
     <!-- ส่วนของการทำงานด้วย JavaScript (ควบคุมลอจิกทั้งหมด) -->
     <script>
         // ==========================================
-        // 🔑 ตั้งค่า Firebase & Admin Security
+        // 🔑 0. เลขเวอร์ชันปัจจุบัน (ใช้อัปเดตเพื่อบังคับคนอื่น Refresh)
         // ==========================================
-        
+        const CLIENT_VERSION = "2.0.11";
+
+        // ==========================================
+        // 🔑 1. ตั้งค่า Firebase & Admin Security
+        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyAiFev1IKP9wVFM4ZZzijBiSWfJhH1afS0",
             authDomain: "boss-timer-pro.firebaseapp.com",
@@ -468,7 +472,6 @@
             targetDbDoc = 'local-server'; 
         }
 
-        // 🌟 ย้ายมาใช้ Collection (ตู้เอกสารใหม่) แยกตามเซิร์ฟเวอร์
         const targetCollection = 'bosses_' + targetDbDoc;
         const targetLogDoc = 'logs_' + targetDbDoc;
 
@@ -481,7 +484,7 @@
         }
 
         // ==========================================
-        // 🧮 ส่วนที่ 1: ระบบสมการคำนวณเวลา (Baseline Engine)
+        // 🧮 ส่วนที่ 2: ระบบสมการคำนวณเวลา (Baseline Engine)
         // ==========================================
         function getCumulativeBaselineTime(phase, isFast = false) {
             // 🌟 อัปเดตความเร็ว Fast Profile (แมพ 153) ตามสถิติใหม่ (รวม 10 นาที)
@@ -505,7 +508,7 @@
         }
 
         // ==========================================
-        // 💾 ส่วนที่ 2: ตัวแปรหลัก และระบบจัดการ Modal
+        // 💾 ส่วนที่ 3: ตัวแปรหลัก และระบบจัดการ Modal
         // ==========================================
         let bosses = []; 
         let deletedLogs = []; 
@@ -533,7 +536,7 @@
         }
 
         // ==========================================
-        // ⌨️ ส่วนที่ 3: ระบบ Numpad ควบคุมการกรอกเวลา
+        // ⌨️ ส่วนที่ 4: ระบบ Numpad ควบคุมการกรอกเวลา
         // ==========================================
         function getTimeGroupFields(id) {
             if (!id) return null;
@@ -709,8 +712,17 @@
         }
 
         // ==========================================
-        // ☁️ ส่วนที่ 4: การโหลดข้อมูลจาก Firebase (เปลี่ยนเป็น docChanges)
+        // ☁️ ส่วนที่ 5: การโหลดข้อมูลจาก Firebase & Version Sync
         // ==========================================
+        function compareVersions(v1, v2) {
+            const p1 = v1.split('.').map(Number); const p2 = v2.split('.').map(Number);
+            for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+                const n1 = p1[i] || 0; const n2 = p2[i] || 0;
+                if (n1 > n2) return 1; if (n1 < n2) return -1;
+            }
+            return 0;
+        }
+
         function saveSettings() {
             currentSettings = {
                 enableStages: document.getElementById('enableStages').checked,
@@ -727,7 +739,6 @@
                 emaAlpha: 1.0, 
                 patch153Applied: true 
             };
-            // 🌟 ย้ายไปใช้คีย์เก็บข้อมูล v2 เพื่อบังคับรีเซ็ตค่า Default ใหม่ทั้งหมด
             localStorage.setItem('bossSettings_v2', JSON.stringify(currentSettings));
             document.getElementById('endGameMapContainer').style.opacity = currentSettings.enableStages ? '1' : '0.4';
             document.getElementById('btnInstantStage').style.display = currentSettings.enableStages ? 'inline-flex' : 'none';
@@ -790,7 +801,7 @@
             if (parseFloat(b.stateInput) < 1.0) b.stateInput = "1.0";
             if (!b.addedAt) b.addedAt = b.id; 
             
-            // 🌟 แก้บัค Ghost Reset: บังคับคำนวณการเกิดจากเวลาจริงเสมอ ป้องกันคลาวด์หลอกให้ล้างไพ่กลับเป็นเฟส 1.0
+            // 🌟 แก้บัค Ghost Reset: บังคับคำนวณการเกิดจากเวลาจริงเสมอ 
             b._wasSpawned = (b.spawnTime <= Date.now());
 
             if (b.hasManualUpdate === undefined) { b.hasManualUpdate = b.stateHistory.length > 1 || b._wasSpawned; }
@@ -806,6 +817,24 @@
         }
 
         function loadData() {
+            // 🌟 ระบบเช็คเวอร์ชัน (Auto-Refresh)
+            db.collection('systemData').doc('appConfig_' + targetDbDoc).onSnapshot(doc => {
+                if (doc.exists) {
+                    const dbVersion = doc.data().version;
+                    if (dbVersion && dbVersion !== CLIENT_VERSION) {
+                        if (isAdmin && compareVersions(CLIENT_VERSION, dbVersion) > 0) {
+                            // Admin มีเวอร์ชันใหม่กว่า ให้ดันขึ้นคลาวด์ไปสั่งคนอื่น
+                            db.collection('systemData').doc('appConfig_' + targetDbDoc).set({ version: CLIENT_VERSION }, { merge: true });
+                        } else {
+                            // เครื่องนี้เก่ากว่าคลาวด์ ทะลวงแคชและโหลดใหม่
+                            window.location.href = window.location.pathname + "?v=" + dbVersion;
+                        }
+                    }
+                } else if (isAdmin) {
+                    db.collection('systemData').doc('appConfig_' + targetDbDoc).set({ version: CLIENT_VERSION }, { merge: true });
+                }
+            });
+
             const savedSettings = localStorage.getItem('bossSettings_v2');
             const savedAiDataset = localStorage.getItem('bossAiDataset');
             if (savedAiDataset) aiDataset = JSON.parse(savedAiDataset);
@@ -913,7 +942,7 @@
         }
 
         // ==========================================
-        // 🔊 ส่วนที่ 5: ระบบเสียงแจ้งเตือน
+        // 🔊 ส่วนที่ 6: ระบบเสียงแจ้งเตือน
         // ==========================================
         function initAudio() { if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if (audioCtx.state === 'suspended') { audioCtx.resume(); } }
         function playTone(time, freq, vol, type) {
@@ -955,7 +984,7 @@
         function testSound() { playDingSound(); }
 
         // ==========================================
-        // ⚔️ ส่วนที่ 6: การกระทำต่างๆ ของการ์ดบอส
+        // ⚔️ ส่วนที่ 7: การกระทำต่างๆ ของการ์ดบอส
         // ==========================================
         function addBoss(mode) {
             initAudio(); 
@@ -1105,7 +1134,7 @@
         }
 
         // ==========================================
-        // 🔀 ส่วนที่ 7: กลไกการจัดเรียงการ์ด
+        // 🔀 ส่วนที่ 8: กลไกการจัดเรียงการ์ด
         // ==========================================
         function applySort(forceRender = false) {
             const sortMode = document.getElementById('sortOption') ? document.getElementById('sortOption').value : 'time';
@@ -1144,7 +1173,7 @@
         }
 
         // ==========================================
-        // 🖥️ ส่วนที่ 8: ฟังก์ชันวาด UI ลงหน้าจอ
+        // 🖥️ ส่วนที่ 9: ฟังก์ชันวาด UI ลงหน้าจอ
         // ==========================================
         function renderBosses() {
             const activeCont = document.getElementById('activeContainer'); 
@@ -1303,7 +1332,7 @@
         }
 
         // ==========================================
-        // ⏱️ ส่วนที่ 9: ฟังก์ชันวนรอบเพื่ออัปเดตตัวเลขและเสียง
+        // ⏱️ ส่วนที่ 10: ฟังก์ชันวนรอบเพื่ออัปเดตตัวเลขและเสียง
         // ==========================================
         function updateTimers() {
             const now = new Date().getTime();
@@ -1472,7 +1501,6 @@
                 }
             });
 
-            // 🌟 เซฟสถานะเสียงเป็นรายตัว โดยตั้ง flag ว่า "เล่นแล้ว" เพื่อกันเสียงตีกัน
             if (Date.now() - lastAudioPlayTime > 2000) { 
                 if (pendingHorn.length > 0) {
                     if (document.getElementById('enableStage5Sound')?.checked) playStage5HornSound(); 
