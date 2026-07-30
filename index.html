@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Boss Timer Pro">
-    <title>Boss Timer Pro | v2.0.6 Audio Fix</title>
+    <title>Boss Timer Pro | v2.0.7 Audio & Sync Fix</title>
     <link rel="icon" href="data:,">
     <style>
         /* 🎨 หมวดหมู่สีและการตั้งค่าตัวแปร (CSS Variables) สำหรับใช้ทั้งโปรเจกต์ */
@@ -335,7 +335,7 @@
 
         <div class="watermark">
             © 2026 Crafted by <span>Gensu</span>. All rights reserved.<br>
-            <div class="version-tag">Version 2.0.6 | Audio Fix & Cloud Sync</div>
+            <div class="version-tag">Version 2.0.7 | Audio Queue & Debounced Save</div>
         </div>
     </div>
 
@@ -623,7 +623,11 @@
             document.getElementById('numpadOverlay').style.display = 'flex'; updateNumpadDisplay();
         }
 
-        function closeNumpad() { document.getElementById('numpadOverlay').style.display = 'none'; activeInputId = null; }
+        function closeNumpad() { 
+            document.getElementById('numpadOverlay').style.display = 'none'; 
+            activeInputId = null; 
+            applySort(true); // บังคับให้จอวาดใหม่ทันทีเพื่อรับข้อมูลที่ค้างอยู่ตอนพิมพ์
+        }
 
         function numpadType(char) {
             if (!activeInputId) return;
@@ -728,6 +732,15 @@
                 deletedLogs: deletedLogs
             }).catch(error => console.error("Error saving data: ", error));
         }
+
+        // ตัวแปรหน่วงเวลาการเซฟออโต้เพื่อไม่ให้ยิง Firestore ถี่เกินไปเวลาเสียงตีกัน
+        let autoSaveTimeout = null;
+        function debouncedSave() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                saveData();
+            }, 3000); 
+        }
         
         function saveSettings() {
             currentSettings = {
@@ -813,24 +826,9 @@
             db.collection('bossData').doc(targetDbDoc).onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    const incomingBosses = data.bosses || [];
                     
-                    // --- 🧠 Local State Preservation ---
-                    // ดึงความจำเรื่องเสียงจากการ์ดเดิมในเครื่องเราไปทับข้อมูลที่เพิ่งโหลดมา (เพื่อป้องกัน Cloud ล้างสมอง)
-                    incomingBosses.forEach(inBoss => {
-                        const localBoss = bosses.find(b => b.id === inBoss.id);
-                        if (localBoss && localBoss.spawnTime === inBoss.spawnTime) {
-                            if (localBoss.isPreAlertPlayed) inBoss.isPreAlertPlayed = true;
-                            if (localBoss.isSpawnSoundPlayed) inBoss.isSpawnSoundPlayed = true;
-                            if (localBoss.isStage4AlertPlayed) inBoss.isStage4AlertPlayed = true;
-                            if (localBoss.isStage5AlertPlayed) inBoss.isStage5AlertPlayed = true;
-                            if (localBoss.lastIntervalPlayed > (inBoss.lastIntervalPlayed || 0)) {
-                                inBoss.lastIntervalPlayed = localBoss.lastIntervalPlayed;
-                            }
-                        }
-                    });
-
-                    bosses = incomingBosses;
+                    // ปล่อยให้ข้อมูลจาก Firestore ทับลงไปตรงๆ เพื่อแก้ปัญหาการแก้ไขเลขย้อนกลับ
+                    bosses = data.bosses || [];
                     deletedLogs = data.deletedLogs || [];
                     
                     bosses.forEach(b => { 
@@ -1565,7 +1563,9 @@
                 }
             });
 
-            // 🎵 ระบบจัดการคิวเสียงใหม่ จะจำว่า "เล่นแล้ว" ก็ต่อเมื่อทะลุ Cooldown ไปดังที่ลำโพงได้จริงๆ
+            // 🎵 ระบบจัดการคิวเสียงใหม่ จะจำว่า "เล่นแล้ว" และเรียก Auto-save ก็ต่อเมื่อทะลุ Cooldown ไปดังที่ลำโพงได้จริงๆ
+            let needsStateSave = false;
+            
             if (Date.now() - lastAudioPlayTime > 2000) { 
                 if (pendingHorn.length > 0) {
                     playStage5HornSound();
@@ -1574,6 +1574,7 @@
                         boss.isStage5AlertPlayed = true; 
                         boss.isStage4AlertPlayed = true; 
                         boss.isSpawnSoundPlayed = true; 
+                        needsStateSave = true;
                     });
                 } else if (pendingEpic.length > 0) {
                     playEpicStage4Sound();
@@ -1581,16 +1582,22 @@
                     pendingEpic.forEach(boss => { 
                         boss.isStage4AlertPlayed = true; 
                         boss.isSpawnSoundPlayed = true; 
+                        needsStateSave = true;
                     });
                 } else if (pendingSpawn.length > 0) {
                     playDingSound();
                     lastAudioPlayTime = Date.now();
                     pendingSpawn.forEach(item => {
-                        if (item.type === 'pre') item.b.isPreAlertPlayed = true;
-                        if (item.type === 'interval') item.b.lastIntervalPlayed = item.val;
-                        if (item.type === 'spawn') item.b.isSpawnSoundPlayed = true;
+                        if (item.type === 'pre') { item.b.isPreAlertPlayed = true; needsStateSave = true; }
+                        if (item.type === 'interval') { item.b.lastIntervalPlayed = item.val; needsStateSave = true; }
+                        if (item.type === 'spawn') { item.b.isSpawnSoundPlayed = true; needsStateSave = true; }
                     });
                 }
+            }
+
+            // ถ้ามีเสียงถูกเล่นออกไปจริงๆ ให้หน่วงเวลาแล้วเขียนสถานะใหม่ทับขึ้น Firestore เพื่อป้องกันการหลอกหลอนตอนรีเฟรชหน้าเว็บ
+            if (needsStateSave) {
+                debouncedSave();
             }
 
             if (needsSort) applySort(true);
