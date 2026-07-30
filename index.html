@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Boss Timer Pro">
-    <title>Boss Timer Pro | v2.0.9 Infinite Sound Fix</title>
+    <title>Boss Timer Pro | v2.0.10 Final Polish</title>
     <link rel="icon" href="data:,">
     <style>
         /* 🎨 หมวดหมู่สีและการตั้งค่าตัวแปร (CSS Variables) สำหรับใช้ทั้งโปรเจกต์ */
@@ -314,7 +314,7 @@
 
         <div class="watermark">
             © 2026 Crafted by <span>Gensu</span>. All rights reserved.<br>
-            <div class="version-tag">Version 2.0.9 | Infinite Sound Fix & Subcollections</div>
+            <div class="version-tag">Version 2.0.10 | Final Polish & Cross-Platform Audio</div>
         </div>
     </div>
 
@@ -366,26 +366,23 @@
                 <div class="setting-section">
                     <h4>🔊 เสียงและการแจ้งเตือน (เฉพาะเครื่องนี้)</h4>
                     <label class="setting-row">ระดับเสียง: <input type="range" id="volumeControl" min="0" max="100" value="100" onchange="testSound(); saveSettings();" style="flex-grow:1;"></label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enablePreAlert" onchange="saveSettings()"> เตือนล่วงหน้า <input type="number" id="preAlertTime" value="2" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableRepeatAlert" checked onchange="saveSettings()"> เตือนซ้ำเมื่อบอสเกิด ทุกๆ <input type="number" id="alertInterval" value="10" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> นาที</label>
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableSpawnSound" onchange="saveSettings()"> 🔔 เสียงเตือนเมื่อบอสเกิด (ติ๊กๆ)</label>
                     <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableEpicSound" onchange="saveSettings()"> 🎵 เสียงเตือนพิเศษ Phase 4 (Epic Sound)</label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableStage5Sound" checked onchange="saveSettings()"> 🎺 เสียงแตรออกรบตอนบอสเกิด (Phase 5)</label>
+                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableStage5Sound" onchange="saveSettings()"> 🎺 เสียงแตรออกรบตอนบอสเกิด (Phase 5)</label>
                 </div>
                 
-                <div class="setting-section">
-                    <h4>💤 การจัดการการ์ดอัตโนมัติ (ให้ Admin เป็นผู้รันคำสั่ง)</h4>
-                    <label class="setting-row" style="cursor:pointer; color: var(--text-primary);">
-                        <input type="checkbox" id="autoSleepEnable" onchange="saveSettings()"> 💤 พักการ์ดอัตโนมัติ (Auto-Sleep) ทิ้งไว้เกิน <input type="number" id="autoSleepHrs" value="6" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
-                    </label>
-                    <label class="setting-row" style="cursor:pointer; color: var(--color-danger);">
-                        <input type="checkbox" id="autoDeleteEnable" onchange="saveSettings()"> 🗑️ ลบการ์ดอัตโนมัติ (Auto-Delete) ทิ้งไว้เกิน <input type="number" id="autoDeleteHrs" value="12" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
-                    </label>
-                </div>
-
-                <!-- ซ่อนฟีเจอร์อันตรายไว้ในโหมด Admin -->
+                <!-- โซน Admin Only -->
                 <div class="setting-section" id="adminSettingsSection" style="display:none; margin-bottom: 0;">
                     <h4 style="color:#a855f7; border-bottom-color: rgba(168, 85, 247, 0.3);">🧠 ขั้นสูง (Admin Only)</h4>
-                    <label class="setting-row" style="cursor:pointer; color: #cbd5e1;"><input type="checkbox" id="showAiPanel" onchange="saveSettings(); toggleAiPanelVisibility();"> แสดงแผงควบคุม AI Telemetry ด้านล่าง</label>
+                    <label class="setting-row" style="cursor:pointer; color: #cbd5e1;">
+                        <input type="checkbox" id="autoSleepEnable" onchange="saveSettings()"> 💤 พักการ์ดอัตโนมัติ (Auto-Sleep) ทิ้งไว้เกิน <input type="number" id="autoSleepHrs" value="6" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
+                    </label>
+                    <label class="setting-row" style="cursor:pointer; color: #cbd5e1;">
+                        <input type="checkbox" id="autoDeleteEnable" onchange="saveSettings()"> 🗑️ ลบการ์ดอัตโนมัติ (Auto-Delete) ทิ้งไว้เกิน <input type="number" id="autoDeleteHrs" value="12" min="1" style="width:50px; text-align:center;" onchange="saveSettings()"> ชม.
+                    </label>
+                    <label class="setting-row" style="cursor:pointer; color: #cbd5e1; margin-top: 10px;">
+                        <input type="checkbox" id="showAiPanel" onchange="saveSettings(); toggleAiPanelVisibility();"> แสดงแผงควบคุม AI Telemetry ด้านล่าง
+                    </label>
                     
                     <div style="display:flex; gap:10px; margin-top: 15px; margin-bottom: 10px;">
                         <button class="btn-sync" onclick="importData()" style="flex:1; justify-content:center;">📥 นำเข้าเซฟ (Import)</button>
@@ -487,7 +484,8 @@
         // 🧮 ส่วนที่ 1: ระบบสมการคำนวณเวลา (Baseline Engine)
         // ==========================================
         function getCumulativeBaselineTime(phase, isFast = false) {
-            const durations = isFast ? [630, 350, 280, 140] : [1620, 900, 720, 360];
+            // 🌟 อัปเดตความเร็ว Fast Profile (แมพ 153) ตามสถิติใหม่ (รวม 10 นาที)
+            const durations = isFast ? [300, 150, 100, 60] : [1620, 900, 720, 360];
             let total = 0;
             if (phase > 1) total += Math.min(1, phase - 1) * durations[0]; 
             if (phase > 2) total += Math.min(1, phase - 2) * durations[1]; 
@@ -497,7 +495,7 @@
         }
 
         function getPhaseFromTime(time, isFast = false) {
-            const d = isFast ? [630, 350, 280, 140] : [1620, 900, 720, 360];
+            const d = isFast ? [300, 150, 100, 60] : [1620, 900, 720, 360];
             if (time <= 0) return 1.0;
             if (time <= d[0]) return 1.0 + time / d[0];
             if (time <= d[0] + d[1]) return 2.0 + (time - d[0]) / d[1];
@@ -567,7 +565,7 @@
                 const sErr = sNum > 59;
                 if (mErr || sErr) hasError = true;
                 
-                const dispH = hVal === '' ? (activeInputId === hVal ? '' : '0') : hVal;
+                const dispH = hVal === '' ? (activeInputId === group.h ? '' : '0') : hVal;
                 const dispM = mVal === '' ? (activeInputId === group.m ? '' : '00') : (activeInputId === group.m ? mVal : String(mVal).padStart(2, '0'));
                 const dispS = sVal === '' ? (activeInputId === group.s ? '' : '00') : (activeInputId === group.s ? sVal : String(sVal).padStart(2, '0'));
 
@@ -694,7 +692,6 @@
                         newHistory.push({ s: finalStateStr, t: nowTime }); 
                     }
                     
-                    // 🌟 ใช้ .update() อัปเดตเฉพาะข้อมูลการ์ดนี้ใบเดียว
                     db.collection(targetCollection).doc(bossId.toString()).update({
                         stateInput: finalStateStr,
                         stateHistory: newHistory,
@@ -718,10 +715,7 @@
             currentSettings = {
                 enableStages: document.getElementById('enableStages').checked,
                 vol: document.getElementById('volumeControl').value, 
-                enablePreAlert: document.getElementById('enablePreAlert').checked, 
-                preAlertTime: document.getElementById('preAlertTime').value,
-                enableRepeatAlert: document.getElementById('enableRepeatAlert').checked, 
-                interval: document.getElementById('alertInterval').value,
+                enableSpawnSound: document.getElementById('enableSpawnSound').checked,
                 autoSleepEnable: document.getElementById('autoSleepEnable').checked,
                 autoSleepHrs: document.getElementById('autoSleepHrs').value,
                 autoDeleteEnable: document.getElementById('autoDeleteEnable').checked, 
@@ -733,7 +727,8 @@
                 emaAlpha: 1.0, 
                 patch153Applied: true 
             };
-            localStorage.setItem('bossSettings', JSON.stringify(currentSettings));
+            // 🌟 ย้ายไปใช้คีย์เก็บข้อมูล v2 เพื่อบังคับรีเซ็ตค่า Default ใหม่ทั้งหมด
+            localStorage.setItem('bossSettings_v2', JSON.stringify(currentSettings));
             document.getElementById('endGameMapContainer').style.opacity = currentSettings.enableStages ? '1' : '0.4';
             document.getElementById('btnInstantStage').style.display = currentSettings.enableStages ? 'inline-flex' : 'none';
         }
@@ -795,8 +790,8 @@
             if (parseFloat(b.stateInput) < 1.0) b.stateInput = "1.0";
             if (!b.addedAt) b.addedAt = b.id; 
             
-            // 🌟 เพิ่มบรรทัดนี้: เช็คทันทีว่าตอนที่โหลดข้อมูลมา บอสถึงเวลาเกิดไปหรือยัง
-            if (b._wasSpawned === undefined) { b._wasSpawned = (b.spawnTime <= Date.now()); }
+            // 🌟 แก้บัค Ghost Reset: บังคับคำนวณการเกิดจากเวลาจริงเสมอ ป้องกันคลาวด์หลอกให้ล้างไพ่กลับเป็นเฟส 1.0
+            b._wasSpawned = (b.spawnTime <= Date.now());
 
             if (b.hasManualUpdate === undefined) { b.hasManualUpdate = b.stateHistory.length > 1 || b._wasSpawned; }
             if (b.spawnTime <= Date.now() && !b.spawnedAt) { b.spawnedAt = b.spawnTime; }
@@ -806,15 +801,15 @@
             if (b.sleptAt === undefined && b.isStandby) b.sleptAt = b.spawnTime;
             if (b.isStage4AlertPlayed === undefined) b.isStage4AlertPlayed = false;
             if (b.isStage5AlertPlayed === undefined) b.isStage5AlertPlayed = false;
+            if (b.isSpawnSoundPlayed === undefined) b.isSpawnSoundPlayed = false;
             return b;
         }
 
         function loadData() {
-            const savedSettings = localStorage.getItem('bossSettings');
+            const savedSettings = localStorage.getItem('bossSettings_v2');
             const savedAiDataset = localStorage.getItem('bossAiDataset');
             if (savedAiDataset) aiDataset = JSON.parse(savedAiDataset);
             
-            // 🌟 เปลี่ยนมารับข้อมูลจาก Collection ใหม่แบบแยกรายตัว
             db.collection(targetCollection).onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     const data = sanitizeBossData(change.doc.data());
@@ -823,8 +818,6 @@
                     } else if (change.type === 'modified') {
                         const index = bosses.findIndex(b => b.id === data.id);
                         if (index !== -1) {
-                            // 🌟 ป้องกันคลาวด์ลบความจำในเครื่องที่อาจส่งผลให้เสียงเตือนผิดพลาด
-                            data._wasSpawned = bosses[index]._wasSpawned;
                             bosses[index] = data;
                         }
                     } else if (change.type === 'removed') {
@@ -834,7 +827,6 @@
                 applySort(true); 
             });
 
-            // 🌟 ดึงข้อมูลประวัติการลบที่แยกมาอยู่อีก Document
             db.collection('systemData').doc(targetLogDoc).onSnapshot(doc => {
                 if (doc.exists) {
                     deletedLogs = doc.data().logs || [];
@@ -846,16 +838,13 @@
                 currentSettings = JSON.parse(savedSettings);
                 document.getElementById('enableStages').checked = currentSettings.enableStages !== false; 
                 document.getElementById('volumeControl').value = currentSettings.vol !== undefined ? currentSettings.vol : 100;
-                document.getElementById('enablePreAlert').checked = currentSettings.enablePreAlert || false;
-                document.getElementById('preAlertTime').value = currentSettings.preAlertTime || 2;
-                document.getElementById('enableRepeatAlert').checked = currentSettings.enableRepeatAlert !== undefined ? currentSettings.enableRepeatAlert : true;
-                document.getElementById('alertInterval').value = currentSettings.interval || 10;
+                document.getElementById('enableSpawnSound').checked = currentSettings.enableSpawnSound || false;
                 document.getElementById('autoSleepEnable').checked = currentSettings.autoSleepEnable !== undefined ? currentSettings.autoSleepEnable : false; 
                 document.getElementById('autoSleepHrs').value = currentSettings.autoSleepHrs || 6;
                 document.getElementById('autoDeleteEnable').checked = currentSettings.autoDeleteEnable !== undefined ? currentSettings.autoDeleteEnable : false; 
                 document.getElementById('autoDeleteHrs').value = currentSettings.autoDeleteHrs || 12; 
                 document.getElementById('enableEpicSound').checked = currentSettings.enableEpicSound !== undefined ? currentSettings.enableEpicSound : false;
-                document.getElementById('enableStage5Sound').checked = currentSettings.enableStage5Sound !== undefined ? currentSettings.enableStage5Sound : true;
+                document.getElementById('enableStage5Sound').checked = currentSettings.enableStage5Sound !== undefined ? currentSettings.enableStage5Sound : false;
                 document.getElementById('showAiPanel').checked = currentSettings.showAiPanel || false;
                 document.getElementById('endGameMap').value = currentSettings.endGameMap || "153";
             } else { saveSettings(); }
@@ -876,7 +865,7 @@
 
         function exportData() {
             if (!isAdmin) return;
-            const data = { bosses: bosses, settings: JSON.parse(localStorage.getItem('bossSettings') || '{}') };
+            const data = { bosses: bosses, settings: JSON.parse(localStorage.getItem('bossSettings_v2') || '{}') };
             const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
             const preview = encoded.length > 20 ? encoded.substring(0, 12) + "........" + encoded.substring(encoded.length - 8) : encoded;
             if (navigator.clipboard && window.isSecureContext) { 
@@ -893,7 +882,6 @@
                 const decoded = JSON.parse(decodeURIComponent(atob(inputCode.trim())));
                 if(confirm("🔄 รวมข้อมูล (Merge) ลงใน Environment นี้ใช่หรือไม่?")) {
                     
-                    // 🌟 นำข้อมูลบอสที่ดึงมา วนลูปสร้างเป็น Document แยกทีละตัว
                     if (decoded.bosses && decoded.bosses.length > 0) {
                         decoded.bosses.forEach(newBoss => {
                             const cleanBoss = sanitizeBossData(newBoss);
@@ -901,9 +889,8 @@
                         });
                     }
                     
-                    // นำเข้า Settings
                     if (decoded.settings && Object.keys(decoded.settings).length > 0) { 
-                        localStorage.setItem('bossSettings', JSON.stringify(decoded.settings)); 
+                        localStorage.setItem('bossSettings_v2', JSON.stringify(decoded.settings)); 
                     }
                     
                     alert("✅ นำเข้าเซฟและแยก Document เรียบร้อยครับ! \nระบบจะรีเฟรชหน้าจอ 1 ครั้งเพื่อนำข้อมูลเข้า");
@@ -1005,13 +992,11 @@
             const newBoss = {
                 id: Date.now(), addedAt: Date.now(), hasManualUpdate: isManual,
                 name: nameInput, spawnTime: sTime, spawnedAt: (mode === 'instant') ? now : null, stateInput: initialStageStr, stateHistory: historyLog,
-                isPreAlertPlayed: false, isSpawnSoundPlayed: false, 
-                isStage4AlertPlayed: muteStage4, lastIntervalPlayed: 0, _wasSpawned: (mode === 'instant'),
+                isSpawnSoundPlayed: false, isStage4AlertPlayed: muteStage4, _wasSpawned: (mode === 'instant'),
                 isStandby: false, isAutoSlept: false, telemetrySaved: false,
                 sleptAt: null, isStage5AlertPlayed: muteStage5
             };
             
-            // 🌟 เขียนข้อมูลลง Document ของตัวเอง
             db.collection(targetCollection).doc(newBoss.id.toString()).set(newBoss);
             
             document.getElementById('bossName').value = ''; 
@@ -1071,10 +1056,8 @@
                     stateHistory: [{ s: 1.0, t: sTime }],
                     hasManualUpdate: false,
                     spawnedAt: null,
-                    isPreAlertPlayed: false,
                     isSpawnSoundPlayed: false,
                     isStage4AlertPlayed: false,
-                    lastIntervalPlayed: 0,
                     _wasSpawned: false,
                     isStandby: false,
                     isAutoSlept: false,
@@ -1324,8 +1307,6 @@
         // ==========================================
         function updateTimers() {
             const now = new Date().getTime();
-            const preAlertTimeMs = (parseInt(document.getElementById('preAlertTime')?.value || 2)) * 60 * 1000;
-            const repeatIntervalMs = (parseInt(document.getElementById('alertInterval')?.value || 10)) * 60 * 1000;
             const autoSleepEnable = document.getElementById('autoSleepEnable')?.checked;
             const autoSleepHrs = parseFloat(document.getElementById('autoSleepHrs')?.value || 6);
             const autoDelEnable = document.getElementById('autoDeleteEnable')?.checked;
@@ -1356,13 +1337,12 @@
                     boss._wasSpawned = isCurrentlySpawned; needsSort = true;
                     if (isCurrentlySpawned && !boss.isStandby) {
                         boss.spawnedAt = Date.now(); boss.stateHistory = [{s: 1.0, t: boss.spawnTime}]; boss.stateInput = "1.0";
-                        boss.hasManualUpdate = false; boss.isPreAlertPlayed = true; boss.isSpawnSoundPlayed = false; boss.isStage4AlertPlayed = false; boss.lastIntervalPlayed = 0; boss.isStage5AlertPlayed = false; 
+                        boss.hasManualUpdate = false; boss.isSpawnSoundPlayed = false; boss.isStage4AlertPlayed = false; boss.isStage5AlertPlayed = false; 
                     }
                 }
 
                 if (!isCurrentlySpawned) {
                     if (boss.isStandby) return; 
-                    if (document.getElementById('enablePreAlert')?.checked && distance <= preAlertTimeMs && !boss.isPreAlertPlayed) { pendingSpawn.push({b: boss, type: 'pre'}); }
                     if (timeEl) {
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -1379,11 +1359,6 @@
                     const elapsedStr = eH > 0 ? `[+${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}:${String(eS).padStart(2,'0')}]` : `[+${String(eM).padStart(2,'0')}:${String(eS).padStart(2,'0')}]`;
                     const elapEl = document.getElementById(`elapsed-${boss.id}`);
                     if(elapEl) elapEl.innerText = elapsedStr;
-
-                    if (document.getElementById('enableRepeatAlert')?.checked) {
-                        const currentInterval = Math.floor(elapsed / repeatIntervalMs);
-                        if (currentInterval >= 1 && currentInterval > boss.lastIntervalPlayed) { pendingSpawn.push({b: boss, type: 'interval', val: currentInterval}); }
-                    }
 
                     if (isStageSystemEnabled) {
                         try {
@@ -1479,43 +1454,38 @@
                             if (predPhase >= 4.0) {
                                 cardEl.classList.add("is-stage4"); cardEl.classList.remove("is-spawned");
                                 if (predPhase >= 5.0) {
-                                    if (!boss.isStage5AlertPlayed) {
-                                        if (document.getElementById('enableStage5Sound')?.checked) { pendingHorn.push(boss); } else { boss.isStage5AlertPlayed = true; boss.isStage4AlertPlayed = true; boss.isSpawnSoundPlayed = true; }
-                                    }
+                                    if (!boss.isStage5AlertPlayed) { pendingHorn.push(boss); }
                                 } else {
-                                    if (!boss.isStage4AlertPlayed) { 
-                                        if (epicSoundEnable) { pendingEpic.push(boss); } else { boss.isStage4AlertPlayed = true; boss.isSpawnSoundPlayed = true; }
-                                    }
+                                    if (!boss.isStage4AlertPlayed) { pendingEpic.push(boss); }
                                     if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
                                 }
                             } else {
                                 cardEl.classList.add("is-spawned"); cardEl.classList.remove("is-stage4");
-                                if (!boss.isSpawnSoundPlayed) { pendingSpawn.push({b: boss, type: 'spawn'}); }
+                                if (!boss.isSpawnSoundPlayed) { pendingSpawn.push(boss); }
                                 if (boss.isStage4AlertPlayed) { boss.isStage4AlertPlayed = false; }
                                 if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
                             }
                         } catch (err) {}
                     } else {
-                        if (!boss.isSpawnSoundPlayed) { pendingSpawn.push({b: boss, type: 'spawn'}); }
+                        if (!boss.isSpawnSoundPlayed) { pendingSpawn.push(boss); }
                     }
                 }
             });
 
-            // 🌟 เซฟสถานะเสียงเป็นรายตัว โดยไม่ต้องเหมาเซฟทั้งกระดานอีกต่อไป
+            // 🌟 เซฟสถานะเสียงเป็นรายตัว โดยตั้ง flag ว่า "เล่นแล้ว" เพื่อกันเสียงตีกัน
             if (Date.now() - lastAudioPlayTime > 2000) { 
                 if (pendingHorn.length > 0) {
-                    playStage5HornSound(); lastAudioPlayTime = Date.now();
+                    if (document.getElementById('enableStage5Sound')?.checked) playStage5HornSound(); 
+                    lastAudioPlayTime = Date.now();
                     pendingHorn.forEach(boss => { db.collection(targetCollection).doc(boss.id.toString()).update({ isStage5AlertPlayed: true, isStage4AlertPlayed: true, isSpawnSoundPlayed: true }); });
                 } else if (pendingEpic.length > 0) {
-                    playEpicStage4Sound(); lastAudioPlayTime = Date.now();
+                    if (document.getElementById('enableEpicSound')?.checked) playEpicStage4Sound(); 
+                    lastAudioPlayTime = Date.now();
                     pendingEpic.forEach(boss => { db.collection(targetCollection).doc(boss.id.toString()).update({ isStage4AlertPlayed: true, isSpawnSoundPlayed: true }); });
                 } else if (pendingSpawn.length > 0) {
-                    playDingSound(); lastAudioPlayTime = Date.now();
-                    pendingSpawn.forEach(item => {
-                        if (item.type === 'pre') { db.collection(targetCollection).doc(item.b.id.toString()).update({ isPreAlertPlayed: true }); }
-                        if (item.type === 'interval') { db.collection(targetCollection).doc(item.b.id.toString()).update({ lastIntervalPlayed: item.val }); }
-                        if (item.type === 'spawn') { db.collection(targetCollection).doc(item.b.id.toString()).update({ isSpawnSoundPlayed: true }); }
-                    });
+                    if (document.getElementById('enableSpawnSound')?.checked) playDingSound(); 
+                    lastAudioPlayTime = Date.now();
+                    pendingSpawn.forEach(boss => { db.collection(targetCollection).doc(boss.id.toString()).update({ isSpawnSoundPlayed: true }); });
                 }
             }
 
