@@ -488,7 +488,7 @@
         // ==========================================
         function getCumulativeBaselineTime(phase, isFast = false) {
             // 🌟 อัปเดตความเร็ว Fast Profile (แมพ 153) ตามสถิติใหม่ (รวม 10 นาที)
-            const durations = isFast ? [300, 150, 100, 60] : [1620, 900, 720, 360];
+            const durations = isFast ? [262, 168, 84, 66] : [1620, 900, 720, 360];
             let total = 0;
             if (phase > 1) total += Math.min(1, phase - 1) * durations[0]; 
             if (phase > 2) total += Math.min(1, phase - 2) * durations[1]; 
@@ -498,7 +498,7 @@
         }
 
         function getPhaseFromTime(time, isFast = false) {
-            const d = isFast ? [300, 150, 100, 60] : [1620, 900, 720, 360];
+            const d = isFast ? [262, 168, 84, 66] : [1620, 900, 720, 360];
             if (time <= 0) return 1.0;
             if (time <= d[0]) return 1.0 + time / d[0];
             if (time <= d[0] + d[1]) return 2.0 + (time - d[0]) / d[1];
@@ -1343,7 +1343,7 @@
             const epicSoundEnable = document.getElementById('enableEpicSound')?.checked;
             const isStageSystemEnabled = currentSettings.enableStages !== false; 
             const currentEndMap = document.getElementById('endGameMap')?.value.trim() || "";
-            const emaAlpha = 1.0; 
+            const emaAlpha = isEndGameMap ? 0.4 : 0.8;
 
             const filteredBosses = bosses.filter(b => b.name.toLowerCase().includes(document.getElementById('searchInput')?.value.toLowerCase() || ''));
             let needsSort = false; 
