@@ -6,8 +6,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Boss Timer Pro">
-    <title>Boss Timer Pro | v2.0.11 Auto-Sync</title>
-    <link rel="icon" href="data:,">
+    <title>Boss Timer Pro | v2.0.13</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo=">
+    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgo=">
     <style>
         /* 🎨 หมวดหมู่สีและการตั้งค่าตัวแปร (CSS Variables) สำหรับใช้ทั้งโปรเจกต์ */
         :root {
@@ -26,9 +27,14 @@
         /* 📌 ส่วนหัวของแอป (Header) ที่จะติดอยู่ด้านบนเสมอเวลาเลื่อนจอ */
         .sticky-controls { position: sticky; top: 0; z-index: 100; background-color: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); padding-bottom: 15px; margin-bottom: 16px; border-bottom: 1px solid #334155; padding-top: 10px; }
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
-        .title-group { display: flex; align-items: center; gap: 10px; }
+        .title-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .title-group h1 { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; margin-right: 12px;}
         
+        /* [NEW FEATURE] ป้ายบอกสถานะ Online/Offline (Database Mode Indicator) */
+        .mode-badge { font-size: 0.75rem; padding: 3px 10px; border-radius: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .mode-badge.online { background: #10b981; color: #000; }
+        .mode-badge.local { background: #94a3b8; color: #0f172a; }
+
         .header-actions { display: flex; gap: 8px; }
         .btn-circle { background: var(--bg-surface); border: 1px solid #334155; color: var(--text-accent); font-size: 1.1rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
         .btn-circle:hover { background: var(--text-accent); color: #000; }
@@ -204,7 +210,7 @@
         /* --- Modal Boxes --- */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 20px;}
         .modal-content { background: var(--bg-surface); width: 100%; border-radius: var(--radius-lg); border: 1px solid #334155; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
-        .modal-content.help { max-width: 700px; } .modal-content.settings { max-width: 500px; }
+        .modal-content.help { max-width: 700px; } .modal-content.settings { max-width: 700px; }
         .modal-header { padding: 16px 20px; background: rgba(15, 23, 42, 0.5); border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 1.1rem;}
         .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; transition: 0.2s;} .modal-close:hover { color: var(--color-danger); }
         .modal-body { padding: 20px 24px; overflow-y: auto; font-size: 0.95rem; line-height: 1.6;}
@@ -227,6 +233,14 @@
         .help-list li::before { content: '▪'; color: var(--text-accent); position: absolute; left: 0;}
         .help-list b { color: var(--text-primary); }
 
+        /* CSS สำหรับ Audio Settings ใหม่ */
+        .sound-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.05); }
+        .sound-row label { cursor:pointer; flex:1; min-width:140px; font-weight: bold; color: var(--text-primary); }
+        .sound-row select { flex:1; min-width:160px; font-size:0.85rem; padding: 6px; }
+        .sound-loop-wrap { display:flex; align-items:center; gap:4px; font-size:0.85rem; color: var(--text-secondary); }
+        .btn-test { background: #334155; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+        .btn-test:hover { background: var(--color-edit); }
+
         @media (max-width: 900px) { 
             .boss-list { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } 
             .add-form-group { flex-direction: column; align-items: stretch; } 
@@ -241,7 +255,9 @@
         <div class="sticky-controls">
             <div class="header-row">
                 <div class="title-group">
-                    <h1>🔥 Boss Timer Pro (Sv.Laima only)</h1>
+                    <h1 id="mainAppTitle">🔥 Boss Timer Pro</h1>
+                    <!-- ป้ายบอกสถานะ Online/Local -->
+                    <span id="modeBadge" class="mode-badge local">🖥️ Local</span>
                 </div>
                 <div class="header-actions">
                     <button class="btn-circle" onclick="openSettings()" title="ตั้งค่าระบบ">⚙️</button>
@@ -306,15 +322,14 @@
         <div class="log-section">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="color: var(--text-secondary); font-size: 1rem;">📜 10 ประวัติที่ลบล่าสุด</h3>
-                <!-- ปุ่มล้างประวัติซ่อนไว้ให้เฉพาะ Admin -->
-                <button id="btnAdminClearLogs" onclick="clearLogs()" style="display:none; background: none; border: 1px solid var(--color-danger); color: var(--color-danger); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">ล้างประวัติส่วนกลาง</button>
+                <button id="btnAdminClearLogs" onclick="clearLogs()" style="display:none; background: none; border: 1px solid var(--color-danger); color: var(--color-danger); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">ล้างประวัติทั้งหมด</button>
             </div>
             <div class="log-list" id="logContainer"></div>
         </div>
 
         <div class="watermark">
-            © 2026 Crafted by <span>Gensu</span>. All rights reserved.<br>
-            <div class="version-tag">Version 2.0.11 | Auto-Sync Version</div>
+            © 2026 Crafted by <span>Genzu</span>. All rights reserved.<br>
+            <div class="version-tag">Version 2.0.13 | Auto-Sync Version</div>
         </div>
     </div>
 
@@ -348,6 +363,19 @@
         <div class="modal-content settings">
             <div class="modal-header">⚙️ ตั้งค่าระบบ <button class="modal-close" onclick="closeSettings()">✕</button></div>
             <div class="modal-body">
+                
+                <!-- ตัวเลือกแหล่งเก็บข้อมูล -->
+                <div class="setting-section">
+                    <h4 style="color: var(--color-warning);">💾 แหล่งเก็บข้อมูล (Data Source)</h4>
+                    <label class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">เลือกว่าจะซิงค์ข้อมูลกับเพื่อน (Online) หรือบันทึกเฉพาะในเครื่อง (Local)</span>
+                        <select id="dataSourceSelect" onchange="changeDataSource()" style="width: 100%; font-size: 0.95rem; font-weight: bold; background: rgba(0,0,0,0.2);">
+                            <option value="local">🖥️ Local Standalone (บันทึกในเครื่องส่วนตัว)</option>
+                            <option value="online">🟢 Online Sync (Firebase ส่วนกลาง)</option>
+                        </select>
+                    </label>
+                </div>
+
                 <div class="setting-section">
                     <h4>🤖 การคำนวณ Hybrid Engine</h4>
                     <label class="setting-row" style="cursor:pointer; font-weight: bold; color: var(--text-primary); margin-bottom: 15px;">
@@ -358,17 +386,51 @@
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.3;">ระบุเลขแมพที่มีคนฟาร์มเยอะที่สุด ระบบจะใช้ <b>Fast Profile</b> เป็นมาตรฐาน</p>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="color:var(--text-primary);">เลเวลแมพ:</span>
-                            <input type="text" id="endGameMap" value="153" style="width: 80px; text-align: center; font-weight: bold; font-size: 1rem;" onchange="saveSettings(); applySort(true);">
+                            <input type="text" id="endGameMap" value="163" style="width: 80px; text-align: center; font-weight: bold; font-size: 1rem;" onchange="saveSettings(); applySort(true);">
                         </div>
                     </div>
                 </div>
 
+                <!-- 🔊 ตั้งค่า Custom Audio / Loop Engine -->
                 <div class="setting-section">
-                    <h4>🔊 เสียงและการแจ้งเตือน (เฉพาะเครื่องนี้)</h4>
-                    <label class="setting-row">ระดับเสียง: <input type="range" id="volumeControl" min="0" max="100" value="100" onchange="testSound(); saveSettings();" style="flex-grow:1;"></label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableSpawnSound" onchange="saveSettings()"> 🔔 เสียงเตือนเมื่อบอสเกิด (ติ๊กๆ)</label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableEpicSound" onchange="saveSettings()"> 🎵 เสียงเตือนพิเศษ Phase 4 (Epic Sound)</label>
-                    <label class="setting-row" style="cursor:pointer;"><input type="checkbox" id="enableStage5Sound" onchange="saveSettings()"> 🎺 เสียงแตรออกรบตอนบอสเกิด (Phase 5)</label>
+                    <h4>🔊 เสียงแจ้งเตือน (Custom Audio Settings)</h4>
+                    <label class="setting-row" style="margin-bottom: 15px;">ระดับเสียง (Master): 
+                        <input type="range" id="volumeControl" min="0" max="100" value="100" onchange="updateVolume(); saveSettings();" style="flex-grow:1;">
+                    </label>
+                    
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <!-- Stage 1 -->
+                        <div class="sound-row">
+                            <label><input type="checkbox" id="en-stage1" onchange="saveSettings()"> 🔔 Stage 1 (Active)</label>
+                            <select id="type-stage1" onchange="saveSettings()"></select>
+                            <div class="sound-loop-wrap">Loop: <input type="number" id="loop-stage1" min="1" max="10" value="1" style="width:55px;" onchange="saveSettings()"></div>
+                            <button class="btn-test" onclick="testCustomSound('type-stage1', 'loop-stage1')">▶️ Test</button>
+                        </div>
+                        
+                        <!-- Stage 4 -->
+                        <div class="sound-row">
+                            <label><input type="checkbox" id="en-stage4" onchange="saveSettings()"> 🎵 Stage 4 (Epic)</label>
+                            <select id="type-stage4" onchange="saveSettings()"></select>
+                            <div class="sound-loop-wrap">Loop: <input type="number" id="loop-stage4" min="1" max="10" value="1" style="width:55px;" onchange="saveSettings()"></div>
+                            <button class="btn-test" onclick="testCustomSound('type-stage4', 'loop-stage4')">▶️ Test</button>
+                        </div>
+
+                        <!-- 30s Before Stage 5 -->
+                        <div class="sound-row">
+                            <label><input type="checkbox" id="en-stage30s" onchange="saveSettings()"> ⏳ 30s ก่อน Stage 5</label>
+                            <select id="type-stage30s" onchange="saveSettings()"></select>
+                            <div class="sound-loop-wrap">Loop: <input type="number" id="loop-stage30s" min="1" max="10" value="1" style="width:55px;" onchange="saveSettings()"></div>
+                            <button class="btn-test" onclick="testCustomSound('type-stage30s', 'loop-stage30s')">▶️ Test</button>
+                        </div>
+
+                        <!-- Stage 5 -->
+                        <div class="sound-row">
+                            <label><input type="checkbox" id="en-stage5" onchange="saveSettings()"> 🎺 Stage 5 (บอสเกิด)</label>
+                            <select id="type-stage5" onchange="saveSettings()"></select>
+                            <div class="sound-loop-wrap">Loop: <input type="number" id="loop-stage5" min="1" max="10" value="1" style="width:55px;" onchange="saveSettings()"></div>
+                            <button class="btn-test" onclick="testCustomSound('type-stage5', 'loop-stage5')">▶️ Test</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- โซน Admin Only -->
@@ -388,7 +450,7 @@
                         <button class="btn-sync" onclick="importData()" style="flex:1; justify-content:center;">📥 นำเข้าเซฟ (Import)</button>
                         <button class="btn-sync" onclick="exportData()" style="flex:1; justify-content:center;">📤 ส่งออกเซฟ (Export)</button>
                     </div>
-                    <button class="btn-sync" style="width:100%; justify-content:center; background-color:rgba(239, 68, 68, 0.1); color:var(--color-danger); border:1px solid var(--color-danger);" onclick="clearAllBosses()">🔴 ล้างกระดานบอสส่วนกลางทั้งหมด (Reset Board)</button>
+                    <button class="btn-sync" style="width:100%; justify-content:center; background-color:rgba(239, 68, 68, 0.1); color:var(--color-danger); border:1px solid var(--color-danger);" onclick="clearAllBosses()">🔴 ล้างกระดานบอสทั้งหมด (Reset Board)</button>
                 </div>
             </div>
         </div>
@@ -402,25 +464,23 @@
                 <div class="help-section">
                     <h4>➕ 1. การเพิ่มและตั้งเวลาบอส</h4>
                     <ul class="help-list">
-                        <li><b>⏱️ ระบุเวลา:</b> พิมพ์ชื่อบอส (ด้านบน) แล้วกดปุ่มนี้เพื่อตั้งเวลานับถอยหลัง (ชั่วโมง:นาที:วินาที) เหมาะสำหรับบอสที่ยังไม่เกิด</li>
-                        <li><b>⚡ ระบุ Phase:</b> พิมพ์ชื่อบอส แล้วกดปุ่มนี้เพื่อกรอกเลขร่าง (เช่น 2.5) เหมาะสำหรับบอสที่เกิดไปแล้ว ระบบจะคำนวณเวลาเกิดย้อนหลังให้อัตโนมัติ</li>
+                        <li><b>⏱️ ระบุเวลา:</b> พิมพ์ชื่อบอส แล้วกดปุ่มนี้เพื่อตั้งเวลานับถอยหลัง เหมาะสำหรับบอสที่ยังไม่เกิด</li>
+                        <li><b>⚡ ระบุ Phase:</b> พิมพ์ชื่อบอส แล้วกดปุ่มนี้เพื่อกรอกเลขร่าง (เช่น 2.5) เหมาะสำหรับบอสที่เริ่มตีไปแล้ว</li>
                     </ul>
                 </div>
                 <div class="help-section">
                     <h4>⭐ 2. การจัดการการ์ดและการจัดเรียง (Cloud Sync)</h4>
                     <ul class="help-list">
                         <li><b>ข้อมูลส่วนกลาง:</b> เมื่อใครก็ตามเพิ่มบอส หรืออัปเดตสถานะ หน้าจอของทุกคนจะอัปเดตตรงกันทันที!</li>
-                        <li><b>การติดดาวส่วนตัว (⭐):</b> กดที่รูปดาวหน้าชื่อบอส หากบอสนั้นเกิดแล้ว การ์ดจะถูกดันขึ้นไปอยู่บนสุดของหน้าจอเสมอ <b>(สถานะดาวจะบันทึกแยกไว้ในเครื่องใครเครื่องมัน ไม่รบกวนหน้าจอเพื่อน)</b></li>
-                        <li><b>ปุ่ม ✏️ (ดินสอ):</b> ใช้สำหรับแก้ไขเวลาหรือแก้ชื่อบอส</li>
-                        <li><b>ปุ่ม 🗑️ (ถังขยะ):</b> ใช้สำหรับลบบอสตัวนั้นทิ้งออกจากกระดาน</li>
+                        <li><b>การติดดาวส่วนตัว (⭐):</b> กดที่รูปดาวหน้าชื่อบอส หากบอสนั้นเกิดแล้ว การ์ดจะถูกดันขึ้นไปอยู่บนสุดของหน้าจอเสมอ</li>
                     </ul>
                 </div>
                 <div class="help-section">
-                    <h4>🤖 3. ระบบพยากรณ์เวลา (AI & Phase)</h4>
+                    <h4>🤖 3. ระบบพยากรณ์เวลาและ Phase (กลไกเกม)</h4>
                     <ul class="help-list">
-                        <li>เมื่อเวลาบอสเกิดแล้ว การ์ดจะเปลี่ยนเป็นแถบเครื่องมือสำหรับ <b>อัปเดตเฟส (Phase)</b></li>
-                        <li>เมื่อมีคนในเกมแจ้งเฟส (หรือสเตจ) ให้เรากดที่ <b>วงกลมตัวเลข</b> เพื่ออัปเดตตาม</li>
-                        <li>ระบบจะคำนวณความเร็วในการตีของคนในเซิร์ฟเวอร์ และพยากรณ์ว่าบอสจะเกิดตอนกี่โมง</li>
+                        <li><b>Phase/State 1 - 4:</b> คือช่วงเวลาที่ผู้เล่นช่วยกันตีมอนสเตอร์ตามเงื่อนไข (บอสยังไม่เกิด)</li>
+                        <li><b>Phase/State 5:</b> คือสเตจสุดท้ายที่ <b>บอสปรากฏตัว</b> พร้อมปะทะ</li>
+                        <li>เมื่อมีคนในเกมแจ้งเฟส ให้กดที่ <b>วงกลมตัวเลข</b> เพื่ออัปเดตตาม ระบบจะคำนวณความเร็วและพยากรณ์ว่าบอสจะเกิดตอนกี่โมง</li>
                     </ul>
                 </div>
             </div>
@@ -434,12 +494,58 @@
     <!-- ส่วนของการทำงานด้วย JavaScript (ควบคุมลอจิกทั้งหมด) -->
     <script>
         // ==========================================
-        // 🔑 0. เลขเวอร์ชันปัจจุบัน (ใช้อัปเดตเพื่อบังคับคนอื่น Refresh)
+        // 🔑 0. เลขเวอร์ชันปัจจุบัน 
         // ==========================================
-        const CLIENT_VERSION = "2.0.11";
+        const CLIENT_VERSION = "2.0.13"; 
 
         // ==========================================
-        // 🔑 1. ตั้งค่า Firebase & Admin Security
+        // 🎵 1. ตั้งค่า Sound Options HTML
+        // ==========================================
+        const SOUND_OPTIONS_HTML = `
+            <optgroup label="1. Crystal Chime">
+                <option value="playCrystalSingle">เคาะเดี่ยวใส (Crystal Single)</option>
+                <option value="playCrystalChord">กระดิ่ง 3 ชั้น (Crystal Chord)</option>
+            </optgroup>
+            <optgroup label="2. Stardust & Pixie">
+                <option value="playPixieFlutter">โปรยดาว (Stardust Sparkle)</option>
+                <option value="playFairyAscent">สวรรค์ประทาน (Fairy Blessing)</option>
+            </optgroup>
+            <optgroup label="3. Celestial Harp">
+                <option value="playHarpMaj7">ลอยละล่อง (Dream Chime)</option>
+                <option value="playHarpLydian">คอร์ดเวทมนตร์ (Mystic Bloom)</option>
+            </optgroup>
+            <optgroup label="4. Mystic Wind Chime">
+                <option value="playWindChimeSingle">กระดิ่งลมเดี่ยว (Wind Single)</option>
+                <option value="playWindChimeBreeze">สายลมพัด (Wind Breeze)</option>
+            </optgroup>
+            <optgroup label="5. Quest Victory">
+                <option value="playVictoryShort">สำเร็จสั้น (Quick Triumph)</option>
+                <option value="playVictoryGrand">บอสเกิดสมบูรณ์ (Grand Reveal)</option>
+            </optgroup>
+            <optgroup label="6. Metallic FM Bell">
+                <option value="playFMBellSingle">เคาะมนตรา (FM Magic Bell)</option>
+                <option value="playFMBellDouble">เคาะเตือนคู่ (FM Double Ping)</option>
+            </optgroup>
+            <optgroup label="7. Sanctuary Glass Bell">
+                <option value="playSanctuarySingle">ระฆังวิหาร (Sanctuary Bell)</option>
+                <option value="playSanctuaryDual">ระฆังคู่ประสาน (Holy Chime)</option>
+            </optgroup>
+            <optgroup label="8. Mystic Warning">
+                <option value="playWarningMinor">เตือนภัยลึกลับ (Ominous Minor)</option>
+                <option value="playWarningPulse">ใกล้ถึงเวลา (Imminent Pulse)</option>
+            </optgroup>
+        `;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('type-stage1').innerHTML = SOUND_OPTIONS_HTML;
+            document.getElementById('type-stage4').innerHTML = SOUND_OPTIONS_HTML;
+            document.getElementById('type-stage30s').innerHTML = SOUND_OPTIONS_HTML;
+            document.getElementById('type-stage5').innerHTML = SOUND_OPTIONS_HTML;
+        });
+
+
+        // ==========================================
+        // 🔑 2. ตั้งค่า Firebase & Admin Security
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyAiFev1IKP9wVFM4ZZzijBiSWfJhH1afS0",
@@ -456,39 +562,69 @@
         const ENABLE_AI_TELEMETRY = 1; 
         const ALLOWED_DOMAIN = "boss-timer-pro.netlify.app"; 
         const SECRET_KEY_BASE64 = "Z2Vuc3VfYWRtaW4="; 
-        
+
         const currentDomain = window.location.hostname;
-        const userKey = window.location.hash.substring(1); 
+        const protocol = window.location.protocol;
+        let userKey = window.location.hash.substring(1); 
         let isAdmin = false;
 
-        if (userKey && btoa(userKey) === SECRET_KEY_BASE64) {
-            isAdmin = true;
-        } 
-        
+        if (userKey && btoa(userKey) === SECRET_KEY_BASE64) { isAdmin = true; } 
+
+        const isLocal = protocol === "file:" || currentDomain === "localhost" || currentDomain === "127.0.0.1";
         let targetDbDoc = 'main-server'; 
-        if (currentDomain.includes('uat--')) {
-            targetDbDoc = 'uat-server'; 
-        } else if (currentDomain === 'localhost' || currentDomain === '127.0.0.1') {
-            targetDbDoc = 'local-server'; 
+
+        if (isLocal) {
+            if (!isAdmin) {
+                const manualPass = prompt("🔑 รันบนเครื่อง Local: กรุณาใส่รหัสผ่าน Admin");
+                if (manualPass && btoa(manualPass) === SECRET_KEY_BASE64) {
+                    isAdmin = true;
+                    window.location.hash = manualPass;
+                }
+            }
+            if (!isAdmin && !isLocal) {} else { targetDbDoc = 'main-server'; }
+        } else {
+            if (currentDomain.includes('uat--')) { targetDbDoc = 'uat-server'; } 
+            else if (!currentDomain.includes(ALLOWED_DOMAIN)) {
+                document.body.innerHTML = `<div style="display:flex; height:100vh; background:#0f172a; color:#ef4444; justify-content:center; align-items:center; flex-direction:column; font-family:sans-serif;"><h1 style="font-size:3rem; margin-bottom:10px;">🚫 Unauthorized</h1></div>`;
+                throw new Error("Access Denied: Invalid Domain.");
+            }
         }
 
         const targetCollection = 'bosses_' + targetDbDoc;
         const targetLogDoc = 'logs_' + targetDbDoc;
 
-        if (!currentDomain.includes(ALLOWED_DOMAIN) && currentDomain !== "localhost" && currentDomain !== "127.0.0.1") {
-            document.body.innerHTML = `
-                <div style="display:flex; height:100vh; background:#0f172a; color:#ef4444; justify-content:center; align-items:center; flex-direction:column; font-family:sans-serif;">
-                    <h1 style="font-size:3rem; margin-bottom:10px;">🚫 Unauthorized</h1>
-                </div>`;
-            throw new Error("Access Denied");
-        }
+        // ตัวแปรควบคุมการทำงานของโหมด Database และ Listeners
+        let isLocalDatabase = true; // [REQUIREMENT: Default to Local Standalone]
+        let unsubscribeBosses = null; 
+        let unsubscribeLogs = null;
 
         // ==========================================
-        // 🧮 ส่วนที่ 2: ระบบสมการคำนวณเวลา (Baseline Engine)
+        // 🧮 3. ระบบสมการคำนวณเวลา (Hybrid Baseline Engine)
         // ==========================================
-        function getCumulativeBaselineTime(phase, isFast = false) {
-            // 🌟 อัปเดตความเร็ว Fast Profile (แมพ 153) ตามสถิติใหม่ (รวม 10 นาที)
-            const durations = isFast ? [262, 168, 84, 66] : [1620, 900, 720, 360];
+        function getMapDurations(bossName) {
+            if (!bossName) return [1458, 810, 648, 324]; 
+            if (/163/.test(bossName)) return [220, 130, 70, 50]; // Example profile for 163
+            if (/153/.test(bossName)) return [252, 144, 77, 54];
+            if (/120/.test(bossName)) return [464, 104, 68, 45];
+            if (/107/.test(bossName)) return [878, 90, 41, 23];
+            if (/85/.test(bossName)) return [262, 151, 55, 35];
+            if (/80/.test(bossName)) return [151, 112, 81, 34];
+            if (/77/.test(bossName)) return [133, 98, 45, 30];
+            
+            if (/143/.test(bossName)) return [855, 315, 153, 72];
+            if (/133/.test(bossName)) return [738, 540, 185, 90];
+            if (/123/.test(bossName)) return [990, 675, 522, 108];
+            if (/113/.test(bossName)) return [720, 189, 212, 120];
+            if (/103/.test(bossName)) return [1800, 765, 360, 153];
+            if (/93/.test(bossName)) return [1602, 855, 639, 135];
+            if (/89/.test(bossName)) return [1710, 1224, 783, 234];
+            if (/83/.test(bossName)) return [1296, 1188, 450, 198];
+            
+            return [1458, 810, 648, 324];
+        }
+
+        function getCumulativeBaselineTime(phase, bossName) {
+            const durations = getMapDurations(bossName);
             let total = 0;
             if (phase > 1) total += Math.min(1, phase - 1) * durations[0]; 
             if (phase > 2) total += Math.min(1, phase - 2) * durations[1]; 
@@ -497,8 +633,8 @@
             return total;
         }
 
-        function getPhaseFromTime(time, isFast = false) {
-            const d = isFast ? [262, 168, 84, 66] : [1620, 900, 720, 360];
+        function getPhaseFromTime(time, bossName) {
+            const d = getMapDurations(bossName);
             if (time <= 0) return 1.0;
             if (time <= d[0]) return 1.0 + time / d[0];
             if (time <= d[0] + d[1]) return 2.0 + (time - d[0]) / d[1];
@@ -508,15 +644,15 @@
         }
 
         // ==========================================
-        // 💾 ส่วนที่ 3: ตัวแปรหลัก และระบบจัดการ Modal
+        // 💾 4. ตัวแปรหลัก และระบบจัดการ Modal
         // ==========================================
         let bosses = []; 
         let deletedLogs = []; 
         let aiDataset = []; 
         let editingBossId = null; 
-        let audioCtx;
         
         let localStarredBosses = JSON.parse(localStorage.getItem('localStarredBosses')) || [];
+        let localSoundFlags = {}; 
         
         let activeInputId = null; let nextTargetId = null; let maxInputDigits = 2; let isNewInputSession = true;
         let currentSettings = {}; let standbyTimeout = null; 
@@ -536,13 +672,99 @@
         }
 
         // ==========================================
-        // ⌨️ ส่วนที่ 4: ระบบ Numpad ควบคุมการกรอกเวลา
+        // 📦 5. Data Source Wrappers (Dynamic Title Update)
+        // ==========================================
+        function changeDataSource() {
+            const selectEl = document.getElementById('dataSourceSelect');
+            const newMode = selectEl.value;
+            isLocalDatabase = (newMode === 'local');
+            currentSettings.dataSource = newMode;
+            saveSettings();
+            
+            editingBossId = null; activeInputId = null;
+            document.getElementById('numpadOverlay').style.display = 'none';
+            
+            if (unsubscribeBosses) { unsubscribeBosses(); unsubscribeBosses = null; }
+            if (unsubscribeLogs) { unsubscribeLogs(); unsubscribeLogs = null; }
+            
+            bosses = []; deletedLogs = [];
+            renderBosses(); renderLogs();
+            
+            const badge = document.getElementById('modeBadge');
+            const titleEl = document.getElementById('mainAppTitle'); // [REQUIREMENT: Dynamic App Title]
+
+            if (isLocalDatabase) {
+                badge.className = 'mode-badge local';
+                badge.innerText = '🖥️ Local';
+                if (titleEl) titleEl.innerText = "🔥 Boss Timer Pro"; 
+                showToast("สลับไปใช้ฐานข้อมูล <b>Local Standalone</b> แล้ว");
+                
+                const savedLocalBosses = localStorage.getItem('bosses_local_db');
+                if (savedLocalBosses) bosses = JSON.parse(savedLocalBosses);
+                const savedLocalLogs = localStorage.getItem('logs_local_db');
+                if (savedLocalLogs) deletedLogs = JSON.parse(savedLocalLogs);
+                
+                applySort(true); renderLogs();
+            } else {
+                badge.className = 'mode-badge online';
+                badge.innerText = '🟢 Online';
+                if (titleEl) titleEl.innerText = "🔥 Boss Timer Pro (Sv.Laima only)";
+                showToast("กำลังเชื่อมต่อฐานข้อมูล <b>Online Sync</b>...");
+                
+                setupFirebaseListeners();
+            }
+        }
+
+        function dbSaveBoss(bossData) {
+            if (isLocalDatabase) {
+                const idx = bosses.findIndex(b => b.id === bossData.id);
+                if (idx !== -1) bosses[idx] = bossData; else bosses.push(bossData);
+                localStorage.setItem('bosses_local_db', JSON.stringify(bosses));
+                applySort(true); 
+            } else {
+                db.collection(targetCollection).doc(bossData.id.toString()).set(bossData);
+            }
+        }
+
+        function dbUpdateBoss(id, updateData) {
+            if (isLocalDatabase) {
+                const idx = bosses.findIndex(b => b.id === id);
+                if (idx !== -1) {
+                    bosses[idx] = { ...bosses[idx], ...updateData };
+                    localStorage.setItem('bosses_local_db', JSON.stringify(bosses));
+                    applySort(true);
+                }
+            } else {
+                db.collection(targetCollection).doc(id.toString()).update(updateData);
+            }
+        }
+
+        function dbDeleteBoss(id) {
+            if (isLocalDatabase) {
+                bosses = bosses.filter(b => b.id !== id);
+                localStorage.setItem('bosses_local_db', JSON.stringify(bosses));
+                applySort(true);
+            } else {
+                db.collection(targetCollection).doc(id.toString()).delete();
+            }
+        }
+
+        function dbSaveLogs(logsArray) {
+            if (isLocalDatabase) {
+                deletedLogs = logsArray;
+                localStorage.setItem('logs_local_db', JSON.stringify(deletedLogs));
+                renderLogs();
+            } else {
+                db.collection('systemData').doc(targetLogDoc).set({ logs: logsArray });
+            }
+        }
+
+        // ==========================================
+        // ⌨️ 6. ระบบ Numpad
         // ==========================================
         function getTimeGroupFields(id) {
             if (!id) return null;
-            if (id.includes('inputHours') || id.includes('inputMinutes') || id.includes('inputSeconds')) {
-                return { h: 'inputHours', m: 'inputMinutes', s: 'inputSeconds', type: 'add' };
-            }
+            if (id.includes('inputHours') || id.includes('inputMinutes') || id.includes('inputSeconds')) { return { h: 'inputHours', m: 'inputMinutes', s: 'inputSeconds', type: 'add' }; }
             if (id.startsWith('editHours-') || id.startsWith('editMinutes-') || id.startsWith('editSeconds-')) {
                 const bid = id.split('-')[1]; return { h: `editHours-${bid}`, m: `editMinutes-${bid}`, s: `editSeconds-${bid}`, type: 'edit', bossId: bid };
             }
@@ -557,34 +779,18 @@
             
             if (group) {
                 if (dotBtn) dotBtn.innerText = ':';
-                let hVal = document.getElementById(group.h).value;
-                let mVal = document.getElementById(group.m).value;
-                let sVal = document.getElementById(group.s).value;
-
-                let hasError = false;
-                const mNum = parseInt(mVal || '0');
-                const sNum = parseInt(sVal || '0');
-                const mErr = mNum > 59;
-                const sErr = sNum > 59;
-                if (mErr || sErr) hasError = true;
+                let hVal = document.getElementById(group.h).value; let mVal = document.getElementById(group.m).value; let sVal = document.getElementById(group.s).value;
+                let hasError = false; const mNum = parseInt(mVal || '0'); const sNum = parseInt(sVal || '0');
+                if (mNum > 59 || sNum > 59) hasError = true;
                 
                 const dispH = hVal === '' ? (activeInputId === group.h ? '' : '0') : hVal;
                 const dispM = mVal === '' ? (activeInputId === group.m ? '' : '00') : (activeInputId === group.m ? mVal : String(mVal).padStart(2, '0'));
                 const dispS = sVal === '' ? (activeInputId === group.s ? '' : '00') : (activeInputId === group.s ? sVal : String(sVal).padStart(2, '0'));
 
-                let html = `<div class="time-box-group">`;
-                html += `<div class="time-box ${activeInputId === group.h ? 'active' : ''}">${dispH}${activeInputId === group.h ? '<span class="blink-cursor"></span>' : ''}</div><span>:</span>`;
-                html += `<div class="time-box ${activeInputId === group.m ? 'active' : ''} ${mErr ? 'error' : ''}">${dispM}${activeInputId === group.m ? '<span class="blink-cursor"></span>' : ''}</div><span>:</span>`;
-                html += `<div class="time-box ${activeInputId === group.s ? 'active' : ''} ${sErr ? 'error' : ''}">${dispS}${activeInputId === group.s ? '<span class="blink-cursor"></span>' : ''}</div></div>`;
+                let html = `<div class="time-box-group"><div class="time-box ${activeInputId === group.h ? 'active' : ''}">${dispH}${activeInputId === group.h ? '<span class="blink-cursor"></span>' : ''}</div><span>:</span><div class="time-box ${activeInputId === group.m ? 'active' : ''} ${mNum > 59 ? 'error' : ''}">${dispM}${activeInputId === group.m ? '<span class="blink-cursor"></span>' : ''}</div><span>:</span><div class="time-box ${activeInputId === group.s ? 'active' : ''} ${sNum > 59 ? 'error' : ''}">${dispS}${activeInputId === group.s ? '<span class="blink-cursor"></span>' : ''}</div></div>`;
                 valEl.innerHTML = html;
-                
-                if (activeInputId === group.s) { 
-                    nextBtn.innerText = group.type === 'add' ? "➕ Add Boss" : "✓ Save Edit"; 
-                    nextBtn.className = hasError ? "numpad-btn action disabled" : "numpad-btn action done"; 
-                } else { 
-                    nextBtn.innerText = "ถัดไป ➔"; 
-                    nextBtn.className = hasError ? "numpad-btn action disabled" : "numpad-btn action"; 
-                }
+                if (activeInputId === group.s) { nextBtn.innerText = group.type === 'add' ? "➕ Add Boss" : "✓ Save Edit"; nextBtn.className = hasError ? "numpad-btn action disabled" : "numpad-btn action done"; } 
+                else { nextBtn.innerText = "ถัดไป ➔"; nextBtn.className = hasError ? "numpad-btn action disabled" : "numpad-btn action"; }
             } else {
                 if (dotBtn) dotBtn.innerText = '•';
                 const inputEl = document.getElementById(activeInputId); let val = inputEl.value;
@@ -596,41 +802,26 @@
 
         function openNumpad(currentId, nextId, limit, titleText) {
             activeInputId = currentId; nextTargetId = nextId; maxInputDigits = limit; isNewInputSession = true; 
-            if (currentId === 'inputHours') {
-                document.getElementById('inputHours').value = ''; document.getElementById('inputMinutes').value = ''; document.getElementById('inputSeconds').value = '';
-            } else if (currentId === 'inputInstantStage') { document.getElementById('inputInstantStage').value = '1.0'; }
-            else if (currentId.startsWith('editHours')) {
-                const group = getTimeGroupFields(currentId);
-                if (document.getElementById(group.h).value === '0') document.getElementById(group.h).value = '';
-            }
+            if (currentId === 'inputHours') { document.getElementById('inputHours').value = ''; document.getElementById('inputMinutes').value = ''; document.getElementById('inputSeconds').value = ''; } 
+            else if (currentId === 'inputInstantStage') { document.getElementById('inputInstantStage').value = '1.0'; }
+            else if (currentId.startsWith('editHours')) { const group = getTimeGroupFields(currentId); if (document.getElementById(group.h).value === '0') document.getElementById(group.h).value = ''; }
             document.getElementById('numpadTitle').innerText = titleText;
             document.getElementById('numpadOverlay').style.display = 'flex'; updateNumpadDisplay();
         }
-
-        function closeNumpad() { 
-            document.getElementById('numpadOverlay').style.display = 'none'; 
-            activeInputId = null; 
-            applySort(true); 
-        }
-
+        function closeNumpad() { document.getElementById('numpadOverlay').style.display = 'none'; activeInputId = null; applySort(true); }
         function numpadType(char) {
             if (!activeInputId) return;
             const group = getTimeGroupFields(activeInputId);
-            
             if (group) {
                 if (char === '.' || char === ':') {
-                    if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; } 
-                    else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; }
+                    if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; } else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; }
                     updateNumpadDisplay(); return;
                 }
                 let limit = (activeInputId === group.h) ? 1 : 2;
                 const inputEl = document.getElementById(activeInputId); let val = inputEl.value;
                 if (isNewInputSession) { val = ''; isNewInputSession = false; }
                 if (val.length < limit) { val += char; inputEl.value = val; }
-                if (val.length >= limit) {
-                    if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; } 
-                    else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; }
-                }
+                if (val.length >= limit) { if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; } else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; } }
                 updateNumpadDisplay();
             } else {
                 if (char === ':') char = '.'; 
@@ -642,15 +833,13 @@
                 updateNumpadDisplay();
             }
         }
-
         function numpadDel() {
             if (!activeInputId) return;
             const group = getTimeGroupFields(activeInputId);
             if (group) {
                 const inputEl = document.getElementById(activeInputId); let val = inputEl.value;
                 if (val === '' || isNewInputSession) {
-                    if (activeInputId === group.s) { activeInputId = group.m; isNewInputSession = false; } 
-                    else if (activeInputId === group.m) { activeInputId = group.h; isNewInputSession = false; }
+                    if (activeInputId === group.s) { activeInputId = group.m; isNewInputSession = false; } else if (activeInputId === group.m) { activeInputId = group.h; isNewInputSession = false; }
                 } else { val = val.slice(0, -1); inputEl.value = val; isNewInputSession = false; }
                 updateNumpadDisplay();
             } else {
@@ -659,49 +848,31 @@
                 inputEl.value = val; updateNumpadDisplay();
             }
         }
-
         function numpadNext() {
             if (!activeInputId) return;
             const group = getTimeGroupFields(activeInputId);
             if (group) {
-                let mVal = parseInt(document.getElementById(group.m).value || '0');
-                let sVal = parseInt(document.getElementById(group.s).value || '0');
+                let mVal = parseInt(document.getElementById(group.m).value || '0'); let sVal = parseInt(document.getElementById(group.s).value || '0');
                 if (mVal > 59 || sVal > 59) return; 
-
-                if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; updateNumpadDisplay(); } 
-                else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; updateNumpadDisplay(); } 
+                if (activeInputId === group.h) { activeInputId = group.m; isNewInputSession = true; updateNumpadDisplay(); } else if (activeInputId === group.m) { activeInputId = group.s; isNewInputSession = true; updateNumpadDisplay(); } 
                 else if (activeInputId === group.s) { 
                     closeNumpad(); 
                     if(!document.getElementById(group.h).value) document.getElementById(group.h).value = '0';
                     if(!document.getElementById(group.m).value) document.getElementById(group.m).value = '0';
                     if(!document.getElementById(group.s).value) document.getElementById(group.s).value = '0';
-
                     if (group.type === 'add') { addBoss('normal'); } else if (group.type === 'edit') { saveEditBoss(parseInt(group.bossId)); } 
                 }
                 return;
             }
-            
             if (activeInputId.startsWith('state-input-')) {
                 const bossId = parseInt(activeInputId.replace('state-input-', '')); const boss = bosses.find(b => b.id === bossId);
                 if (boss && !boss.isStandby) {
                     const newVal = parseFloat(document.getElementById(activeInputId).value) || 1.0;
                     const finalStateStr = Math.max(1.0, newVal).toString();
-                    
                     const newHistory = [...(boss.stateHistory || [])];
                     const nowTime = Date.now();
-                    if (newHistory.length > 0 && (nowTime - newHistory[newHistory.length-1].t < 15000)) { 
-                        newHistory[newHistory.length-1] = { s: finalStateStr, t: nowTime }; 
-                    } else { 
-                        newHistory.push({ s: finalStateStr, t: nowTime }); 
-                    }
-                    
-                    db.collection(targetCollection).doc(bossId.toString()).update({
-                        stateInput: finalStateStr,
-                        stateHistory: newHistory,
-                        isStage4AlertPlayed: newVal >= 4.0,
-                        isStage5AlertPlayed: newVal >= 5.0,
-                        hasManualUpdate: true
-                    });
+                    if (newHistory.length > 0 && (nowTime - newHistory[newHistory.length-1].t < 15000)) { newHistory[newHistory.length-1] = { s: finalStateStr, t: nowTime }; } else { newHistory.push({ s: finalStateStr, t: nowTime }); }
+                    dbUpdateBoss(bossId, { stateInput: finalStateStr, stateHistory: newHistory, hasManualUpdate: true });
                 }
             } else if (activeInputId === 'inputInstantStage') {
                 const newVal = parseFloat(document.getElementById('inputInstantStage').value) || 1.0;
@@ -712,32 +883,26 @@
         }
 
         // ==========================================
-        // ☁️ ส่วนที่ 5: การโหลดข้อมูลจาก Firebase & Version Sync
+        // ☁️ 7. การโหลดข้อมูลจาก Firebase & Version Sync
         // ==========================================
-        function compareVersions(v1, v2) {
-            const p1 = v1.split('.').map(Number); const p2 = v2.split('.').map(Number);
-            for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
-                const n1 = p1[i] || 0; const n2 = p2[i] || 0;
-                if (n1 > n2) return 1; if (n1 < n2) return -1;
-            }
-            return 0;
-        }
-
         function saveSettings() {
             currentSettings = {
                 enableStages: document.getElementById('enableStages').checked,
                 vol: document.getElementById('volumeControl').value, 
-                enableSpawnSound: document.getElementById('enableSpawnSound').checked,
                 autoSleepEnable: document.getElementById('autoSleepEnable').checked,
                 autoSleepHrs: document.getElementById('autoSleepHrs').value,
                 autoDeleteEnable: document.getElementById('autoDeleteEnable').checked, 
                 autoDeleteHrs: document.getElementById('autoDeleteHrs').value,
-                enableEpicSound: document.getElementById('enableEpicSound').checked,
-                enableStage5Sound: document.getElementById('enableStage5Sound').checked,
                 showAiPanel: document.getElementById('showAiPanel').checked,
                 endGameMap: document.getElementById('endGameMap').value.trim(),
-                emaAlpha: 1.0, 
-                patch153Applied: true 
+                dataSource: document.getElementById('dataSourceSelect').value,
+                // [NEW FEATURE: Custom Audio Configuration]
+                soundConfig: {
+                    stage1: { enabled: document.getElementById('en-stage1').checked, type: document.getElementById('type-stage1').value, loops: parseInt(document.getElementById('loop-stage1').value) || 1 },
+                    stage4: { enabled: document.getElementById('en-stage4').checked, type: document.getElementById('type-stage4').value, loops: parseInt(document.getElementById('loop-stage4').value) || 1 },
+                    stage30s: { enabled: document.getElementById('en-stage30s').checked, type: document.getElementById('type-stage30s').value, loops: parseInt(document.getElementById('loop-stage30s').value) || 1 },
+                    stage5: { enabled: document.getElementById('en-stage5').checked, type: document.getElementById('type-stage5').value, loops: parseInt(document.getElementById('loop-stage5').value) || 1 }
+                }
             };
             localStorage.setItem('bossSettings_v2', JSON.stringify(currentSettings));
             document.getElementById('endGameMapContainer').style.opacity = currentSettings.enableStages ? '1' : '0.4';
@@ -758,8 +923,7 @@
         }
 
         function processTelemetry(boss) {
-            if (ENABLE_AI_TELEMETRY !== 1 || !isAdmin) return;
-            if (boss.telemetrySaved) return; 
+            if (ENABLE_AI_TELEMETRY !== 1 || !isAdmin || !currentSettings.showAiPanel || boss.telemetrySaved) return; 
             if (!boss.stateHistory || boss.stateHistory.length < 2) return;
             for (let i = 1; i < boss.stateHistory.length; i++) { if ((boss.stateHistory[i].t - boss.stateHistory[i-1].t) > (3 * 60 * 60 * 1000)) { return; } }
             const segments = [];
@@ -772,12 +936,8 @@
             let totalDur = (boss.stateHistory[boss.stateHistory.length - 1].t - boss.stateHistory[0].t) / 1000;
             if (totalDur < 0) totalDur = Math.abs(totalDur);
 
-            const payload = {
-                bossName: boss.name, spawnTime: boss.spawnTime, endTime: Date.now(),
-                totalDurationSeconds: totalDur, updatesCount: boss.stateHistory.length,
-                isCompleteCycle: (lastState >= 5.0), segments: segments, rawHistory: boss.stateHistory
-            };
-            aiDataset.push(payload); boss.telemetrySaved = true; 
+            aiDataset.push({ bossName: boss.name, spawnTime: boss.spawnTime, endTime: Date.now(), totalDurationSeconds: totalDur, updatesCount: boss.stateHistory.length, isCompleteCycle: (lastState >= 5.0), segments: segments, rawHistory: boss.stateHistory });
+            boss.telemetrySaved = true; 
             localStorage.setItem('bossAiDataset', JSON.stringify(aiDataset)); updateAiCounterDisplay();
         }
 
@@ -785,98 +945,98 @@
             if (ENABLE_AI_TELEMETRY !== 1) return;
             if (aiDataset.length === 0) { alert("ยังไม่มีข้อมูล AI ในขณะนี้ครับ"); return; }
             const dataStr = JSON.stringify(aiDataset, null, 2);
-            if (navigator.clipboard && window.isSecureContext) { 
-                navigator.clipboard.writeText(dataStr).then(() => alert(`🧠 คัดลอก AI Dataset สำเร็จ! (${aiDataset.length} Cycles)`)).catch(e => prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr));
-            } else { prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr); }
+            if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(dataStr).then(() => alert(`🧠 คัดลอก AI Dataset สำเร็จ! (${aiDataset.length} Cycles)`)).catch(e => prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr)); } else { prompt("คัดลอก Dataset รหัสชุดนี้:", dataStr); }
         }
 
-        function clearAiDataset() {
-            if(confirm("⚠️ ยืนยันการล้างข้อมูล AI Dataset สะสมทั้งหมดหรือไม่?")) {
-                aiDataset = []; localStorage.removeItem('bossAiDataset'); updateAiCounterDisplay(); alert("🗑️ ล้างข้อมูล AI เรียบร้อยแล้วครับ");
-            }
-        }
+        function clearAiDataset() { if(confirm("⚠️ ยืนยันการล้างข้อมูล AI Dataset สะสมทั้งหมดหรือไม่?")) { aiDataset = []; localStorage.removeItem('bossAiDataset'); updateAiCounterDisplay(); alert("🗑️ ล้างข้อมูล AI เรียบร้อยแล้วครับ"); } }
 
         function sanitizeBossData(b) {
             if (!b.stateHistory) b.stateHistory = [{ s: Math.max(1.0, parseFloat(b.stateInput)||1.0), t: b.spawnTime }];
             if (parseFloat(b.stateInput) < 1.0) b.stateInput = "1.0";
             if (!b.addedAt) b.addedAt = b.id; 
-            
-            // 🌟 แก้บัค Ghost Reset: บังคับคำนวณการเกิดจากเวลาจริงเสมอ 
             b._wasSpawned = (b.spawnTime <= Date.now());
-
             if (b.hasManualUpdate === undefined) { b.hasManualUpdate = b.stateHistory.length > 1 || b._wasSpawned; }
             if (b.spawnTime <= Date.now() && !b.spawnedAt) { b.spawnedAt = b.spawnTime; }
             if (b.isStandby === undefined) b.isStandby = false;
             if (b.isAutoSlept === undefined) b.isAutoSlept = false;
             if (b.telemetrySaved === undefined) b.telemetrySaved = false;
             if (b.sleptAt === undefined && b.isStandby) b.sleptAt = b.spawnTime;
-            if (b.isStage4AlertPlayed === undefined) b.isStage4AlertPlayed = false;
-            if (b.isStage5AlertPlayed === undefined) b.isStage5AlertPlayed = false;
-            if (b.isSpawnSoundPlayed === undefined) b.isSpawnSoundPlayed = false;
             return b;
         }
 
-        function loadData() {
-            // 🌟 ระบบเช็คเวอร์ชัน (Auto-Refresh)
-            db.collection('systemData').doc('appConfig_' + targetDbDoc).onSnapshot(doc => {
-                if (doc.exists) {
-                    const dbVersion = doc.data().version;
-                    if (dbVersion && dbVersion !== CLIENT_VERSION) {
-                        if (isAdmin && compareVersions(CLIENT_VERSION, dbVersion) > 0) {
-                            // Admin มีเวอร์ชันใหม่กว่า ให้ดันขึ้นคลาวด์ไปสั่งคนอื่น
-                            db.collection('systemData').doc('appConfig_' + targetDbDoc).set({ version: CLIENT_VERSION }, { merge: true });
-                        } else {
-                            // เครื่องนี้เก่ากว่าคลาวด์ ทะลวงแคชและโหลดใหม่
-                            window.location.href = window.location.pathname + "?v=" + dbVersion;
-                        }
-                    }
-                } else if (isAdmin) {
-                    db.collection('systemData').doc('appConfig_' + targetDbDoc).set({ version: CLIENT_VERSION }, { merge: true });
-                }
-            });
-
-            const savedSettings = localStorage.getItem('bossSettings_v2');
-            const savedAiDataset = localStorage.getItem('bossAiDataset');
-            if (savedAiDataset) aiDataset = JSON.parse(savedAiDataset);
-            
-            db.collection(targetCollection).onSnapshot(snapshot => {
+        function setupFirebaseListeners() {
+            unsubscribeBosses = db.collection(targetCollection).onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     const data = sanitizeBossData(change.doc.data());
-                    if (change.type === 'added') {
-                        bosses.push(data);
-                    } else if (change.type === 'modified') {
-                        const index = bosses.findIndex(b => b.id === data.id);
-                        if (index !== -1) {
-                            bosses[index] = data;
-                        }
-                    } else if (change.type === 'removed') {
-                        bosses = bosses.filter(b => b.id !== data.id);
-                    }
+                    if (change.type === 'added') { bosses.push(data); } 
+                    else if (change.type === 'modified') { const index = bosses.findIndex(b => b.id === data.id); if (index !== -1) { if (data.isStandby && !bosses[index].isStandby) processTelemetry(bosses[index]); bosses[index] = data; } } 
+                    else if (change.type === 'removed') { const index = bosses.findIndex(b => b.id === data.id); if (index !== -1) { if (!bosses[index].isStandby) processTelemetry(bosses[index]); } bosses = bosses.filter(b => b.id !== data.id); }
                 });
                 applySort(true); 
             });
+            unsubscribeLogs = db.collection('systemData').doc(targetLogDoc).onSnapshot(doc => { if (doc.exists) { deletedLogs = doc.data().logs || []; renderLogs(); } });
+        }
 
-            db.collection('systemData').doc(targetLogDoc).onSnapshot(doc => {
-                if (doc.exists) {
-                    deletedLogs = doc.data().logs || [];
-                    renderLogs();
-                }
-            });
-
+        function loadData() {
+            const savedAiDataset = localStorage.getItem('bossAiDataset');
+            if (savedAiDataset) aiDataset = JSON.parse(savedAiDataset);
+            
+            let savedSettings = localStorage.getItem('bossSettings_v2');
             if (savedSettings) {
                 currentSettings = JSON.parse(savedSettings);
-                document.getElementById('enableStages').checked = currentSettings.enableStages !== false; 
-                document.getElementById('volumeControl').value = currentSettings.vol !== undefined ? currentSettings.vol : 100;
-                document.getElementById('enableSpawnSound').checked = currentSettings.enableSpawnSound || false;
-                document.getElementById('autoSleepEnable').checked = currentSettings.autoSleepEnable !== undefined ? currentSettings.autoSleepEnable : false; 
-                document.getElementById('autoSleepHrs').value = currentSettings.autoSleepHrs || 6;
-                document.getElementById('autoDeleteEnable').checked = currentSettings.autoDeleteEnable !== undefined ? currentSettings.autoDeleteEnable : false; 
-                document.getElementById('autoDeleteHrs').value = currentSettings.autoDeleteHrs || 12; 
-                document.getElementById('enableEpicSound').checked = currentSettings.enableEpicSound !== undefined ? currentSettings.enableEpicSound : false;
-                document.getElementById('enableStage5Sound').checked = currentSettings.enableStage5Sound !== undefined ? currentSettings.enableStage5Sound : false;
-                document.getElementById('showAiPanel').checked = currentSettings.showAiPanel || false;
-                document.getElementById('endGameMap').value = currentSettings.endGameMap || "153";
-            } else { saveSettings(); }
+                // [REQUIREMENT: Apply Default OFF logic if missing]
+                if (!currentSettings.soundConfig) {
+                    currentSettings.soundConfig = {
+                        stage1: { enabled: false, type: 'playCrystalSingle', loops: 1 },
+                        stage4: { enabled: false, type: 'playVictoryShort', loops: 1 },
+                        stage30s: { enabled: false, type: 'playWarningPulse', loops: 1 },
+                        stage5: { enabled: false, type: 'playVictoryGrand', loops: 1 }
+                    };
+                }
+            } else {
+                currentSettings = {
+                    enableStages: true, vol: 100, autoSleepEnable: false, autoSleepHrs: 6, autoDeleteEnable: false, autoDeleteHrs: 12, showAiPanel: false,
+                    endGameMap: "163", dataSource: "online",
+                    soundConfig: {
+                        stage1: { enabled: false, type: 'playCrystalSingle', loops: 1 },
+                        stage4: { enabled: false, type: 'playVictoryShort', loops: 1 },
+                        stage30s: { enabled: false, type: 'playWarningPulse', loops: 1 },
+                        stage5: { enabled: false, type: 'playVictoryGrand', loops: 1 }
+                    }
+                };
+            }
+
+            document.getElementById('enableStages').checked = currentSettings.enableStages !== false; 
+            document.getElementById('volumeControl').value = currentSettings.vol !== undefined ? currentSettings.vol : 100;
+            
+            // Populate HTML DOM
+            document.getElementById('en-stage1').checked = currentSettings.soundConfig.stage1.enabled;
+            document.getElementById('type-stage1').value = currentSettings.soundConfig.stage1.type;
+            document.getElementById('loop-stage1').value = currentSettings.soundConfig.stage1.loops;
+            
+            document.getElementById('en-stage4').checked = currentSettings.soundConfig.stage4.enabled;
+            document.getElementById('type-stage4').value = currentSettings.soundConfig.stage4.type;
+            document.getElementById('loop-stage4').value = currentSettings.soundConfig.stage4.loops;
+            
+            document.getElementById('en-stage30s').checked = currentSettings.soundConfig.stage30s.enabled;
+            document.getElementById('type-stage30s').value = currentSettings.soundConfig.stage30s.type;
+            document.getElementById('loop-stage30s').value = currentSettings.soundConfig.stage30s.loops;
+            
+            document.getElementById('en-stage5').checked = currentSettings.soundConfig.stage5.enabled;
+            document.getElementById('type-stage5').value = currentSettings.soundConfig.stage5.type;
+            document.getElementById('loop-stage5').value = currentSettings.soundConfig.stage5.loops;
+
+            document.getElementById('autoSleepEnable').checked = currentSettings.autoSleepEnable || false; 
+            document.getElementById('autoSleepHrs').value = currentSettings.autoSleepHrs || 6;
+            document.getElementById('autoDeleteEnable').checked = currentSettings.autoDeleteEnable || false; 
+            document.getElementById('autoDeleteHrs').value = currentSettings.autoDeleteHrs || 12; 
+            document.getElementById('showAiPanel').checked = currentSettings.showAiPanel || false;
+            
+            // [REQUIREMENT: Default map to 163 and local]
+            document.getElementById('endGameMap').value = currentSettings.endGameMap || "163";
+            document.getElementById('dataSourceSelect').value = currentSettings.dataSource || "online";
+
+            changeDataSource();
 
             document.getElementById('btnInstantStage').style.display = (currentSettings.enableStages !== false) ? 'inline-flex' : 'none';
             document.getElementById('endGameMapContainer').style.opacity = (currentSettings.enableStages !== false) ? '1' : '0.4';
@@ -897,116 +1057,258 @@
             const data = { bosses: bosses, settings: JSON.parse(localStorage.getItem('bossSettings_v2') || '{}') };
             const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
             const preview = encoded.length > 20 ? encoded.substring(0, 12) + "........" + encoded.substring(encoded.length - 8) : encoded;
-            if (navigator.clipboard && window.isSecureContext) { 
-                navigator.clipboard.writeText(encoded).then(() => alert(`📋 คัดลอกรหัสเซฟสำเร็จ!\n[ รหัส: ${preview} ]`)).catch(e => prompt("คัดลอกรหัสเซฟนี้:", encoded));
-            } else { prompt("คัดลอกรหัสเซฟนี้:", encoded); }
+            if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(encoded).then(() => alert(`📋 คัดลอกรหัสเซฟสำเร็จ!\n[ รหัส: ${preview} ]`)).catch(e => prompt("คัดลอกรหัสเซฟนี้:", encoded)); } 
+            else { prompt("คัดลอกรหัสเซฟนี้:", encoded); }
         }
 
         function importData() {
             if (!isAdmin) return;
-            const inputCode = prompt("📥 วางรหัสเซฟที่คัดลอกมา:"); 
-            if (!inputCode || inputCode.trim() === "") return;
-            
+            const inputCode = prompt("📥 วางรหัสเซฟที่คัดลอกมา:"); if (!inputCode || inputCode.trim() === "") return;
             try {
                 const decoded = JSON.parse(decodeURIComponent(atob(inputCode.trim())));
-                if(confirm("🔄 รวมข้อมูล (Merge) ลงใน Environment นี้ใช่หรือไม่?")) {
-                    
-                    if (decoded.bosses && decoded.bosses.length > 0) {
-                        decoded.bosses.forEach(newBoss => {
-                            const cleanBoss = sanitizeBossData(newBoss);
-                            db.collection(targetCollection).doc(cleanBoss.id.toString()).set(cleanBoss);
-                        });
+                if(confirm("🔄 รวมข้อมูล (Merge) ลงใน Environment ปัจจุบันใช่หรือไม่?")) {
+                    if (decoded.bosses && decoded.bosses.length > 0) { 
+                        if (isLocalDatabase) {
+                            decoded.bosses.forEach(newBoss => { const cleanBoss = sanitizeBossData(newBoss); const idx = bosses.findIndex(b => b.id === cleanBoss.id); if (idx !== -1) bosses[idx] = cleanBoss; else bosses.push(cleanBoss); }); 
+                            localStorage.setItem('bosses_local_db', JSON.stringify(bosses)); applySort(true);
+                        } else {
+                            decoded.bosses.forEach(newBoss => { const cleanBoss = sanitizeBossData(newBoss); db.collection(targetCollection).doc(cleanBoss.id.toString()).set(cleanBoss); }); 
+                        }
                     }
-                    
                     if (decoded.settings && Object.keys(decoded.settings).length > 0) { 
-                        localStorage.setItem('bossSettings_v2', JSON.stringify(decoded.settings)); 
+                        const oldDataSource = currentSettings.dataSource;
+                        const mergedSettings = { ...currentSettings, ...decoded.settings, dataSource: oldDataSource };
+                        localStorage.setItem('bossSettings_v2', JSON.stringify(mergedSettings)); 
                     }
-                    
-                    alert("✅ นำเข้าเซฟและแยก Document เรียบร้อยครับ! \nระบบจะรีเฟรชหน้าจอ 1 ครั้งเพื่อนำข้อมูลเข้า");
-                    location.reload();
+                    alert("✅ นำเข้าเซฟสำเร็จ! ระบบจะรีเฟรช 1 ครั้ง"); location.reload();
                 }
-            } catch (e) { 
-                alert("❌ รหัสเซฟไม่ถูกต้อง กรุณาลองใหม่"); 
-            }
+            } catch (e) { alert("❌ รหัสเซฟไม่ถูกต้อง กรุณาลองใหม่"); }
         }
 
         function clearAllBosses() {
             if (!isAdmin) return;
-            if(confirm("🔴 คำเตือนแอดมิน: คุณต้องการล้างกระดานบอสส่วนกลางทั้งหมด ใช่หรือไม่?")) {
-                bosses.forEach(boss => { 
-                    if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); 
-                    db.collection(targetCollection).doc(boss.id.toString()).delete();
-                });
+            if(confirm("🔴 คำเตือนแอดมิน: ต้องการล้างกระดานบอสทั้งหมดของฐานข้อมูลนี้ ใช่หรือไม่?")) {
+                const bossesToClear = [...bosses];
+                if (isLocalDatabase) {
+                    bossesToClear.forEach(boss => { if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); });
+                    bosses = []; localStorage.setItem('bosses_local_db', JSON.stringify(bosses)); applySort(true);
+                } else {
+                    bossesToClear.forEach(boss => { if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); db.collection(targetCollection).doc(boss.id.toString()).delete(); });
+                }
                 closeSettings();
             }
         }
 
-        // ==========================================
-        // 🔊 ส่วนที่ 6: ระบบเสียงแจ้งเตือน
-        // ==========================================
-        function initAudio() { if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } if (audioCtx.state === 'suspended') { audioCtx.resume(); } }
-        function playTone(time, freq, vol, type) {
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.setValueAtTime(freq, time); gain.gain.setValueAtTime(vol, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.3);
-            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(time); osc.stop(time + 0.3);
-        }
-        function playDingSound() {
-            const vol = document.getElementById('volumeControl').value / 100; if (vol === 0) return;
-            initAudio(); const now = audioCtx.currentTime; playTone(now, 880, vol, 'sine'); playTone(now + 0.2, 880, vol, 'sine');
-        }
-        function playEpicStage4Sound() {
-            const vol = document.getElementById('volumeControl').value / 100; if (vol === 0) return;
-            initAudio(); const now = audioCtx.currentTime;
-            playTone(now, 440, vol, 'square'); playTone(now + 0.15, 659, vol, 'square'); playTone(now + 0.3, 880, vol * 1.5, 'square'); playTone(now + 0.45, 1108, vol * 1.5, 'square');
-        }
-        function playStage5HornSound() {
-            const vol = document.getElementById('volumeControl').value / 100; if (vol === 0) return;
-            initAudio(); const now = audioCtx.currentTime;
-            
-            const d1 = 0.60; const p1 = 146.83; 
-            const d2 = 1.10; const p2 = 293.66; 
+        // ==========================================================
+        // 🔊 8. ระบบเสียงสังเคราะห์ Fantasy Chimes (Web Audio API Engine)
+        // ==========================================================
+        let audioCtx;
+        let masterGainNode;
 
-            const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
-            osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(p1, now); 
-            gain1.gain.setValueAtTime(vol * 0.7, now); gain1.gain.exponentialRampToValueAtTime(0.01, now + d1);
-            osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.start(now); osc1.stop(now + d1);
+        const SOUND_DURATIONS = {
+            'playCrystalSingle': 1.5, 'playCrystalChord': 1.8, 'playPixieFlutter': 1.2, 'playFairyAscent': 1.5,
+            'playHarpMaj7': 2.0, 'playHarpLydian': 2.2, 'playWindChimeSingle': 2.2, 'playWindChimeBreeze': 2.5,
+            'playVictoryShort': 1.8, 'playVictoryGrand': 2.8, 'playFMBellSingle': 1.5, 'playFMBellDouble': 1.8,
+            'playSanctuarySingle': 2.8, 'playSanctuaryDual': 2.6, 'playWarningMinor': 1.6, 'playWarningPulse': 1.0
+        };
 
-            const start2 = now + d1; const end2 = start2 + d2;
-            const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
-            osc2.type = 'sawtooth'; osc2.frequency.setValueAtTime(p2, start2); 
-            gain2.gain.setValueAtTime(vol * 0.9, start2); 
-            
-            const holdTime = start2 + (d2 * 0.4); 
-            gain2.gain.linearRampToValueAtTime(vol * 0.5, holdTime); gain2.gain.exponentialRampToValueAtTime(0.01, end2); 
-            
-            osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.start(start2); osc2.stop(end2);
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGainNode = audioCtx.createGain();
+                const vol = document.getElementById('volumeControl').value / 100;
+                masterGainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+                masterGainNode.connect(audioCtx.destination);
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
         }
-        function testSound() { playDingSound(); }
+
+        function updateVolume() {
+            const vol = document.getElementById('volumeControl').value / 100;
+            if (masterGainNode && audioCtx) masterGainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+        }
+
+        function scheduleSoundLoop(type, loops) {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            const gap = SOUND_DURATIONS[type] || 2.0; 
+            for(let i = 0; i < loops; i++) {
+                const scheduledTime = now + (i * gap);
+                if (window[type]) window[type](scheduledTime);
+            }
+            return (loops * gap * 1000); // Return duration in ms
+        }
+
+        function testCustomSound(selectId, loopId) {
+            const type = document.getElementById(selectId).value;
+            const loops = parseInt(document.getElementById(loopId).value) || 1;
+            scheduleSoundLoop(type, loops);
+        }
+
+        // --- Sound Generating Functions (Refactored for startTime offset) ---
+        function playCrystalSingle(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(1046.5, now);
+            const harmOsc = ctx.createOscillator(); const harmGain = ctx.createGain(); harmOsc.type = 'sine'; harmOsc.frequency.setValueAtTime(1046.5 * 3.01, now);
+            gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.7, now + 0.015); gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+            harmGain.gain.setValueAtTime(0, now); harmGain.gain.linearRampToValueAtTime(0.25, now + 0.005); harmGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+            osc.connect(gain); gain.connect(masterGainNode); harmOsc.connect(harmGain); harmGain.connect(masterGainNode);
+            osc.start(now); harmOsc.start(now); osc.stop(now + 1.3); harmOsc.stop(now + 0.5);
+        }
+        function playCrystalChord(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [1046.50, 1318.51, 1567.98, 2093.00].forEach((freq, idx) => {
+                const noteTime = now + (idx * 0.065); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, noteTime);
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(0.4, noteTime + 0.015); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 1.4);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(noteTime); osc.stop(noteTime + 1.5);
+            });
+        }
+        function playPixieFlutter(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [1046.5, 1174.66, 1318.51, 1567.98, 1760.0, 2093.0].forEach((freq, i) => {
+                const noteTime = now + (i * 0.04); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, noteTime);
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(0.35, noteTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.8);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(noteTime); osc.stop(noteTime + 0.9);
+            });
+        }
+        function playFairyAscent(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [1318.51, 1567.98, 1975.53, 2349.32, 2637.02].forEach((freq, i) => {
+                const noteTime = now + (i * 0.05); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, noteTime);
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(0.3, noteTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 1.2);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(noteTime); osc.stop(noteTime + 1.3);
+            });
+        }
+        function playHarpMaj7(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51].forEach((freq, i) => {
+                const noteTime = now + (i * 0.07); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, noteTime);
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(0.35, noteTime + 0.02); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 1.6);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(noteTime); osc.stop(noteTime + 1.8);
+            });
+        }
+        function playHarpLydian(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [698.46, 880.00, 1046.50, 1318.51, 1567.98].forEach((freq, i) => {
+                const noteTime = now + (i * 0.08); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, noteTime);
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(0.38, noteTime + 0.02); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 1.8);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(noteTime); osc.stop(noteTime + 2.0);
+            });
+        }
+        function createBellHarmonic(ctx, baseFreq, startTime, duration = 1.8, vol = 0.3) {
+            [1.0, 2.76, 5.40].forEach((ratio, i) => {
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(baseFreq * ratio, startTime);
+                const noteGain = vol * [1.0, 0.4, 0.15][i];
+                gain.gain.setValueAtTime(0, startTime); gain.gain.linearRampToValueAtTime(noteGain, startTime + 0.005); gain.gain.exponentialRampToValueAtTime(0.0001, startTime + (duration / (i + 1)));
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(startTime); osc.stop(startTime + duration);
+            });
+        }
+        function playWindChimeSingle(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            createBellHarmonic(ctx, 1200, now, 2.0, 0.45);
+        }
+        function playWindChimeBreeze(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [1046, 1200, 1396, 1567, 1864].forEach((f, i) => {
+                createBellHarmonic(ctx, f, now + (i * 0.09) + (Math.random() * 0.04), 1.8, 0.25);
+            });
+        }
+        function playVictoryShort(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [{ f: 783.99, t: 0.00, d: 0.25 }, { f: 1046.50, t: 0.10, d: 0.25 }, { f: 1318.51, t: 0.20, d: 0.25 }, { f: 1567.98, t: 0.32, d: 1.20 }].forEach(item => {
+                const noteTime = now + item.t; const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(item.f, noteTime);
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(0.45, noteTime + 0.015); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + item.d);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(noteTime); osc.stop(noteTime + item.d + 0.1);
+            });
+        }
+        function playVictoryGrand(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            const melody = [{ f: 523.25, t: 0.00 }, { f: 659.25, t: 0.08 }, { f: 783.99, t: 0.16 }, { f: 1046.50, t: 0.26 }, { f: 1318.51, t: 0.38 }, { f: 2093.00, t: 0.52 }];
+            melody.forEach((item, idx) => {
+                const noteTime = now + item.t; const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(item.f, noteTime);
+                const dur = idx === melody.length - 1 ? 1.8 : 0.6; const vol = idx === melody.length - 1 ? 0.6 : 0.35;
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(vol, noteTime + 0.02); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + dur);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(noteTime); osc.stop(noteTime + dur + 0.1);
+            });
+        }
+        function playFMBell(freq, startTime, dur = 1.0) {
+            const ctx = getAudioContext(); const carrier = ctx.createOscillator(); const modulator = ctx.createOscillator(); const modGain = ctx.createGain(); const masterVoiceGain = ctx.createGain();
+            carrier.type = 'sine'; carrier.frequency.setValueAtTime(freq, startTime);
+            modulator.type = 'sine'; modulator.frequency.setValueAtTime(freq * 1.414, startTime);
+            modGain.gain.setValueAtTime(freq * 1.5, startTime); modGain.gain.exponentialRampToValueAtTime(0.01, startTime + dur);
+            modulator.connect(modGain); modGain.connect(carrier.frequency);
+            masterVoiceGain.gain.setValueAtTime(0, startTime); masterVoiceGain.gain.linearRampToValueAtTime(0.4, startTime + 0.008); masterVoiceGain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+            carrier.connect(masterVoiceGain); masterVoiceGain.connect(masterGainNode);
+            carrier.start(startTime); modulator.start(startTime); carrier.stop(startTime + dur + 0.1); modulator.stop(startTime + dur + 0.1);
+        }
+        function playFMBellSingle(startTime = null) { const ctx = getAudioContext(); playFMBell(1174.66, startTime !== null ? startTime : ctx.currentTime, 1.2); }
+        function playFMBellDouble(startTime = null) { const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime; playFMBell(1174.66, now, 0.8); playFMBell(1760.00, now + 0.14, 1.3); }
+        function playSanctuarySingle(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [-2, 2].forEach(detune => {
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.detune.setValueAtTime(detune, now);
+                gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.35, now + 0.03); gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(now); osc.stop(now + 2.5);
+            });
+        }
+        function playSanctuaryDual(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [659.25, 987.77].forEach((freq, i) => {
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now + (i * 0.08));
+                gain.gain.setValueAtTime(0, now + (i * 0.08)); gain.gain.linearRampToValueAtTime(0.38, now + (i * 0.08) + 0.02); gain.gain.exponentialRampToValueAtTime(0.0001, now + (i * 0.08) + 2.2);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(now + (i * 0.08)); osc.stop(now + (i * 0.08) + 2.3);
+            });
+        }
+        function playWarningMinor(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [880.00, 1046.50, 1244.51].forEach((freq, i) => {
+                const noteTime = now + (i * 0.09); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, noteTime);
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(0.4, noteTime + 0.015); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 1.2);
+                osc.connect(gain); gain.connect(masterGainNode); osc.start(noteTime); osc.stop(noteTime + 1.3);
+            });
+        }
+        function playWarningPulse(startTime = null) {
+            const ctx = getAudioContext(); const now = startTime !== null ? startTime : ctx.currentTime;
+            [0, 0.16].forEach(offset => {
+                const noteTime = now + offset; const osc1 = ctx.createOscillator(); const osc2 = ctx.createOscillator(); const gain = ctx.createGain();
+                osc1.type = 'sine'; osc2.type = 'sine'; osc1.frequency.setValueAtTime(1174.66, noteTime); osc2.frequency.setValueAtTime(1244.51, noteTime); 
+                gain.gain.setValueAtTime(0, noteTime); gain.gain.linearRampToValueAtTime(0.35, noteTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.6);
+                osc1.connect(gain); osc2.connect(gain); gain.connect(masterGainNode);
+                osc1.start(noteTime); osc2.start(noteTime); osc1.stop(noteTime + 0.65); osc2.stop(noteTime + 0.65);
+            });
+        }
 
         // ==========================================
-        // ⚔️ ส่วนที่ 7: การกระทำต่างๆ ของการ์ดบอส
+        // ⚔️ 9. การกระทำต่างๆ ของการ์ดบอส
         // ==========================================
         function addBoss(mode) {
-            initAudio(); 
+            getAudioContext();
             const nameInput = document.getElementById('bossName').value.trim();
             if (!nameInput) { alert("กรุณาใส่ชื่อบอสครับ!"); return; }
             if (bosses.some(boss => boss.name.toLowerCase() === nameInput.toLowerCase())) { alert("ชื่อซ้ำครับ!"); return; }
             
             const now = Date.now(); let sTime = now; let initialStageStr = "1.0"; let historyLog = []; let isManual = false;
-            let muteStage4 = false; let muteStage5 = false;
 
             if (mode === 'instant') {
                 const inputStage = Math.max(1.0, parseFloat(document.getElementById('inputInstantStage').value) || 1.0);
-                const currentEndMap = document.getElementById('endGameMap').value.trim();
-                const isEndGame = currentEndMap !== "" && nameInput.includes(currentEndMap);
-                const baselineMs = getCumulativeBaselineTime(inputStage, isEndGame) * 1000;
+                const baselineMs = getCumulativeBaselineTime(inputStage, nameInput) * 1000;
                 sTime = now - baselineMs;
                 initialStageStr = inputStage.toString();
                 historyLog.push({ s: 1.0, t: sTime });
                 if (inputStage > 1.0) historyLog.push({ s: inputStage, t: now });
                 isManual = true;
-                if (inputStage >= 4.0) muteStage4 = true;
-                if (inputStage >= 5.0) muteStage5 = true;
             } else {
                 const hoursInput = parseInt(document.getElementById('inputHours').value) || 0;
                 const minutesInput = parseInt(document.getElementById('inputMinutes').value) || 0;
@@ -1021,12 +1323,10 @@
             const newBoss = {
                 id: Date.now(), addedAt: Date.now(), hasManualUpdate: isManual,
                 name: nameInput, spawnTime: sTime, spawnedAt: (mode === 'instant') ? now : null, stateInput: initialStageStr, stateHistory: historyLog,
-                isSpawnSoundPlayed: false, isStage4AlertPlayed: muteStage4, _wasSpawned: (mode === 'instant'),
-                isStandby: false, isAutoSlept: false, telemetrySaved: false,
-                sleptAt: null, isStage5AlertPlayed: muteStage5
+                _wasSpawned: (mode === 'instant'), isStandby: false, isAutoSlept: false, telemetrySaved: false, sleptAt: null
             };
             
-            db.collection(targetCollection).doc(newBoss.id.toString()).set(newBoss);
+            dbSaveBoss(newBoss);
             
             document.getElementById('bossName').value = ''; 
             document.getElementById('inputHours').value = '0'; document.getElementById('inputMinutes').value = '0'; document.getElementById('inputSeconds').value = '0';
@@ -1035,34 +1335,46 @@
 
         function toggleStar(id) {
             const index = localStarredBosses.indexOf(id);
-            if (index > -1) {
-                localStarredBosses.splice(index, 1);
-            } else {
-                localStarredBosses.push(id);
-            }
-            localStorage.setItem('localStarredBosses', JSON.stringify(localStarredBosses));
-            applySort(true);
+            if (index > -1) { localStarredBosses.splice(index, 1); } else { localStarredBosses.push(id); }
+            localStorage.setItem('localStarredBosses', JSON.stringify(localStarredBosses)); applySort(true);
         }
 
         function toggleStandbyBoss(id, isAuto = false) {
             const boss = bosses.find(b => b.id === id); if (!boss) return;
+            if (editingBossId === id) { editingBossId = null; }
             if (!boss.isStandby) {
                 const cardEl = document.getElementById(`boss-card-${boss.id}`);
                 if(cardEl) {
                     cardEl.classList.add('entering-standby');
-                    setTimeout(() => {
+                    setTimeout(() => { 
                         processTelemetry(boss); 
-                        db.collection(targetCollection).doc(boss.id.toString()).update({ isStandby: true, isAutoSlept: isAuto, sleptAt: Date.now() });
-                        if (!isAuto) showToast(`💤 พักการ์ด <b>${boss.name}</b> สำเร็จ`);
+                        dbUpdateBoss(boss.id, { isStandby: true, isAutoSlept: isAuto, sleptAt: Date.now() }); 
+                        if (!isAuto) showToast(`💤 พักการ์ด <b>${boss.name}</b> สำเร็จ`); 
                     }, 400); 
                 } else {
-                    processTelemetry(boss); 
-                    db.collection(targetCollection).doc(boss.id.toString()).update({ isStandby: true, isAutoSlept: isAuto, sleptAt: Date.now() });
+                    processTelemetry(boss); dbUpdateBoss(boss.id, { isStandby: true, isAutoSlept: isAuto, sleptAt: Date.now() });
                 }
             }
         }
 
-        function startEditBoss(id) { editingBossId = id; renderBosses(); }
+        function startEditBoss(id) { 
+            editingBossId = id; renderBosses(); 
+            setTimeout(() => {
+                const cardEl = document.getElementById(`boss-card-${id}`); const headerEl = document.querySelector('.sticky-controls');
+                if (cardEl && headerEl) {
+                    const cardRect = cardEl.getBoundingClientRect(); const headerRect = headerEl.getBoundingClientRect();
+                    const viewportHeight = window.innerHeight; const safeTop = headerRect.bottom + 16; const safeBottom = viewportHeight - 45;
+                    const isTopHidden = cardRect.top < safeTop; const isBottomHidden = cardRect.bottom > safeBottom;
+                    if (isTopHidden || isBottomHidden) {
+                        let scrollAmount = 0;
+                        if (isBottomHidden && !isTopHidden) { scrollAmount = cardRect.bottom - safeBottom; if (cardRect.top - scrollAmount < safeTop) { scrollAmount = cardRect.top - safeTop; } } 
+                        else if (isTopHidden) { scrollAmount = cardRect.top - safeTop; }
+                        if (scrollAmount !== 0) { window.scrollBy({ top: scrollAmount, left: 0, behavior: 'smooth' }); }
+                    }
+                }
+            }, 150); 
+        }
+        
         function cancelEditBoss() { editingBossId = null; renderBosses(); }
 
         function saveEditBoss(id) {
@@ -1071,39 +1383,24 @@
             const hoursInput = parseInt(document.getElementById(`editHours-${id}`).value) || 0;
             const minutesInput = parseInt(document.getElementById(`editMinutes-${id}`).value) || 0;
             const secondsInput = parseInt(document.getElementById(`editSeconds-${id}`).value) || 0;
+            editingBossId = null;
 
             if (hoursInput === boss._tempPrefillH && minutesInput === boss._tempPrefillM && secondsInput === boss._tempPrefillS) {
-                db.collection(targetCollection).doc(id.toString()).update({ name: nameInput });
+                dbUpdateBoss(id, { name: nameInput });
             } else {
                 if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss); 
                 const sTime = new Date().getTime() + (hoursInput*3600000) + (minutesInput*60000) + (secondsInput*1000);
-                
-                db.collection(targetCollection).doc(id.toString()).update({
-                    name: nameInput,
-                    spawnTime: sTime,
-                    stateInput: "1.0",
-                    stateHistory: [{ s: 1.0, t: sTime }],
-                    hasManualUpdate: false,
-                    spawnedAt: null,
-                    isSpawnSoundPlayed: false,
-                    isStage4AlertPlayed: false,
-                    _wasSpawned: false,
-                    isStandby: false,
-                    isAutoSlept: false,
-                    telemetrySaved: false,
-                    sleptAt: null,
-                    isStage5AlertPlayed: false
+                dbUpdateBoss(id, {
+                    name: nameInput, spawnTime: sTime, stateInput: "1.0", stateHistory: [{ s: 1.0, t: sTime }],
+                    hasManualUpdate: false, spawnedAt: null, _wasSpawned: false, isStandby: false, isAutoSlept: false, telemetrySaved: false, sleptAt: null
                 });
             }
-            editingBossId = null; 
         }
 
         function removeBoss(id, isAutoDelete = false) {
             const boss = bosses.find(b => b.id === id); if (!boss) return;
             if (!isAutoDelete && !confirm(`🗑️ ต้องการลบ "${boss.name}" หรือไม่?`)) return;
-
             if (!boss.telemetrySaved && !boss.isStandby) processTelemetry(boss);
-
             const now = new Date().getTime();
             let elapsedTimeText = now >= boss.spawnTime ? `⏳ ปล่อยเลยมานาน` : `⏳ (ลบก่อนเกิด)`;
             deletedLogs.unshift({
@@ -1111,17 +1408,11 @@
                 statusText: elapsedTimeText, reasonText: isAutoDelete ? `(ลบอัตโนมัติ)` : `(ลบด้วยตัวเอง)`
             });
             if (deletedLogs.length > 10) deletedLogs.length = 10;
-            
-            db.collection(targetCollection).doc(id.toString()).delete();
-            db.collection('systemData').doc(targetLogDoc).set({ logs: deletedLogs });
+            if (editingBossId === id) { editingBossId = null; }
+            dbDeleteBoss(id); dbSaveLogs(deletedLogs);
         }
 
-        function clearLogs() { 
-            if(!isAdmin) return;
-            if(confirm("ล้างประวัติส่วนกลางทั้งหมด?")) { 
-                db.collection('systemData').doc(targetLogDoc).set({ logs: [] });
-            } 
-        }
+        function clearLogs() { if(!isAdmin) return; if(confirm("ล้างประวัติทั้งหมด?")) { dbSaveLogs([]); } }
 
         function renderLogs() {
             const logContainer = document.getElementById('logContainer'); if (!logContainer) return; 
@@ -1134,7 +1425,7 @@
         }
 
         // ==========================================
-        // 🔀 ส่วนที่ 8: กลไกการจัดเรียงการ์ด
+        // 🔀 10. กลไกการจัดเรียงการ์ด และ UI Render
         // ==========================================
         function applySort(forceRender = false) {
             const sortMode = document.getElementById('sortOption') ? document.getElementById('sortOption').value : 'time';
@@ -1147,8 +1438,7 @@
                 const aSpawned = now >= a.spawnTime; const bSpawned = now >= b.spawnTime;
 
                 if (sortMode === 'time') {
-                    const aIsStarred = localStarredBosses.includes(a.id);
-                    const bIsStarred = localStarredBosses.includes(b.id);
+                    const aIsStarred = localStarredBosses.includes(a.id); const bIsStarred = localStarredBosses.includes(b.id);
                     const aStarredReady = aIsStarred && aSpawned; const bStarredReady = bIsStarred && bSpawned;
                     if (aStarredReady && !bStarredReady) return -1;
                     if (!aStarredReady && bStarredReady) return 1;
@@ -1161,7 +1451,6 @@
                     return sortMode === 'name_asc' ? cmp : -cmp;
                 }
             });
-            
             if (forceRender && editingBossId === null && activeInputId === null) { renderBosses(); }
         }
 
@@ -1172,9 +1461,6 @@
             return `<div class="edit-mode-container"><div style="font-size:0.9rem; color:var(--text-accent); font-weight:bold;">✏️ แก้ไขข้อมูล</div><input type="text" id="editName-${boss.id}" value="${boss.name}" style="width:100%;"><div style="display:flex; gap:8px;"><div class="time-wrapper"><input type="text" id="editHours-${boss.id}" value="${eh}" readonly onclick="openNumpad('editHours-${boss.id}', 'editMinutes-${boss.id}', 2, 'ชั่วโมง')"><span class="time-label">ชม.</span></div><div class="time-wrapper"><input type="text" id="editMinutes-${boss.id}" value="${em}" readonly onclick="openNumpad('editMinutes-${boss.id}', 'editSeconds-${boss.id}', 2, 'นาที')"><span class="time-label">น.</span></div><div class="time-wrapper"><input type="text" id="editSeconds-${boss.id}" value="${es}" readonly onclick="openNumpad('editSeconds-${boss.id}', null, 2, 'วินาที')"><span class="time-label">วิ.</span></div></div><div class="edit-actions"><button class="btn-text save" onclick="saveEditBoss(${boss.id})">✓ บันทึก</button><button class="btn-text cancel" onclick="cancelEditBoss()">✕ ยกเลิก</button></div></div>`;
         }
 
-        // ==========================================
-        // 🖥️ ส่วนที่ 9: ฟังก์ชันวาด UI ลงหน้าจอ
-        // ==========================================
         function renderBosses() {
             const activeCont = document.getElementById('activeContainer'); 
             const upcomingCont = document.getElementById('upcomingContainer');
@@ -1182,7 +1468,6 @@
             if (!activeCont || !upcomingCont || !standbyCont) return;
 
             activeCont.innerHTML = ''; upcomingCont.innerHTML = ''; standbyCont.innerHTML = '';
-            
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const filteredBosses = bosses.filter(boss => boss.name.toLowerCase().includes(searchTerm));
             const isStageSystemEnabled = currentSettings.enableStages !== false; 
@@ -1296,18 +1581,18 @@
                 const dist = boss.spawnTime - nowTime;
                 const spawnTimeString = new Date(boss.spawnTime).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
                 const isStarredLocal = localStarredBosses.includes(boss.id);
-                let starFilter = isStarredLocal ? 'opacity(0.4)' : 'grayscale(1) opacity(0.3)'; 
+                let starFilter = isStarredLocal ? 'opacity(0.6)' : 'grayscale(1) opacity(0.3)'; 
 
                 let innerHTML = `
                     <div class="list-row">
-                        <div class="card-header" style="filter: grayscale(1);">
+                        <div class="card-header">
                             <div class="boss-name-group">
                                 <span onclick="toggleStar(${boss.id})" style="cursor: pointer; user-select: none; font-size: 1.15rem; filter: ${starFilter}; transition: all 0.2s;">⭐</span>
-                                <span class="boss-name">${boss.name}</span>
-                                <span class="start-badge">🕒 เริ่ม: ${spawnTimeString}</span>
+                                <span class="boss-name" style="color: #94a3b8;">${boss.name}</span>
+                                <span class="start-badge" style="filter: grayscale(1);">🕒 เริ่ม: ${spawnTimeString}</span>
                             </div>
                         </div>
-                        <div class="list-bottom-row">
+                        <div class="list-bottom-row" style="filter: grayscale(1);">
                             <span class="list-eta-large">${boss.isAutoSlept ? '[💤 พักอัตโนมัติ]' : '[💤 พักการ์ด]'}</span>
                             <div class="hover-actions">
                                 <button class="btn-icon edit" onclick="startEditBoss(${boss.id})" title="แก้ไขเพื่อปลุก">✏️</button>
@@ -1316,7 +1601,7 @@
                         </div>
                     </div>`;
                 
-                if (boss.id === editingBossId) { innerHTML += `<div class="edit-accordion" style="filter: none;">${getEditFormHtml(boss, dist)}</div>`; }
+                if (boss.id === editingBossId) { innerHTML += `<div class="edit-accordion">${getEditFormHtml(boss, dist)}</div>`; }
                 div.innerHTML = innerHTML;
                 standbyCont.appendChild(div);
             });
@@ -1332,7 +1617,7 @@
         }
 
         // ==========================================
-        // ⏱️ ส่วนที่ 10: ฟังก์ชันวนรอบเพื่ออัปเดตตัวเลขและเสียง
+        // ⏱️ 11. Core Timer Update (Custom Audio Logic)
         // ==========================================
         function updateTimers() {
             const now = new Date().getTime();
@@ -1340,17 +1625,13 @@
             const autoSleepHrs = parseFloat(document.getElementById('autoSleepHrs')?.value || 6);
             const autoDelEnable = document.getElementById('autoDeleteEnable')?.checked;
             const autoDelHrs = parseFloat(document.getElementById('autoDeleteHrs')?.value || 12);
-            const epicSoundEnable = document.getElementById('enableEpicSound')?.checked;
             const isStageSystemEnabled = currentSettings.enableStages !== false; 
             const currentEndMap = document.getElementById('endGameMap')?.value.trim() || "";
             
-
             const filteredBosses = bosses.filter(b => b.name.toLowerCase().includes(document.getElementById('searchInput')?.value.toLowerCase() || ''));
             let needsSort = false; 
 
-            let pendingHorn = [];
-            let pendingEpic = [];
-            let pendingSpawn = [];
+            let pendingHorn = []; let pendingBell = []; let pendingEpic = []; let pendingSpawn = [];
 
             filteredBosses.forEach(boss => {
                 if (boss.id === editingBossId) return;
@@ -1360,16 +1641,94 @@
 
                 const distance = boss.spawnTime - now;
                 const isCurrentlySpawned = distance <= 0;
+                
                 const isEndGameMap = currentEndMap !== "" && boss.name.includes(currentEndMap);
-		const emaAlpha = isEndGameMap ? 0.4 : 0.8;
+		        const emaAlpha = isEndGameMap ? 0.7 : 0.9;
 
                 if (boss._wasSpawned !== isCurrentlySpawned) { 
                     boss._wasSpawned = isCurrentlySpawned; needsSort = true;
                     if (isCurrentlySpawned && !boss.isStandby) {
                         boss.spawnedAt = Date.now(); boss.stateHistory = [{s: 1.0, t: boss.spawnTime}]; boss.stateInput = "1.0";
-                        boss.hasManualUpdate = false; boss.isSpawnSoundPlayed = false; boss.isStage4AlertPlayed = false; boss.isStage5AlertPlayed = false; 
+                        boss.hasManualUpdate = false; 
                     }
                 }
+
+                let predPhase = 1.0; let etaBossMs = 0;
+                if (isCurrentlySpawned && isStageSystemEnabled && !boss.isStandby) {
+                    try {
+                        const actualVal = parseFloat(boss.stateInput) || 1.0;
+                        const lastLog = boss.stateHistory[boss.stateHistory.length - 1];
+                        const elapsedSinceLogSec = (now - lastLog.t) / 1000;
+                        
+                        if (!boss.hasManualUpdate || boss.stateHistory.length < 2) {
+                            const totalElapsedSec = (now - boss.spawnTime) / 1000;
+                            predPhase = getPhaseFromTime(totalElapsedSec, boss.name);
+                            const remainingTo5Sec = Math.max(0, getCumulativeBaselineTime(5.0, boss.name) - totalElapsedSec);
+                            etaBossMs = now + (remainingTo5Sec * 1000);
+                        } else {
+                            let dynamicScale = 1.0;
+                            if (boss.stateHistory.length > 1) {
+                                let firstActual = (boss.stateHistory[1].t - boss.stateHistory[0].t) / 1000;
+                                let firstBase = getCumulativeBaselineTime(boss.stateHistory[1].s, boss.name) - getCumulativeBaselineTime(boss.stateHistory[0].s, boss.name);
+                                if (firstBase > 0 && firstActual > 0) { dynamicScale = Math.max(0.1, Math.min(10.0, firstActual / firstBase)); }
+                            }
+                            let mEma = null; 
+                            for (let i = 1; i < boss.stateHistory.length; i++) {
+                                let prev = boss.stateHistory[i-1]; let curr = boss.stateHistory[i];
+                                let actualSec = (curr.t - prev.t) / 1000;
+                                let expectedSec = (getCumulativeBaselineTime(curr.s, boss.name) - getCumulativeBaselineTime(prev.s, boss.name)) * dynamicScale;
+                                if (expectedSec > 0 && actualSec > 0) {
+                                    let currentSpeed = expectedSec / actualSec; 
+                                    if (mEma === null) { mEma = currentSpeed; } else { mEma = (emaAlpha * currentSpeed) + ((1 - emaAlpha) * mEma); } 
+                                }
+                            }
+                            if (mEma === null || mEma <= 0) mEma = 1.0;
+
+                            const baselineSecAtLastLog = getCumulativeBaselineTime(lastLog.s, boss.name) * dynamicScale;
+                            const virtualElapsedSec = elapsedSinceLogSec * mEma;
+                            const currentExpectedCumulative = baselineSecAtLastLog + virtualElapsedSec;
+
+                            predPhase = getPhaseFromTime(currentExpectedCumulative / dynamicScale, boss.name);
+                            const remainingTo5Sec = Math.max(0, getCumulativeBaselineTime(5.0, boss.name) * dynamicScale - baselineSecAtLastLog);
+                            etaBossMs = lastLog.t + ((remainingTo5Sec / mEma) * 1000);
+                        }
+                    } catch (err) {}
+                }
+
+                let flags = localSoundFlags[boss.id];
+                if (!flags) {
+                    flags = {
+                        p1: isCurrentlySpawned,
+                        p4: isStageSystemEnabled && predPhase >= 4.0,
+                        p30s: isStageSystemEnabled && isCurrentlySpawned && (predPhase >= 5.0 || (etaBossMs > 0 && etaBossMs - now <= 30000)),
+                        p5: isStageSystemEnabled && predPhase >= 5.0
+                    };
+                    localSoundFlags[boss.id] = flags;
+                }
+
+                if (!isCurrentlySpawned) {
+                    flags.p1 = flags.p4 = flags.p30s = flags.p5 = false;
+                } else if (isStageSystemEnabled && !boss.isStandby) {
+                    if (predPhase < 4.0) flags.p4 = false;
+                    if (predPhase < 5.0) { flags.p5 = false; if (etaBossMs > 0 && (etaBossMs - now) > 30000) flags.p30s = false; }
+                }
+
+                let highestTrigger = 0;
+                if (!boss.isStandby) {
+                    if (isStageSystemEnabled) {
+                        if (predPhase >= 5.0 && !flags.p5) highestTrigger = 4;
+                        else if (predPhase < 5.0 && etaBossMs > 0 && (etaBossMs - now) <= 30000 && !flags.p30s && predPhase >= 1.0) highestTrigger = 3;
+                        else if (predPhase >= 4.0 && !flags.p4) highestTrigger = 2;
+                        else if (isCurrentlySpawned && !flags.p1) highestTrigger = 1;
+                    } else {
+                        if (isCurrentlySpawned && !flags.p1) highestTrigger = 1;
+                    }
+                }
+
+                if (highestTrigger === 4) { pendingHorn.push(boss); flags.p5 = flags.p30s = flags.p4 = flags.p1 = true; }
+                else if (highestTrigger === 3) { pendingBell.push(boss); flags.p30s = flags.p4 = flags.p1 = true; }
+                else if (highestTrigger === 2) { pendingEpic.push(boss); flags.p4 = flags.p1 = true; }
+                else if (highestTrigger === 1) { pendingSpawn.push(boss); flags.p1 = true; }
 
                 if (!isCurrentlySpawned) {
                     if (boss.isStandby) return; 
@@ -1391,130 +1750,75 @@
                     if(elapEl) elapEl.innerText = elapsedStr;
 
                     if (isStageSystemEnabled) {
-                        try {
-                            const actualVal = parseFloat(boss.stateInput) || 1.0;
-                            const etaWrap = document.getElementById(`eta-wrap-${boss.id}`);
-                            if(etaWrap) etaWrap.style.display = 'flex';
-                            
-                            const lastLog = boss.stateHistory[boss.stateHistory.length - 1];
-                            const elapsedSinceLogSec = (now - lastLog.t) / 1000;
-                            
-                            const inputStateInner = document.getElementById(`progress-text-${boss.id}`);
-                            if(inputStateInner) {
-                                if (elapsedSinceLogSec > 60) { inputStateInner.classList.add('needs-update'); } else { inputStateInner.classList.remove('needs-update'); }
-                            }
+                        const actualVal = parseFloat(boss.stateInput) || 1.0;
+                        const etaWrap = document.getElementById(`eta-wrap-${boss.id}`);
+                        if(etaWrap) etaWrap.style.display = 'flex';
+                        
+                        const lastLog = boss.stateHistory[boss.stateHistory.length - 1];
+                        const elapsedSinceLogSec = (now - lastLog.t) / 1000;
+                        
+                        const inputStateInner = document.getElementById(`progress-text-${boss.id}`);
+                        if(inputStateInner) { if (elapsedSinceLogSec > 60) { inputStateInner.classList.add('needs-update'); } else { inputStateInner.classList.remove('needs-update'); } }
 
-                            const updateTimeEl = document.getElementById(`update-time-${boss.id}`);
-                            if(updateTimeEl) {
-                                if (!boss.hasManualUpdate) { updateTimeEl.innerHTML = `<span>เฟสล่าสุด: <b>${boss.stateInput}</b></span> <span><span class="warning">⚠️ รออัปเดต</span></span>`;
-                                } else {
-                                    const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
-                                    const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')}วิ`;
-                                    updateTimeEl.innerHTML = `<span>เฟสล่าสุด: <b>${boss.stateInput}</b></span> <span>ผ่านไป: <b class="hl">${timeStr}</b></span>`;
-                                }
-                            }
-
-                            let predPhase = 1.0; let etaBossMs = 0;
-
-                            if (!boss.hasManualUpdate || boss.stateHistory.length < 2) {
-                                const totalElapsedSec = (now - boss.spawnTime) / 1000;
-                                predPhase = getPhaseFromTime(totalElapsedSec, isEndGameMap);
-                                const remainingTo5Sec = Math.max(0, getCumulativeBaselineTime(5.0, isEndGameMap) - totalElapsedSec);
-                                etaBossMs = now + (remainingTo5Sec * 1000);
+                        const updateTimeEl = document.getElementById(`update-time-${boss.id}`);
+                        if(updateTimeEl) {
+                            if (!boss.hasManualUpdate) { updateTimeEl.innerHTML = `<span>เฟสล่าสุด: <b>${boss.stateInput}</b></span> <span><span class="warning">⚠️ รออัปเดต</span></span>`;
                             } else {
-                                let dynamicScale = 1.0;
-                                if (boss.stateHistory.length > 1) {
-                                    let firstActual = (boss.stateHistory[1].t - boss.stateHistory[0].t) / 1000;
-                                    let firstBase = getCumulativeBaselineTime(boss.stateHistory[1].s, isEndGameMap) - getCumulativeBaselineTime(boss.stateHistory[0].s, isEndGameMap);
-                                    if (firstBase > 0 && firstActual > 0) {
-                                        dynamicScale = firstActual / firstBase;
-                                        dynamicScale = Math.max(0.1, Math.min(10.0, dynamicScale));
-                                    }
-                                }
-
-                                let mEma = null; 
-                                for (let i = 1; i < boss.stateHistory.length; i++) {
-                                    let prev = boss.stateHistory[i-1]; let curr = boss.stateHistory[i];
-                                    let actualSec = (curr.t - prev.t) / 1000;
-                                    let expectedSec = (getCumulativeBaselineTime(curr.s, isEndGameMap) - getCumulativeBaselineTime(prev.s, isEndGameMap)) * dynamicScale;
-                                    if (expectedSec > 0 && actualSec > 0) {
-                                        let currentSpeed = expectedSec / actualSec; 
-                                        if (mEma === null) { mEma = currentSpeed; } else { mEma = (emaAlpha * currentSpeed) + ((1 - emaAlpha) * mEma); } 
-                                    }
-                                }
-
-                                if (mEma === null || mEma <= 0) mEma = 1.0;
-
-                                const baselineSecAtLastLog = getCumulativeBaselineTime(lastLog.s, isEndGameMap) * dynamicScale;
-                                const virtualElapsedSec = elapsedSinceLogSec * mEma;
-                                const currentExpectedCumulative = baselineSecAtLastLog + virtualElapsedSec;
-
-                                predPhase = getPhaseFromTime(currentExpectedCumulative / dynamicScale, isEndGameMap);
-                                const remainingTo5Sec = Math.max(0, getCumulativeBaselineTime(5.0, isEndGameMap) * dynamicScale - baselineSecAtLastLog);
-                                etaBossMs = lastLog.t + ((remainingTo5Sec / mEma) * 1000);
+                                const upM = Math.floor(elapsedSinceLogSec / 60); const upS = Math.floor(elapsedSinceLogSec % 60);
+                                const timeStr = upM > 0 ? `${String(upM).padStart(2,'0')}:${String(upS).padStart(2,'0')}` : `${String(upS).padStart(2,'0')}วิ`;
+                                updateTimeEl.innerHTML = `<span>เฟสล่าสุด: <b>${boss.stateInput}</b></span> <span>ผ่านไป: <b class="hl">${timeStr}</b></span>`;
                             }
+                        }
 
-                            predPhase = Math.round(Math.min(5.0, predPhase) * 100) / 100;
-                            if(inputStateInner) { inputStateInner.innerText = Math.floor(predPhase) >= 5 ? "ON" : Math.floor(predPhase).toString(); }
-                            
-                            const predPct = (predPhase % 1) * 100;
-                            const ringEl = document.getElementById(`progress-circle-${boss.id}`);
-                            if(ringEl) {
-                                if (predPhase >= 4.0) { ringEl.style.background = `conic-gradient(var(--color-stage4) ${predPct}%, transparent 0)`; } 
-                                else { ringEl.style.background = `conic-gradient(var(--color-ghost) ${predPct}%, transparent 0)`; }
-                                if (predPhase >= 3.8 && predPhase < 4.0) { ringEl.classList.add('is-hype'); } else { ringEl.classList.remove('is-hype'); }
-                            }
+                        predPhase = Math.round(Math.min(5.0, predPhase) * 100) / 100;
+                        if(inputStateInner) { inputStateInner.innerText = Math.floor(predPhase) >= 5 ? "ON" : Math.floor(predPhase).toString(); }
+                        
+                        const predPct = (predPhase % 1) * 100;
+                        const ringEl = document.getElementById(`progress-circle-${boss.id}`);
+                        if(ringEl) {
+                            if (predPhase >= 4.0) { ringEl.style.background = `conic-gradient(var(--color-stage4) ${predPct}%, transparent 0)`; } 
+                            else { ringEl.style.background = `conic-gradient(var(--color-ghost) ${predPct}%, transparent 0)`; }
+                            if (predPhase >= 3.8 && predPhase < 4.0) { ringEl.classList.add('is-hype'); } else { ringEl.classList.remove('is-hype'); }
+                        }
 
-                            const mtActual = document.getElementById(`mt-actual-${boss.id}`);
-                            const mtGhost = document.getElementById(`mt-ghost-${boss.id}`);
-                            if(mtActual) mtActual.style.width = `${Math.max(0, Math.min(100, ((actualVal - 1) / 4) * 100))}%`;
-                            if(mtGhost) mtGhost.style.width = `${Math.max(0, Math.min(100, ((predPhase - 1) / 4) * 100))}%`;
+                        const mtActual = document.getElementById(`mt-actual-${boss.id}`);
+                        const mtGhost = document.getElementById(`mt-ghost-${boss.id}`);
+                        if(mtActual) mtActual.style.width = `${Math.max(0, Math.min(100, ((actualVal - 1) / 4) * 100))}%`;
+                        if(mtGhost) mtGhost.style.width = `${Math.max(0, Math.min(100, ((predPhase - 1) / 4) * 100))}%`;
 
-                            for (let i = 1; i <= 5; i++) {
-                                const dotEl = document.getElementById('mt-dot-' + i + '-' + boss.id); if (!dotEl) continue;
-                                let baseClass = i === 5 ? "mt-dot taurus" : "mt-dot";
-                                if (actualVal >= i) { dotEl.className = baseClass + " active"; } 
-                                else if (predPhase >= i) { dotEl.className = baseClass + " active-ghost"; } 
-                                else { dotEl.className = baseClass; }
-                            }
+                        for (let i = 1; i <= 5; i++) {
+                            const dotEl = document.getElementById('mt-dot-' + i + '-' + boss.id); if (!dotEl) continue;
+                            let baseClass = i === 5 ? "mt-dot taurus" : "mt-dot";
+                            if (actualVal >= i) { dotEl.className = baseClass + " active"; } 
+                            else if (predPhase >= i) { dotEl.className = baseClass + " active-ghost"; } 
+                            else { dotEl.className = baseClass; }
+                        }
 
-                            const eta5Text = document.getElementById(`eta5-text-${boss.id}`);
-                            if(eta5Text) eta5Text.innerHTML = formatCountdownOnly(etaBossMs, now);
+                        const eta5Text = document.getElementById(`eta5-text-${boss.id}`);
+                        if(eta5Text) eta5Text.innerHTML = formatCountdownOnly(etaBossMs, now);
 
-                            if (predPhase >= 4.0) {
-                                cardEl.classList.add("is-stage4"); cardEl.classList.remove("is-spawned");
-                                if (predPhase >= 5.0) {
-                                    if (!boss.isStage5AlertPlayed) { pendingHorn.push(boss); }
-                                } else {
-                                    if (!boss.isStage4AlertPlayed) { pendingEpic.push(boss); }
-                                    if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
-                                }
-                            } else {
-                                cardEl.classList.add("is-spawned"); cardEl.classList.remove("is-stage4");
-                                if (!boss.isSpawnSoundPlayed) { pendingSpawn.push(boss); }
-                                if (boss.isStage4AlertPlayed) { boss.isStage4AlertPlayed = false; }
-                                if (boss.isStage5AlertPlayed) { boss.isStage5AlertPlayed = false; }
-                            }
-                        } catch (err) {}
-                    } else {
-                        if (!boss.isSpawnSoundPlayed) { pendingSpawn.push(boss); }
+                        if (predPhase >= 4.0) { cardEl.classList.add("is-stage4"); cardEl.classList.remove("is-spawned"); } 
+                        else { cardEl.classList.add("is-spawned"); cardEl.classList.remove("is-stage4"); }
                     }
                 }
             });
 
+            // [NEW FEATURE: Audio Scheduler Gateway]
             if (Date.now() - lastAudioPlayTime > 2000) { 
-                if (pendingHorn.length > 0) {
-                    if (document.getElementById('enableStage5Sound')?.checked) playStage5HornSound(); 
-                    lastAudioPlayTime = Date.now();
-                    pendingHorn.forEach(boss => { db.collection(targetCollection).doc(boss.id.toString()).update({ isStage5AlertPlayed: true, isStage4AlertPlayed: true, isSpawnSoundPlayed: true }); });
-                } else if (pendingEpic.length > 0) {
-                    if (document.getElementById('enableEpicSound')?.checked) playEpicStage4Sound(); 
-                    lastAudioPlayTime = Date.now();
-                    pendingEpic.forEach(boss => { db.collection(targetCollection).doc(boss.id.toString()).update({ isStage4AlertPlayed: true, isSpawnSoundPlayed: true }); });
-                } else if (pendingSpawn.length > 0) {
-                    if (document.getElementById('enableSpawnSound')?.checked) playDingSound(); 
-                    lastAudioPlayTime = Date.now();
-                    pendingSpawn.forEach(boss => { db.collection(targetCollection).doc(boss.id.toString()).update({ isSpawnSoundPlayed: true }); });
+                let durationAddedMs = 0;
+                if (pendingHorn.length > 0 && currentSettings.soundConfig.stage5.enabled) {
+                    durationAddedMs = scheduleSoundLoop(currentSettings.soundConfig.stage5.type, currentSettings.soundConfig.stage5.loops);
+                } else if (pendingBell.length > 0 && currentSettings.soundConfig.stage30s.enabled) {
+                    durationAddedMs = scheduleSoundLoop(currentSettings.soundConfig.stage30s.type, currentSettings.soundConfig.stage30s.loops);
+                } else if (pendingEpic.length > 0 && currentSettings.soundConfig.stage4.enabled) {
+                    durationAddedMs = scheduleSoundLoop(currentSettings.soundConfig.stage4.type, currentSettings.soundConfig.stage4.loops);
+                } else if (pendingSpawn.length > 0 && currentSettings.soundConfig.stage1.enabled) {
+                    durationAddedMs = scheduleSoundLoop(currentSettings.soundConfig.stage1.type, currentSettings.soundConfig.stage1.loops);
+                }
+                
+                if (durationAddedMs > 0) {
+                    // หน่วงเวลาการเช็คเสียงครั้งต่อไป จนกว่า Loop ที่กำลังเล่นจะเล่นจบ
+                    lastAudioPlayTime = Date.now() + durationAddedMs - 2000;
                 }
             }
 
